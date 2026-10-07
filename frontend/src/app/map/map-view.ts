@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, effect, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import {
   addProtocol, CanvasSource, LayerSpecification, LngLat, LngLatLike, Map as MapLibreMap, Marker, NavigationControl, Popup,
   setWorkerUrl, SourceSpecification,
@@ -8,14 +8,14 @@ import { ChunkedPmtilesSource } from '../data/byte-container';
 import { DATA_BASE, PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
 import { PLACE_COLOURS } from '../scoring/types';
+import { Scheme, ThemeService } from '../theme/theme.service';
+import { BASEMAP_FILES, MAP_COLOURS, MapColours } from './colours';
 import { Breakdown, HeatService } from './heat.service';
 
 let protocolsRegistered = false;
 
 /** The detailed basemap covers Denmark; below this zoom the whole world comes from Natural Earth. */
 const DETAIL_ZOOM = 5;
-const EARTH = '#e2dfda';
-const WATER = '#80deea';
 
 /**
  * Natural Earth land, lakes, borders and names, so the map can be panned and zoomed anywhere.
@@ -26,18 +26,18 @@ function worldSources(): Record<string, SourceSpecification> {
   return { 'world-land': source('land'), 'world-lakes': source('lakes'), 'world-boundaries': source('boundaries'), 'world-countries': source('countries'), 'world-places': source('places') };
 }
 
-function withWorld(basemap: LayerSpecification[]): LayerSpecification[] {
+function withWorld(basemap: LayerSpecification[], colours: MapColours): LayerSpecification[] {
   const [background, ...rest] = basemap;
   return [
-    { ...background, paint: { 'background-color': WATER } } as LayerSpecification,
-    { id: 'world-land', type: 'fill', source: 'world-land', paint: { 'fill-color': EARTH } },
-    { id: 'world-lakes', type: 'fill', source: 'world-lakes', paint: { 'fill-color': WATER } },
-    { id: 'world-boundaries', type: 'line', source: 'world-boundaries', paint: { 'line-color': '#adadad', 'line-width': 0.7, 'line-dasharray': [2, 1] } },
+    { ...background, paint: { 'background-color': colours.water } } as LayerSpecification,
+    { id: 'world-land', type: 'fill', source: 'world-land', paint: { 'fill-color': colours.earth } },
+    { id: 'world-lakes', type: 'fill', source: 'world-lakes', paint: { 'fill-color': colours.water } },
+    { id: 'world-boundaries', type: 'line', source: 'world-boundaries', paint: { 'line-color': colours.boundaries, 'line-width': 0.7, 'line-dasharray': [2, 1] } },
     ...rest,
     {
       id: 'world-places', type: 'symbol', source: 'world-places', minzoom: 2, maxzoom: DETAIL_ZOOM,
       layout: { 'text-field': ['get', 'name'], 'text-font': ['noto-regular'], 'text-size': 11, 'symbol-sort-key': ['get', 'rank'] },
-      paint: { 'text-color': '#5c5c5c', 'text-halo-color': EARTH, 'text-halo-width': 1 },
+      paint: { 'text-color': colours.placeLabel, 'text-halo-color': colours.earth, 'text-halo-width': 1 },
     },
     {
       id: 'world-countries', type: 'symbol', source: 'world-countries', maxzoom: DETAIL_ZOOM,
@@ -45,10 +45,12 @@ function withWorld(basemap: LayerSpecification[]): LayerSpecification[] {
         'text-field': ['get', 'name'], 'text-font': ['noto-medium'], 'symbol-sort-key': ['get', 'rank'],
         'text-size': ['interpolate', ['linear'], ['zoom'], 1, 9, 4, 13], 'text-transform': 'uppercase', 'text-letter-spacing': 0.1,
       },
-      paint: { 'text-color': '#8a8a8a', 'text-halo-color': EARTH, 'text-halo-width': 1 },
+      paint: { 'text-color': colours.countryLabel, 'text-halo-color': colours.earth, 'text-halo-width': 1 },
     },
   ];
 }
+
+type PaintProperty = Parameters<MapLibreMap['setPaintProperty']>[1];
 
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 
@@ -71,7 +73,7 @@ async function workerUrl(): Promise<string> {
 @Component({
   selector: 'app-map-view',
   template: `
-    <div #host class="map" [class.placing]="store.placing()"></div>
+    <div #host class="map" [class.placing]="store.placing()" [class.dark]="theme.scheme() === 'dark'" [style.background]="colours().water"></div>
     @if (problem()) {
       <div class="problem" role="alert">The map could not load: {{ problem() }}</div>
     }
@@ -80,8 +82,10 @@ async function workerUrl(): Promise<string> {
 })
 export class MapView implements AfterViewInit, OnDestroy {
   protected readonly store = inject(Store);
+  protected readonly theme = inject(ThemeService);
   private readonly data = inject(PilotData);
   private readonly heat = inject(HeatService);
+  protected readonly colours = computed(() => MAP_COLOURS[this.theme.scheme()]);
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('host');
 
   private map: MapLibreMap | null = null;
@@ -90,6 +94,10 @@ export class MapView implements AfterViewInit, OnDestroy {
   private popup: Popup | null = null;
   private readonly markers = new Map<string, Marker>();
   private overlayReady = false;
+  /** The basemap's style layers per scheme, fetched when first needed. */
+  private readonly basemapLayers = new Map<Scheme, Promise<LayerSpecification[]>>();
+  /** The scheme the map is coloured for. */
+  private styledScheme: Scheme | null = null;
 
   constructor() {
     effect(() => {
@@ -103,6 +111,10 @@ export class MapView implements AfterViewInit, OnDestroy {
       this.map.setPaintProperty('heat', 'raster-resampling', view.smooth > 0 ? 'linear' : 'nearest');
     });
     effect(() => this.syncMarkers(this.store.places()));
+    effect(() => {
+      const scheme = this.theme.scheme();
+      if (this.overlayReady) void this.restyle(scheme);
+    });
     effect(() => {
       // Start the map once the grid (and its bounds) is known
       if (this.data.grid() && !this.map) void this.createMap();
@@ -125,8 +137,10 @@ export class MapView implements AfterViewInit, OnDestroy {
   private async createMap(): Promise<void> {
     const grid = this.data.grid();
     if (!grid || this.map) return;
+    const scheme = this.theme.scheme();
     const [layers, glyphs, worker] = await Promise.all([
-      fetch(`${DATA_BASE}style-layers.json`).then((r) => r.json()),
+      // A data pack without the dark flavour still gets a map, in the light flavour's colours
+      this.layersFor(scheme).catch(() => this.layersFor('light')),
       fetch(`${DATA_BASE}fonts.json`).then((r) => r.json() as Promise<Record<string, string>>),
       protocolsRegistered ? null : workerUrl(),
     ]);
@@ -154,7 +168,7 @@ export class MapView implements AfterViewInit, OnDestroy {
       style: {
         version: 8,
         glyphs: 'glyphs://{fontstack}/{range}',
-        sprite: `${DATA_BASE}sprites/light`,
+        sprite: `${DATA_BASE}${BASEMAP_FILES[scheme].sprite}`,
         sources: {
           protomaps: {
             type: 'vector',
@@ -164,7 +178,7 @@ export class MapView implements AfterViewInit, OnDestroy {
           },
           ...worldSources(),
         },
-        layers: withWorld(layers),
+        layers: withWorld(layers, MAP_COLOURS[scheme]),
       },
       // Start on the data's region; the rest of the world is free to explore
       bounds: [[b.west, b.south], [b.east, b.north]],
@@ -178,6 +192,7 @@ export class MapView implements AfterViewInit, OnDestroy {
       },
     });
     this.map = map;
+    this.styledScheme = scheme;
     // Until the map has loaded, report what goes wrong instead of showing an empty map
     const report = (reason: unknown) => this.problem.set(reason instanceof Error ? reason.message : String(reason));
     const onError = (event: ErrorEvent) => report(event.error ?? event.message);
@@ -204,10 +219,12 @@ export class MapView implements AfterViewInit, OnDestroy {
       map.addSource('municipalities', { type: 'geojson', data: `${DATA_BASE}data/municipalities.json` });
       map.addLayer({
         id: 'municipalities', type: 'line', source: 'municipalities',
-        paint: { 'line-color': '#3b4046', 'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.8, 12, 2], 'line-opacity': 0.55, 'line-dasharray': [3, 2] },
+        paint: { 'line-color': MAP_COLOURS[scheme].municipalities, 'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.8, 12, 2], 'line-opacity': 0.55, 'line-dasharray': [3, 2] },
       }, 'address_label');
       this.overlayReady = true;
       this.refreshOverlay();
+      // The theme may have changed while the map was loading
+      void this.restyle(this.theme.scheme());
     });
     map.on('click', (event) => {
       if (this.store.placing()) {
@@ -218,6 +235,45 @@ export class MapView implements AfterViewInit, OnDestroy {
       this.showBreakdown(event.lngLat);
     });
     this.syncMarkers(this.store.places());
+  }
+
+  /** The basemap's style layers for a scheme, from the data pack. */
+  private layersFor(scheme: Scheme): Promise<LayerSpecification[]> {
+    let layers = this.basemapLayers.get(scheme);
+    if (!layers) {
+      layers = fetch(`${DATA_BASE}${BASEMAP_FILES[scheme].layers}`).then((response) => {
+        if (!response.ok) throw new Error(`The basemap style is missing (HTTP ${response.status})`);
+        return response.json() as Promise<LayerSpecification[]>;
+      });
+      layers.catch(() => this.basemapLayers.delete(scheme));
+      this.basemapLayers.set(scheme, layers);
+    }
+    return layers;
+  }
+
+  /**
+   * Recolour the map for a scheme. Both flavours of the basemap have the same layers and differ
+   * only in colours and icons, so the paint is updated in place and no tiles are loaded again.
+   */
+  private async restyle(scheme: Scheme): Promise<void> {
+    if (scheme === this.styledScheme) return;
+    let layers: LayerSpecification[];
+    try {
+      layers = await this.layersFor(scheme);
+    } catch {
+      return;
+    }
+    const map = this.map;
+    // A later change of theme takes over
+    if (!map || scheme !== this.theme.scheme() || scheme === this.styledScheme) return;
+    const colours = MAP_COLOURS[scheme];
+    for (const layer of withWorld(layers, colours)) {
+      if (!('paint' in layer) || !layer.paint || !map.getLayer(layer.id)) continue;
+      for (const [property, value] of Object.entries(layer.paint)) map.setPaintProperty(layer.id, property as PaintProperty, value);
+    }
+    map.setPaintProperty('municipalities', 'line-color', colours.municipalities);
+    map.setSprite(`${DATA_BASE}${BASEMAP_FILES[scheme].sprite}`);
+    this.styledScheme = scheme;
   }
 
   private refreshOverlay(): void {

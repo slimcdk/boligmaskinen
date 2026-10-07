@@ -74,7 +74,7 @@ table {
     font-size: 18px;
   }
 
-  &.succeeded mat-icon { color: #2e7d32; }
+  &.succeeded mat-icon { color: var(--app-success); }
   &.failed { color: var(--mat-sys-error); }
   &.running mat-icon { color: var(--mat-sys-primary); }
   &.cancelled mat-icon { color: var(--mat-sys-outline); }
@@ -119,6 +119,6 @@ tr.clickable {
     color: var(--mat-sys-on-surface-variant);
   }
 
-  .warn { color: #b26a00; }
+  .warn { color: var(--app-warning); }
   .error { color: var(--mat-sys-error); }
 }

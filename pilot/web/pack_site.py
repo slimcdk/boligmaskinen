@@ -72,7 +72,8 @@ def main() -> None:
     shutil.copytree(site / "sprites", out / "sprites")
     if (site / "world").exists():
         shutil.copytree(site / "world", out / "world")
-    shutil.copy(site / "style-layers.json", out / "style-layers.json")
+    for style in sorted(site.glob("style-layers*.json")):
+        shutil.copy(style, out / style.name)
     for path in sorted(out.rglob("*")):
         if path.is_file():
             print(f"{path.stat().st_size / 1e6:8.2f} MB  {path.relative_to(out)}")

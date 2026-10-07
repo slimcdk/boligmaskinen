@@ -17,6 +17,7 @@ import { PLACE_COLOURS, SUGGESTED, ViewState } from '../scoring/types';
 import { AboutDialog } from './about-dialog';
 import { BlockRow } from './block-row';
 import { CatalogData, CatalogDialog, CatalogResult } from './catalog-dialog';
+import { ThemeToggle } from '../theme/theme-toggle';
 import { Histogram } from './histogram';
 
 /** The side panel: result, the blocks of the weighting with their controls, own places and folded settings. */
@@ -24,7 +25,7 @@ import { Histogram } from './histogram';
   selector: 'app-panel',
   imports: [
     MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatChipsModule, MatExpansionModule, MatIconModule,
-    MatProgressBarModule, MatSliderModule, MatTooltipModule, BlockRow, Histogram,
+    MatProgressBarModule, MatSliderModule, MatTooltipModule, BlockRow, Histogram, ThemeToggle,
   ],
   templateUrl: './panel.html',
   styleUrl: './panel.scss',

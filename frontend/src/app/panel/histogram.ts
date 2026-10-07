@@ -1,5 +1,17 @@
-import { Component, ElementRef, effect, input, viewChild } from '@angular/core';
-import { RAMP } from '../map/heat.service';
+import { Component, ElementRef, effect, inject, input, viewChild } from '@angular/core';
+import { RAMPS, Rgb } from '../map/colours';
+import { ThemeService } from '../theme/theme.service';
+
+/**
+ * A theme colour the canvas can use. The theme's tokens hold light-dark() pairs, which only CSS
+ * resolves, so the token is set on the element and read back as its computed colour.
+ */
+function themeColour(element: HTMLElement, token: string, fallback: string): string {
+  element.style.color = `var(${token}, ${fallback})`;
+  const colour = getComputedStyle(element).color;
+  element.style.removeProperty('color');
+  return colour || fallback;
+}
 
 /** Distribution of points across the cells considered, coloured like the map. */
 @Component({
@@ -14,14 +26,14 @@ export class Histogram {
   readonly lo = input(0);
   readonly hi = input(100);
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+  private readonly theme = inject(ThemeService);
 
   constructor() {
-    effect(() => this.draw(this.histogram(), this.limit(), this.showLimit(), this.lo(), this.hi()));
+    effect(() => this.draw(this.histogram(), this.limit(), this.showLimit(), this.lo(), this.hi(), RAMPS[this.theme.scheme()]));
   }
 
-  private draw(histogram: Uint32Array, limit: number, showLimit: boolean, lo: number, hi: number): void {
+  private draw(histogram: Uint32Array, limit: number, showLimit: boolean, lo: number, hi: number, ramp: Rgb[]): void {
     const canvas = this.canvas().nativeElement;
-    const css = getComputedStyle(canvas);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const width = canvas.clientWidth || 300;
     const height = 44;
@@ -33,19 +45,19 @@ export class Histogram {
     let max = 1;
     for (const v of histogram) max = Math.max(max, v);
     const barWidth = width / 101;
-    const muted = css.getPropertyValue('--mat-sys-outline-variant') || '#ccc';
+    const muted = themeColour(canvas, '--mat-sys-outline-variant', '#ccc');
     for (let score = 0; score <= 100; score++) {
       const barHeight = (histogram[score] / max) * (height - 12);
       const t = Math.max(0, Math.min(1, (score - lo) / Math.max(1, hi - lo)));
-      const [r, gr, b] = RAMP[Math.round(t * 100)];
+      const [r, gr, b] = ramp[Math.round(t * 100)];
       g.fillStyle = score >= limit ? `rgb(${r},${gr},${b})` : muted;
       g.fillRect(score * barWidth, height - 10 - barHeight, Math.max(1, barWidth - 0.5), barHeight);
     }
     if (showLimit) {
-      g.fillStyle = css.getPropertyValue('--mat-sys-on-surface') || '#000';
+      g.fillStyle = themeColour(canvas, '--mat-sys-on-surface', '#000');
       g.fillRect(limit * barWidth, 0, 1.5, height - 8);
     }
-    g.fillStyle = css.getPropertyValue('--mat-sys-on-surface-variant') || '#666';
+    g.fillStyle = themeColour(canvas, '--mat-sys-on-surface-variant', '#666');
     g.font = '10px Roboto, system-ui, sans-serif';
     g.fillText('0', 0, height - 0.5);
     g.fillText('100 points', width - 50, height - 0.5);
