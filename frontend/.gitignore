@@ -51,3 +51,6 @@ public/data-pack/
 
 # Written by tools/build-info.mjs at build time
 /public/build-info.json
+
+# Playwright against the whole app (playwright.live.config.ts)
+/playwright-report-live/

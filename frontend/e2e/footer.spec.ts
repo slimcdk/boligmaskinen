@@ -26,6 +26,8 @@ test('the gear opens the data jobs, which can be run at once', async ({ page }) 
   await open(page);
   await page.getByRole('button', { name: 'Data jobs' }).click();
   const dialog = page.getByRole('dialog');
+  // The dev server has no backend, so the dialog shows its preview
+  await expect(dialog.locator('.bar p')).toHaveText('Preview without a backend: the runs are simulated');
   const row = dialog.getByRole('row').filter({ hasText: 'Planning zones' });
   await expect(row).toContainText('Every day at 03:30');
   await expect(row).toContainText(/in \d+ hours|tomorrow|in a moment|in \d+ minutes/);

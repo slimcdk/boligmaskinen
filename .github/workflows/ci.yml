@@ -144,6 +144,28 @@ jobs:
           curl -fsS http://localhost:8080/api/version | grep -q '"revision":"${{ github.sha }}"'
           curl -fsS http://localhost:8080/data-pack/data/meta.json | grep -q '"aarhus"'
           curl -fsS http://localhost:8080/ | grep -q '<app-root>'
+          curl -fsS http://localhost:8080/api/jobs | grep -q '"id":"data-pack"'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # The whole app in a browser: a real job started from the jobs dialog, and the version from the server
+      - name: End-to-end tests against the app and its backend
+        working-directory: frontend
+        env:
+          BASE_URL: http://localhost:8080
+          EXPECTED_REVISION: ${{ github.sha }}
+        run: |
+          npm ci
+          npx playwright test -c playwright.live.config.ts
+      - name: Keep the report of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-live
+          path: frontend/playwright-report-live
+          retention-days: 7
       - name: Show the logs
         if: always()
         run: docker compose logs --no-color

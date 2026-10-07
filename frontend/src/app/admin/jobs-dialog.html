@@ -1,16 +1,22 @@
 <div mat-dialog-title class="bar">
   <div class="title">
     <h2>Data jobs</h2>
-    <p>Prototype: runs are simulated until the backend runs them</p>
+    <p>{{ subtitle() }}</p>
   </div>
   <mat-chip-set aria-label="Summary">
     <mat-chip [class.warn]="counts().failing">{{ counts().failing }} failing</mat-chip>
     <mat-chip>{{ counts().running }} running</mat-chip>
     <mat-chip>{{ counts().blocked }} waiting for access</mat-chip>
+    @if (counts().planned) {
+      <mat-chip>{{ counts().planned }} not built yet</mat-chip>
+    }
   </mat-chip-set>
 </div>
 
 <mat-dialog-content class="body">
+  @if (jobs.problem(); as problem) {
+    <div class="problem" role="alert"><mat-icon>error</mat-icon>{{ problem }}</div>
+  }
   <section aria-label="Tasks">
     <table mat-table [dataSource]="jobs.jobs()" class="tasks">
       <ng-container matColumnDef="name">
@@ -19,7 +25,7 @@
           <div class="name">{{ job.name }} <span class="source">{{ job.source }}</span></div>
           <div class="description">{{ job.description }}</div>
           @if (job.blocked) {
-            <span class="blocked"><mat-icon>lock</mat-icon>{{ job.blocked }}</span>
+            <span class="blocked"><mat-icon>{{ job.planned ? 'construction' : 'lock' }}</mat-icon>{{ job.blocked }}</span>
           }
         </td>
       </ng-container>
