@@ -4,9 +4,9 @@ import { Store } from '../state/store';
 import { Scheme, ThemeService } from '../theme/theme.service';
 import {
   BlockInputs, boxBlur, compileCached, DATA_VALUES, DecodeContext, decodeValue, evaluateBlocks, formatValueOf, Grid,
-  lowerLimit, mercatorFrame, MercatorFrame, minutesLayer, percentile, placeValues, total, ValueInfo,
+  lowerLimit, mercatorFrame, MercatorFrame, minutesLayer, percentile, placeValues, total, ValueInfo, ViewState,
 } from '@boligmaskinen/engine';
-import { BELOW_LIMIT, RAMPS, Rgb } from './colours';
+import { BELOW_LIMIT, rampOf, Rgb, stepped } from './colours';
 
 export interface HeatStats {
   hasPreferences: boolean;
@@ -27,10 +27,17 @@ export interface Breakdown {
 
 /** Colours as little-endian RGBA pixels; the ramps leave alpha to the renderer. */
 const pixel = ([r, g, b]: Rgb, alpha = 0) => ((alpha << 24) | (b << 16) | (g << 8) | r) >>> 0;
-const RAMP_PACKED: Record<Scheme, Uint32Array> = {
-  light: Uint32Array.from(RAMPS.light, (c) => pixel(c)),
-  dark: Uint32Array.from(RAMPS.dark, (c) => pixel(c)),
-};
+const packed = new Map<string, Uint32Array>();
+/** The colour scale as pixels, per palette, light or dark map and bands. */
+function packedRamp(view: Pick<ViewState, 'palette' | 'bands'>, scheme: Scheme): Uint32Array {
+  const key = `${view.palette}|${scheme}|${view.bands}`;
+  let ramp = packed.get(key);
+  if (!ramp) {
+    ramp = Uint32Array.from(rampOf(view.palette, scheme, view.bands), (c) => pixel(c));
+    packed.set(key, ramp);
+  }
+  return ramp;
+}
 const BELOW_LIMIT_PACKED: Record<Scheme, number> = {
   light: pixel(BELOW_LIMIT.light.rgb, BELOW_LIMIT.light.alpha),
   dark: pixel(BELOW_LIMIT.dark.rgb, BELOW_LIMIT.dark.alpha),
@@ -230,7 +237,7 @@ export class HeatService {
     }
 
     const scheme = this.theme.scheme();
-    const ramp = RAMP_PACKED[scheme];
+    const ramp = packedRamp(view, scheme);
     const below = BELOW_LIMIT_PACKED[scheme];
     if (view.showBelow && view.show !== 'all') {
       for (let i = 0; i < cells.length; i++) {
@@ -241,7 +248,8 @@ export class HeatService {
     for (let i = 0; i < land.length; i++) {
       const c = cover[i];
       if (!c) continue;
-      const t = Math.max(0, Math.min(1, (value[i] - lo) / (hi - lo)));
+      // With steps, a whole step has one colour and one opacity
+      const t = stepped(Math.max(0, Math.min(1, (value[i] - lo) / (hi - lo))), view.bands);
       pixels[land[i]] = ((Math.round(255 * c * (0.5 + 0.5 * t)) << 24) | ramp[Math.round(t * 100)]) >>> 0;
     }
     this.canvas.getContext('2d')!.putImageData(this.image, 0, 0);

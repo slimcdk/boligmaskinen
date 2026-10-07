@@ -73,9 +73,10 @@ table {
     padding-right: 0;
   }
 
+  // A task reads like an M3 three-line list item: 16px above and below, on the 4px rhythm
   td.mat-mdc-cell {
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 16px;
+    padding-bottom: 16px;
     vertical-align: middle;
   }
 }
@@ -114,19 +115,20 @@ table {
   gap: 4px;
 }
 
+// The type of an M3 list item: the headline in body large, the supporting text in body medium
 .name {
-  font: var(--mat-sys-title-small);
+  font: var(--mat-sys-body-large);
 }
 
 .source {
-  margin-left: 6px;
-  font: var(--mat-sys-label-small);
+  margin-left: 8px;
+  font: var(--mat-sys-label-medium);
   color: var(--mat-sys-on-surface-variant);
 }
 
 .description {
-  margin-top: 2px;
-  font: var(--mat-sys-body-small);
+  margin-top: 4px;
+  font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface-variant);
 }
 
@@ -134,7 +136,7 @@ table {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 8px;
   font: var(--mat-sys-label-medium);
   color: var(--mat-sys-tertiary);
 

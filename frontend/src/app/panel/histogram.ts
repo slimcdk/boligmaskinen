@@ -1,5 +1,6 @@
 import { Component, ElementRef, effect, inject, input, viewChild } from '@angular/core';
-import { RAMPS, Rgb } from '../map/colours';
+import { rampOf, Rgb } from '../map/colours';
+import { Store } from '../state/store';
 import { ThemeService } from '../theme/theme.service';
 
 /**
@@ -16,7 +17,7 @@ function themeColour(element: HTMLElement, token: string, fallback: string): str
 /** Distribution of points across the cells considered, coloured like the map. */
 @Component({
   selector: 'app-histogram',
-  template: '<canvas #canvas aria-label="Distribution of points across the cells considered"></canvas>',
+  template: '<canvas #canvas role="img" [attr.aria-label]="description() || \'Distribution of points across the cells considered\'"></canvas>',
   styles: [':host { display: block; } canvas { width: 100%; height: 44px; display: block; }'],
 })
 export class Histogram {
@@ -25,11 +26,17 @@ export class Histogram {
   readonly showLimit = input(false);
   readonly lo = input(0);
   readonly hi = input(100);
+  /** The result in words, for screen readers. */
+  readonly description = input('');
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly theme = inject(ThemeService);
+  private readonly store = inject(Store);
 
   constructor() {
-    effect(() => this.draw(this.histogram(), this.limit(), this.showLimit(), this.lo(), this.hi(), RAMPS[this.theme.scheme()]));
+    effect(() => {
+      const view = this.store.view();
+      this.draw(this.histogram(), this.limit(), this.showLimit(), this.lo(), this.hi(), rampOf(view.palette, this.theme.scheme(), view.bands));
+    });
   }
 
   private draw(histogram: Uint32Array, limit: number, showLimit: boolean, lo: number, hi: number, ramp: Rgb[]): void {

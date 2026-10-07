@@ -17,23 +17,22 @@
 
   <section class="result" aria-label="Result">
     @if (stats()?.hasPreferences) {
-      <div class="headline">{{ headline() }}</div>
-      <div class="subline">{{ subline() }}</div>
       <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().show" (change)="setView({ show: $event.value })" aria-label="Which cells to show">
         <mat-button-toggle value="all">All</mat-button-toggle>
-        <mat-button-toggle value="top">Best %</mat-button-toggle>
+        <mat-button-toggle value="top">Percentile</mat-button-toggle>
         <mat-button-toggle value="abs">Min. points</mat-button-toggle>
       </mat-button-toggle-group>
       @if (view().show === 'top') {
         <mat-slider discrete min="1" max="100" step="1" [displayWith]="best">
-          <input matSliderThumb [value]="view().top" (input)="onLimit($event)" aria-label="Share of the best cells to show">
+          <input matSliderThumb [value]="view().top" (input)="onLimit($event)" aria-label="Show the best share of the cells">
         </mat-slider>
       } @else if (view().show === 'abs') {
         <mat-slider discrete min="0" max="100" step="1">
           <input matSliderThumb [value]="view().abs" (input)="onLimit($event)" aria-label="Lowest points to show">
         </mat-slider>
       }
-      <app-histogram [histogram]="stats()!.histogram" [limit]="stats()!.limit" [showLimit]="view().show !== 'all'" [lo]="stats()!.lo" [hi]="stats()!.hi" />
+      <app-histogram [histogram]="stats()!.histogram" [limit]="stats()!.limit" [showLimit]="view().show !== 'all'" [lo]="stats()!.lo" [hi]="stats()!.hi"
+                     [description]="resultDescription()" />
     } @else {
       <div class="empty">
         <h2>Where would you like to live?</h2>
@@ -91,6 +90,26 @@
         <mat-panel-description>{{ mapSummary() }}</mat-panel-description>
       </mat-expansion-panel-header>
       <div class="settings">
+        <span class="label">Colours</span>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="palette">
+          <mat-select [value]="view().palette" (selectionChange)="setView({ palette: $event.value })" aria-label="Heatmap colours">
+            <mat-select-trigger>
+              <span class="choice"><span class="swatch" [style.background]="palette().swatch"></span>{{ palette().name }}</span>
+            </mat-select-trigger>
+            @for (p of palettes(); track p.id) {
+              <mat-option [value]="p.id">
+                <span class="choice">
+                  <span class="swatch" [style.background]="p.swatch"></span>
+                  <span>{{ p.name }}@if (p.note) {<span class="note"> · {{ p.note }}</span>}</span>
+                </span>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().bands" (change)="setView({ bands: $event.value })" aria-label="Colour scale">
+          <mat-button-toggle value="smooth">Smooth</mat-button-toggle>
+          <mat-button-toggle value="steps">Steps</mat-button-toggle>
+        </mat-button-toggle-group>
         <span class="label">Smoothing</span>
         <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().smooth" (change)="setView({ smooth: $event.value })" aria-label="Smoothing">
           <mat-button-toggle [value]="0">Off</mat-button-toggle>

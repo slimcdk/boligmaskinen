@@ -95,6 +95,9 @@ export interface Grid {
   landCells: Uint32Array;
 }
 
+/** The heatmap's colour scales (the frontend's map/colours.ts holds their colours). */
+export type HeatPalette = 'orange' | 'azure' | 'violet' | 'rose' | 'red-green';
+
 export interface ViewState {
   show: 'all' | 'top' | 'abs';
   top: number;
@@ -103,6 +106,9 @@ export interface ViewState {
   cells: 'homes' | 'land';
   showBelow: boolean;
   opacity: number;
+  palette: HeatPalette;
+  /** A smooth colour scale, or five steps of it. */
+  bands: 'smooth' | 'steps';
 }
 
 
@@ -127,7 +133,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   },
 ];
 
-export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85 };
+export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85, palette: 'orange', bands: 'smooth' };
 
 export const PLACE_COLOURS = ['#1f6feb', '#8a3ffc', '#007d79', '#d12771', '#b28600'];
 

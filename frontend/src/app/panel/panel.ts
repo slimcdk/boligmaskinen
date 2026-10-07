@@ -6,12 +6,16 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BuildInfoService } from '../data/build-info';
 import { PilotData } from '../data/pilot-data';
+import { PALETTES, rampGradient } from '../map/colours';
 import { HeatService } from '../map/heat.service';
+import { ThemeService } from '../theme/theme.service';
 import { Store } from '../state/store';
 import { PLACE_COLOURS, SUGGESTED, ViewState } from '@boligmaskinen/engine';
 import { AboutDialog } from './about-dialog';
@@ -25,7 +29,7 @@ import { Histogram } from './histogram';
   selector: 'app-panel',
   imports: [
     MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatChipsModule, MatExpansionModule, MatIconModule,
-    MatProgressBarModule, MatSliderModule, MatTooltipModule, BlockRow, Histogram, ThemeToggle,
+    MatProgressBarModule, MatSliderModule, MatTooltipModule, MatFormFieldModule, MatSelectModule, BlockRow, Histogram, ThemeToggle,
   ],
   templateUrl: './panel.html',
   styleUrl: './panel.scss',
@@ -48,20 +52,16 @@ export class Panel {
     return SUGGESTED.filter((id) => !present.has(id)).map((id) => this.store.catalogue.find((c) => c.id === id)!).filter(Boolean);
   });
 
-  protected readonly headline = computed(() => {
+  /**
+   * The result in words, for screen readers: the panel shows the histogram, not the numbers. The
+   * histogram's canvas carries it as its label.
+   */
+  protected readonly resultDescription = computed(() => {
     const s = this.stats();
     if (!s?.hasPreferences) return '';
-    return this.view().show === 'all' ? `Median ${s.median} points` : `${s.shown.toLocaleString('en-US')} cells shown`;
-  });
-
-  protected readonly subline = computed(() => {
-    const s = this.stats();
-    if (!s?.hasPreferences) return '';
-    const cell = this.data.grid()?.meta.cellMetres ?? 100;
-    const km2 = (n: number) => ((n * cell * cell) / 1e6).toLocaleString('en-US', { maximumFractionDigits: 0 });
-    if (this.view().show === 'all') return `${s.considered.toLocaleString('en-US')} cells (${km2(s.considered)} km²) meet your requirements`;
-    const share = s.considered ? Math.round((s.shown / s.considered) * 100) : 0;
-    return `${share} % of ${s.considered.toLocaleString('en-US')} · ${km2(s.shown)} km² · at least ${s.limit} points`;
+    const cells = (n: number) => n.toLocaleString('en-US');
+    if (this.view().show === 'all') return `Points of the ${cells(s.considered)} cells that meet your requirements, median ${s.median}`;
+    return `${cells(s.shown)} of the ${cells(s.considered)} cells that meet your requirements, at least ${s.limit} points`;
   });
 
 
@@ -71,8 +71,14 @@ export class Panel {
 
   protected readonly mapSummary = computed(() => {
     const v = this.view();
-    return `${v.cells === 'homes' ? 'Where homes are' : 'All land'} · ${['no smoothing', 'light smoothing', 'strong smoothing'][v.smooth]}`;
+    const colours = v.palette === 'orange' && v.bands === 'smooth' ? '' : ` · ${this.palette().name}${v.bands === 'steps' ? ' in steps' : ''}`;
+    return `${v.cells === 'homes' ? 'Where homes are' : 'All land'} · ${['no smoothing', 'light smoothing', 'strong smoothing'][v.smooth]}${colours}`;
   });
+
+  // The heatmap's colours, each with a swatch in the current light or dark mode
+  private readonly theme = inject(ThemeService);
+  protected readonly palettes = computed(() => PALETTES.map((p) => ({ ...p, swatch: rampGradient(p.id, this.theme.scheme(), this.view().bands) })));
+  protected readonly palette = computed(() => this.palettes().find((p) => p.id === this.view().palette) ?? this.palettes()[0]);
 
   protected setView(patch: Partial<ViewState>): void {
     this.store.setView(patch);
@@ -122,5 +128,5 @@ export class Panel {
   }
 
   protected percent = (value: number) => `${Math.round(value * 100)} %`;
-  protected best = (value: number) => `${value} %`;
+  protected best = (value: number) => `Top ${value} %`;
 }

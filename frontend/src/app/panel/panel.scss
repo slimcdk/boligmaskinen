@@ -39,11 +39,6 @@
   gap: 8px;
 }
 
-.headline {
-  font: var(--mat-sys-headline-small);
-}
-
-.subline,
 .hint,
 .label {
   font: var(--mat-sys-body-small);
@@ -98,6 +93,28 @@ mat-slider {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.palette {
+  width: 100%;
+}
+
+// A colour choice: its scale as a swatch, then its name (also in the select's options, outside the panel)
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.swatch {
+  flex: none;
+  width: 56px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.note {
+  color: var(--mat-sys-on-surface-variant);
 }
 
 

@@ -38,7 +38,7 @@ export class Legend {
   private readonly store = inject(Store);
   protected readonly stats = this.heat.stats;
   private readonly theme = inject(ThemeService);
-  protected readonly gradient = computed(() => rampGradient(this.theme.scheme()));
+  protected readonly gradient = computed(() => rampGradient(this.store.view().palette, this.theme.scheme(), this.store.view().bands));
   protected readonly lo = computed(() => Math.round(this.stats()?.lo ?? 0));
   protected readonly hi = computed(() => Math.round(this.stats()?.hi ?? 100));
   protected readonly mid = computed(() => Math.round(((this.stats()?.lo ?? 0) + (this.stats()?.hi ?? 100)) / 2));
