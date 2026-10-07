@@ -1,0 +1,26 @@
+{
+  "name": "boligmaskinen-backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Serves the app and its API",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/server.ts",
+    "dev": "node --watch src/server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@fastify/compress": "^9.2.0",
+    "@fastify/static": "^10.1.5",
+    "fastify": "^5.12.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}
