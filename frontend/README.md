@@ -54,8 +54,19 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   - They have the same layers, so only the colours change and no tiles are loaded again.
   - The app's own layers (world, municipalities) take their colours from
     `src/app/map/colours.ts`.
-- The heatmap ramp turns around in dark mode: more points are darker orange on the light
-  map and brighter on the dark map. The legend and the histogram use the same ramp.
+- The heatmap ramp turns around in dark mode: more points are darker on the light map and
+  brighter on the dark map. The legend and the histogram use the same ramp.
+
+## Heatmap colours
+
+- **"Map settings" picks the colours:** Orange (the theme's tertiary colour, the default), Azure (its
+  primary), Violet, Rose, or Red to green.
+- **The scales are made from the tones of Angular Material's M3 palettes** (`src/app/map/m3-tones.ts`,
+  copied from `@angular/material`). One hue in steps of lightness can be read with every kind of
+  colour vision; Red to green says that it cannot.
+- **"Smooth" or "Steps":** steps divide the scale into five, each with one colour and opacity.
+- **The panel shows the histogram, not the numbers.** The result in words (cells and median) is the
+  histogram's label for screen readers.
 
 ## Footer: about, data jobs and version
 

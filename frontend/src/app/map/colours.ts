@@ -1,35 +1,101 @@
+import type { HeatPalette, ViewState } from '@boligmaskinen/engine';
 import type { Scheme } from '../theme/theme.service';
+import { M3_TONES } from './m3-tones';
 
 export type Rgb = [number, number, number];
 
-/**
- * Heatmap ramps from the fewest to the most points. On the light map more points read as darker
- * orange, on the dark map as brighter, so the best places stand out on both.
- */
-const RAMP_STOPS: Record<Scheme, [number, Rgb][]> = {
-  light: [[0, [254, 230, 206]], [25, [253, 174, 107]], [50, [241, 105, 19]], [75, [217, 72, 1]], [100, [127, 39, 4]]],
-  dark: [[0, [84, 28, 6]], [25, [166, 54, 3]], [50, [236, 96, 18]], [75, [253, 150, 62]], [100, [255, 214, 130]]],
-};
+/** A colour scale for the heatmap, from the fewest to the most points, per light and dark map. */
+export interface Palette {
+  id: HeatPalette;
+  name: string;
+  /** Said next to the name, e.g. for colour blindness. */
+  note?: string;
+  /** Darker with more points on the light map, brighter on the dark map. False for "Red to green". */
+  sequential: boolean;
+  stops: Record<Scheme, string[]>;
+}
 
-function interpolate(stops: [number, Rgb][]): Rgb[] {
+/** A tonal ramp: light to dark tones on the light map, dark to light on the dark map. */
+const tonal = (tones: { 25: string; 40: string; 60: string; 80: string; 90: string }): Record<Scheme, string[]> => ({
+  light: [tones[90], tones[80], tones[60], tones[40], tones[25]],
+  dark: [tones[25], tones[40], tones[60], tones[80], tones[90]],
+});
+
+/**
+ * The heatmap's colour scales, made from the tones of Angular Material's M3 palettes, so the map
+ * matches the app's theme. Each tonal scale is one hue in steps of lightness, which every kind of
+ * colour vision can read: more points are darker on the light map and brighter on the dark map.
+ * Orange is the theme's tertiary colour and Azure its primary.
+ */
+export const PALETTES: Palette[] = [
+  { id: 'orange', name: 'Orange', sequential: true, stops: tonal(M3_TONES.orange) },
+  { id: 'azure', name: 'Azure', sequential: true, stops: tonal(M3_TONES.azure) },
+  { id: 'violet', name: 'Violet', sequential: true, stops: tonal(M3_TONES.violet) },
+  { id: 'rose', name: 'Rose', sequential: true, stops: tonal(M3_TONES.rose) },
+  {
+    id: 'red-green', name: 'Red to green', note: 'Hard to read with red-green colour blindness', sequential: false,
+    stops: {
+      light: [M3_TONES.red[40], M3_TONES.orange[60], M3_TONES.yellow[80], M3_TONES.green[60], M3_TONES.green[40]],
+      dark: [M3_TONES.red[60], M3_TONES.orange[60], M3_TONES.yellow[80], M3_TONES.green[60], M3_TONES.green[60]],
+    },
+  },
+];
+
+/** How many steps "Steps" divides the scale into. */
+export const STEPS = 5;
+
+const hex = (colour: string): Rgb => [1, 3, 5].map((i) => parseInt(colour.slice(i, i + 2), 16)) as Rgb;
+const paletteOf = (id: HeatPalette): Palette => PALETTES.find((p) => p.id === id) ?? PALETTES[0];
+
+/** Evenly spaced stops, interpolated to 101 colours, one per point. */
+function interpolate(stops: Rgb[]): Rgb[] {
   const out: Rgb[] = [];
+  const last = stops.length - 1;
   for (let s = 0; s <= 100; s++) {
-    let j = 0;
-    while (j < stops.length - 2 && s > stops[j + 1][0]) j++;
-    const [s0, c0] = stops[j];
-    const [s1, c1] = stops[j + 1];
-    const t = (s - s0) / (s1 - s0);
-    out.push([0, 1, 2].map((k) => Math.round(c0[k] + (c1[k] - c0[k]) * t)) as Rgb);
+    const at = (s / 100) * last;
+    const j = Math.min(last - 1, Math.floor(at));
+    const t = at - j;
+    out.push([0, 1, 2].map((k) => Math.round(stops[j][k] + (stops[j + 1][k] - stops[j][k]) * t)) as Rgb);
   }
   return out;
 }
 
-/** The ramps in 101 steps, one per point. */
-export const RAMPS: Record<Scheme, Rgb[]> = { light: interpolate(RAMP_STOPS.light), dark: interpolate(RAMP_STOPS.dark) };
+/** Where a 0–1 position lands with steps: the middle of its step. */
+export function stepped(t: number, bands: ViewState['bands']): number {
+  if (bands !== 'steps') return t;
+  return (Math.min(STEPS - 1, Math.floor(t * STEPS)) + 0.5) / STEPS;
+}
 
-/** The ramp as a CSS gradient, for the legend. */
-export function rampGradient(scheme: Scheme): string {
-  return `linear-gradient(90deg, ${RAMP_STOPS[scheme].map(([at, [r, g, b]]) => `rgb(${r} ${g} ${b}) ${at}%`).join(', ')})`;
+const cache = new Map<string, Rgb[]>();
+
+/**
+ * The colour scale in 101 colours, one per point, for a palette, a light or dark map and smooth
+ * or stepped bands. With steps, every point in a step gets the colour of the step's middle.
+ */
+export function rampOf(palette: HeatPalette, scheme: Scheme, bands: ViewState['bands'] = 'smooth'): Rgb[] {
+  const key = `${palette}|${scheme}|${bands}`;
+  let ramp = cache.get(key);
+  if (!ramp) {
+    const smooth = interpolate(paletteOf(palette).stops[scheme].map(hex));
+    ramp = bands === 'steps' ? smooth.map((_, s) => smooth[Math.round(stepped(s / 100, bands) * 100)]) : smooth;
+    cache.set(key, ramp);
+  }
+  return ramp;
+}
+
+/** The scale as a CSS gradient, for the legend and the colour choices; steps have hard edges. */
+export function rampGradient(palette: HeatPalette, scheme: Scheme, bands: ViewState['bands'] = 'smooth'): string {
+  const rgb = ([r, g, b]: Rgb) => `rgb(${r} ${g} ${b})`;
+  if (bands === 'steps') {
+    const ramp = rampOf(palette, scheme, 'steps');
+    const parts = Array.from({ length: STEPS }, (_, i) => {
+      const colour = rgb(ramp[Math.round(((i + 0.5) / STEPS) * 100)]);
+      return `${colour} ${(i * 100) / STEPS}% ${((i + 1) * 100) / STEPS}%`;
+    });
+    return `linear-gradient(90deg, ${parts.join(', ')})`;
+  }
+  const stops = paletteOf(palette).stops[scheme];
+  return `linear-gradient(90deg, ${stops.map((c, i) => `${rgb(hex(c))} ${(i * 100) / (stops.length - 1)}%`).join(', ')})`;
 }
 
 /** Cells under the lower limit: a grey veil (alpha 0–255) that mutes them on either map. */
