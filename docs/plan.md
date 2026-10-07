@@ -150,7 +150,8 @@ Approvals take weeks or months, so they start before the code needs them.
 1. **Registers.** DAR addresses and BBR buildings and units, loaded by jobs into PostGIS:
    type, size, rooms, year and heating.
 2. **Homes in the language.** Values such as `area_m2`, `rooms`, `built` and `home_type`
-   join the cell's values, so one block can mix the home and its surroundings.
+   join the cell's values, so one block can mix the home and its surroundings. The ideas so
+   far, such as heating and room to the neighbours, are in [`block-ideas.md`](block-ideas.md).
 3. **The best homes.** A list of the best homes for the current weighting, each with its
    points per block, linked to the map. Homes are drawn as points from about zoom 13.
 4. **More about the property.** MAT, VUR (valuations), EBR, and school grades from
