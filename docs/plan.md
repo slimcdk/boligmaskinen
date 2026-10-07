@@ -71,8 +71,9 @@ Approvals take weeks or months, so they start before the code needs them.
 
 1. **Structure.** Fastify plugins for config, database, jobs and routes. Configuration
    from the environment, checked at start. Structured logs and one error format.
-2. **Database.** PostgreSQL with PostGIS, with migrations (dbmate) that run when the app
-   starts. A `compose.yaml` for self-hosting: the app image, PostGIS and the data volume.
+2. **Database.** PostgreSQL with PostGIS, with SQL migrations (`backend/migrations`) that run
+   when the app starts. A `compose.yaml` for self-hosting: the app image, PostGIS and the data
+   volume.
 3. **Job runner.** pg-boss in the same process: cron schedules, retries, and a run log
    (`source_run`). The API serves the shapes in `frontend/src/app/admin/jobs.ts`: the
    list, the runs, the log, run now and pause.

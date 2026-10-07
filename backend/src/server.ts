@@ -1,13 +1,15 @@
-import { fileURLToPath } from 'node:url';
 import { buildApp } from './app.ts';
-import { versionFromEnv } from './version.ts';
+import { ConfigError, loadConfig } from './config.ts';
 
-const env = process.env;
-const app = await buildApp({
-  staticDir: env['STATIC_DIR'] ?? fileURLToPath(new URL('../../frontend/dist/frontend/browser', import.meta.url)),
-  dataPackDir: env['DATA_PACK_DIR'] || null,
-  version: versionFromEnv(env),
-  logger: true,
-});
+let config;
+try {
+  config = loadConfig(process.env);
+} catch (error) {
+  if (!(error instanceof ConfigError)) throw error;
+  console.error(error.message);
+  process.exit(1);
+}
+
+const app = await buildApp(config);
 for (const signal of ['SIGINT', 'SIGTERM'] as const) process.once(signal, () => void app.close());
-await app.listen({ port: Number(env['PORT'] ?? 8080), host: env['HOST'] ?? '0.0.0.0' });
+await app.listen({ port: config.port, host: config.host });
