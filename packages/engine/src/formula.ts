@@ -518,7 +518,10 @@ export function setParam(source: string, param: FormulaParam, value: number): st
   return source.slice(0, param.start) + text + source.slice(param.end);
 }
 
-/** Rename value names in the code (not in comments), e.g. when a place gets a new name. */
+/**
+ * Rename names in the code, but not in comments: a place's values when it gets a new name, or a
+ * value or function that a new version of the language calls something else (migrations.ts).
+ */
 export function renameValues(source: string, renames: Record<string, string>): string {
   let tokens: Token[];
   try {

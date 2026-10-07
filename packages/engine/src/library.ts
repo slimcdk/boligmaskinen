@@ -4,6 +4,7 @@
  */
 import { type Block, newId } from './blocks.ts';
 import { type Criterion, DEFAULT_CRITERIA, MODE_MINUTES, type Place, type Role, type TravelMode } from './types.ts';
+import { LANGUAGE_VERSION } from './migrations.ts';
 import { MODES, placeValueName } from './values.ts';
 
 export interface BlockTemplate {
@@ -120,7 +121,7 @@ export function placeTemplate(place: Place, curve: { mode: TravelMode; full: num
 }
 
 export function blockFrom(template: BlockTemplate): Block {
-  return { id: newId('block'), name: template.name, code: template.code, role: template.role, weight: template.weight, template: template.id };
+  return { id: newId('block'), name: template.name, code: template.code, role: template.role, weight: template.weight, template: template.id, language: LANGUAGE_VERSION };
 }
 
 /** The template a block came from, with the place's current name for place blocks. */

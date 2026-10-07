@@ -6,6 +6,8 @@ about.
 
 ## How the weighting works
 
+The block language has its own reference: [`../docs/block-language.md`](../docs/block-language.md).
+
 - The weighting is a list of standalone **blocks**. Every block is a small formula over
   the data, in a safe expression language (`../packages/engine/src/formula.ts`) that is compiled
   to closures and never run as JavaScript.

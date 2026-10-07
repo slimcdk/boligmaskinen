@@ -1,9 +1,8 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
-import { Block } from '@boligmaskinen/engine';
-import { formulaParams, renameValues, setParam } from '@boligmaskinen/engine';
-import { blockFrom, LIBRARY, placeTemplate, templateOf } from '@boligmaskinen/engine';
-import { DEFAULT_CRITERIA, DEFAULT_VIEW, Place, ViewState } from '@boligmaskinen/engine';
-import { MODES, placeValueName } from '@boligmaskinen/engine';
+import {
+  Block, blockFrom, DEFAULT_CRITERIA, DEFAULT_VIEW, formulaParams, LANGUAGE_VERSION, LIBRARY, MODES, Place, placeTemplate,
+  placeValueName, renameValues, setParam, templateOf, upgradeBlock, ViewState,
+} from '@boligmaskinen/engine';
 import { migrateV1, migrateV2, Migrated, SavedV1, SavedV2 } from './migrate';
 
 const STORE_KEY = 'boligmaskinen.prototype.v3';
@@ -66,11 +65,11 @@ export class Store {
     if (block && param) this.updateBlock(id, { code: setParam(block.code, param, value) });
   }
 
-  /** Bring back a predefined block's original code. */
+  /** Bring back a predefined block's original code, in the current version of the language. */
   resetBlock(id: string): void {
     const block = this.blocks().find((b) => b.id === id);
     const template = block && templateOf(block, this.places());
-    if (template) this.updateBlock(id, { code: template.code });
+    if (template) this.updateBlock(id, { code: template.code, language: LANGUAGE_VERSION });
   }
 
   removeBlock(id: string): void {
@@ -132,7 +131,8 @@ export class Store {
   }
 
   private apply(saved: Migrated | Saved): void {
-    this.blocks.set(saved.blocks);
+    // Code saved for an older version of the block language is brought up to the current one
+    this.blocks.set(saved.blocks.map((b) => upgradeBlock(b).block));
     this.places.set(saved.places ?? []);
     this.view.set({ ...DEFAULT_VIEW, ...(saved.view ?? {}) });
   }

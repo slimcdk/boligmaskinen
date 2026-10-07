@@ -2,9 +2,10 @@
  * Carries the earlier prototypes' choices over to blocks, so nothing the user set is lost:
  * v1 saved picked criteria and places with their curves, v2 saved groups of connected blocks.
  */
-import { Block, newId } from '@boligmaskinen/engine';
-import { blockFrom, criterionTemplate, placeTemplate } from '@boligmaskinen/engine';
-import { Criterion, Curve, MODE_MINUTES, Place, Role, TravelMode, ViewState } from '@boligmaskinen/engine';
+import {
+  Block, blockFrom, Criterion, criterionTemplate, Curve, MODE_MINUTES, newId, Place, placeTemplate, Role, TravelMode,
+  ViewState,
+} from '@boligmaskinen/engine';
 
 /** What the first prototype saved. */
 export interface SavedV1 {
@@ -64,7 +65,7 @@ export function migrateV2(saved: SavedV2, catalogue: Criterion[]): Migrated {
       const d = node.data;
       const name = (fallback: string) => (single ? group.name : fallback);
       if (d.type === 'code' && d.code) {
-        blocks.push({ id: newId('block'), name: name('Code'), code: d.code, role: 'want', weight: group.weight });
+        blocks.push({ id: newId('block'), name: name('Code'), code: d.code, role: 'want', weight: group.weight, language: 1 });
         continue;
       }
       if (d.type !== 'curve' && d.type !== 'limit') continue;
