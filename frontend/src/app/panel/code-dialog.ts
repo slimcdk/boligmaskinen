@@ -6,9 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
-import { compileFormula, CONSTANTS, describeError, FUNCTIONS } from '@boligmaskinen/engine';
-import { templateOf } from '@boligmaskinen/engine';
-import { Role } from '@boligmaskinen/engine';
+import { compileFormula, CONSTANTS, describeError, FUNCTIONS, LANGUAGE_VERSION, Role, templateOf } from '@boligmaskinen/engine';
 
 export interface CodeDialogData {
   blockId: string;
@@ -79,7 +77,8 @@ export class CodeDialog {
   private apply(): void {
     clearTimeout(this.timer);
     const block = this.block();
-    if (block && block.code !== this.draft()) this.store.updateBlock(block.id, { code: this.draft() });
+    // Code written in the editor is in the current version of the language
+    if (block && block.code !== this.draft()) this.store.updateBlock(block.id, { code: this.draft(), language: LANGUAGE_VERSION });
   }
 
   /** Put a value or function name where the cursor is. */

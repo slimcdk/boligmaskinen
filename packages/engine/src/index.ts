@@ -7,6 +7,7 @@ export * from './engine.ts';
 export * from './format.ts';
 export * from './formula.ts';
 export * from './library.ts';
+export * from './migrations.ts';
 export * from './travel.ts';
 export * from './types.ts';
 export * from './values.ts';

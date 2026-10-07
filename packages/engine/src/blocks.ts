@@ -11,6 +11,7 @@
  */
 import { compileCached, describeError, type FormulaParam, formulaParams } from './formula.ts';
 import { type Role } from './types.ts';
+import { LANGUAGE_VERSION, languageOf, upgradeCode } from './migrations.ts';
 import { formatWithUnit } from './values.ts';
 
 export interface Block {
@@ -23,6 +24,8 @@ export interface Block {
   weight: number;
   /** The predefined block it started from, e.g. "forest" or "place:<id>", to reset it. */
   template?: string;
+  /** The version of the block language the code is written for; missing means 1 (see migrations.ts). */
+  language?: number;
 }
 
 /** The data a formula can read, per evaluated cell. */
@@ -56,7 +59,14 @@ function round(value: number): string {
 
 /** Run one block over n cells, or explain why it cannot run. */
 export function runBlock(block: Block, n: number, inputs: BlockInputs): { values: Float32Array } | { issue: string } {
-  const compiled = compileCached(block.code, inputs.names);
+  // Blocks are upgraded when they are loaded; one that could not be runs only when it can be now
+  let code = block.code;
+  if (languageOf(block) !== LANGUAGE_VERSION) {
+    const upgrade = upgradeCode(code, languageOf(block));
+    if (!upgrade.ok) return { issue: upgrade.problem! };
+    code = upgrade.code;
+  }
+  const compiled = compileCached(code, inputs.names);
   if (!compiled.ok) return { issue: describeError(compiled.error) };
   const formula = compiled.formula;
   const index = new Map(formula.inputs.map((name, i) => [name, i]));

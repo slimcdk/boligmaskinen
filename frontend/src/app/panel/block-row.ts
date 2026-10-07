@@ -7,9 +7,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
-import { Block, blockSummary, MAX_WEIGHT } from '@boligmaskinen/engine';
-import { formulaParams } from '@boligmaskinen/engine';
-import { Role } from '@boligmaskinen/engine';
+import { Block, blockSummary, formulaParams, MAX_WEIGHT, Role } from '@boligmaskinen/engine';
 import { CodeDialog, CodeDialogData } from './code-dialog';
 import { ParamControl } from './param-control';
 

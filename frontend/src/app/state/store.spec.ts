@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { formulaParams } from '@boligmaskinen/engine';
+import { formulaParams, LANGUAGE_VERSION } from '@boligmaskinen/engine';
 import { Store } from './store';
 
 const values = (code: string) => Object.fromEntries(formulaParams(code).map((p) => [p.name, p.value]));
@@ -59,6 +59,16 @@ describe('Store', () => {
     TestBed.resetTestingModule();
     const reloaded = TestBed.inject(Store);
     expect(values(reloaded.blocks()[0].code)).toEqual({ full: 45, zero: 60 });
+  });
+
+  it('brings blocks saved for an older version of the block language up to date when it loads them', () => {
+    localStorage.setItem('boligmaskinen.prototype.v3', JSON.stringify({
+      blocks: [{ id: 'b1', name: 'Forest', code: 'ramp(forest, 300, 3000)', role: 'want', weight: 5 }],
+      places: [],
+      view: {},
+    }));
+    TestBed.resetTestingModule();
+    expect(TestBed.inject(Store).blocks()[0]).toMatchObject({ code: 'ramp(forest, 300, 3000)', language: LANGUAGE_VERSION });
   });
 
   it('carries over what the first prototype saved', () => {
