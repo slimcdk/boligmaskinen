@@ -134,6 +134,13 @@ Like free values in GeoGebra, some `let` lines become controls in the side panel
 - **Distances** (`(m)`) get a slider on a square-root scale, so short distances can be set
   precisely.
 - **Moving a control** rewrites the number in the code, so the code is always the whole truth.
+- **Turning a block around.** A block whose ramp's ends are called `full` and `zero` can be turned
+  around: "Turn around" in the panel swaps the two values in the code. Full points then go to the
+  other end, such as noise instead of quiet. `ramp()` works in either direction, so nothing else
+  changes. The labels "Full points at" and "No points at" hold either way, and the panel's summary
+  says which way the block points ("Full points up to 45 dB" or "Full points from 65 dB").
+  A predefined block that still has its own name takes its opposite name ("Quiet" becomes
+  "Noisy"), and Reset brings back both.
 
 ## When the code is wrong
 

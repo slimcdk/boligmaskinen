@@ -1,7 +1,7 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 import {
   Block, blockFrom, DEFAULT_CRITERIA, DEFAULT_VIEW, formulaParams, LANGUAGE_VERSION, LIBRARY, MODES, Place, placeTemplate,
-  placeValueName, renameValues, setParam, templateOf, upgradeBlock, ViewState,
+  placeValueName, renameValues, setParam, templateOf, turnAround, upgradeBlock, ViewState,
 } from '@boligmaskinen/engine';
 import { migrateV1, migrateV2, Migrated, SavedV1, SavedV2 } from './migrate';
 
@@ -69,7 +69,26 @@ export class Store {
   resetBlock(id: string): void {
     const block = this.blocks().find((b) => b.id === id);
     const template = block && templateOf(block, this.places());
-    if (template) this.updateBlock(id, { code: template.code, language: LANGUAGE_VERSION });
+    if (!block || !template) return;
+    // A block that was turned around also gets its own name back
+    const name = template.opposite && block.name === template.opposite ? template.name : block.name;
+    this.updateBlock(id, { code: template.code, language: LANGUAGE_VERSION, name });
+  }
+
+  /**
+   * Turn a block around: full points at the other end of its ramp, such as noise instead of quiet.
+   * A predefined block that still has its own name takes its opposite name, and back again.
+   */
+  turnAround(id: string): void {
+    const block = this.blocks().find((b) => b.id === id);
+    const code = block && turnAround(block.code);
+    if (!block || !code) return;
+    const template = templateOf(block, this.places());
+    const name = !template?.opposite ? block.name
+      : block.name === template.name ? template.opposite
+      : block.name === template.opposite ? template.name
+      : block.name;
+    this.updateBlock(id, { code, name });
   }
 
   removeBlock(id: string): void {

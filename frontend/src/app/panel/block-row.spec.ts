@@ -48,6 +48,23 @@ describe('BlockRow', () => {
     expect(element.querySelector('.weight')).toBeNull();
   });
 
+  it('turns a block with a ramp around, and offers nothing to turn for one without', () => {
+    const { fixture, element } = render('noise');
+    element.querySelector<HTMLButtonElement>('button.expand')!.click();
+    fixture.detectChanges();
+    const button = [...element.querySelectorAll<HTMLButtonElement>('.actions button')].find((b) => b.textContent!.includes('Turn around'))!;
+    button.click();
+    fixture.componentRef.setInput('block', store.blocks()[0]);
+    fixture.detectChanges();
+    expect(element.querySelector('.name')!.textContent).toBe('Noisy');
+    expect(element.querySelector('.rule')!.textContent!.trim()).toBe('No points below 45 dB · Full points from 65 dB');
+
+    const zone = render('zone');
+    zone.element.querySelector<HTMLButtonElement>('button.expand')!.click();
+    zone.fixture.detectChanges();
+    expect(zone.element.textContent).not.toContain('Turn around');
+  });
+
   it('folds out the controls and the role', () => {
     const { fixture, element } = render('forest');
     element.querySelector<HTMLButtonElement>('button.expand')!.click();

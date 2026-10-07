@@ -40,6 +40,9 @@
       <p class="note">{{ block().role === 'must' ? 'Passes' : 'Score' }}: {{ preview() }}</p>
     }
     <div class="actions">
+      @if (canTurnAround()) {
+        <button mat-button (click)="turnAround()" matTooltip="Full points at the other end"><mat-icon>swap_horiz</mat-icon>Turn around</button>
+      }
       <button mat-button (click)="editCode()"><mat-icon>code</mat-icon>Code</button>
       <button mat-button (click)="remove()"><mat-icon>delete</mat-icon>Remove</button>
     </div>

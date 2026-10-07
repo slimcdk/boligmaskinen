@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoRange, compileFormula, formulaParams, renameValues, setParam, toVariableName } from './formula.ts';
+import { autoRange, compileFormula, formulaParams, renameValues, setParam, toVariableName, turnAround } from './formula.ts';
 
 const run = (code: string, inputs: Record<string, number> = {}) => {
   const result = compileFormula(code, Object.keys(inputs));
@@ -124,5 +124,30 @@ describe('helpers', () => {
     expect(toVariableName('Børnehave')).toBe('boernehave');
     expect(toVariableName('2nd home')).toBe('v_2nd_home');
     expect(toVariableName('min')).toBe('min_value');
+  });
+});
+
+describe('turnAround', () => {
+  const quiet = '// Road noise, Lden in dB.\nlet full = slider(45, 30, 80, 1)  // Full points up to (dB)\nlet zero = slider(65, 30, 80, 1)  // No points from (dB)\nramp(noise, full, zero)';
+
+  it('swaps the two ends of a ramp and gives their lines labels that hold either way', () => {
+    expect(turnAround(quiet)).toBe('// Road noise, Lden in dB.\nlet full = slider(65, 30, 80, 1)  // Full points at (dB)\nlet zero = slider(45, 30, 80, 1)  // No points at (dB)\nramp(noise, full, zero)');
+    const back = turnAround(turnAround(quiet)!)!;
+    expect(formulaParams(back).map((p) => [p.name, p.value, p.label])).toEqual([['full', 45, 'Full points at'], ['zero', 65, 'No points at']]);
+  });
+
+  it('scores the other end once turned around', () => {
+    const run = (code: string, db: number) => (compileFormula(code, ['noise']) as { ok: true; formula: { run(v: number[]): number } }).formula.run([db]);
+    expect([run(quiet, 45), run(quiet, 65)]).toEqual([1, 0]);
+    expect([run(turnAround(quiet)!, 45), run(turnAround(quiet)!, 65)]).toEqual([0, 1]);
+  });
+
+  it('leaves code without a ramp alone, and a value that would not fit the other slider', () => {
+    expect(turnAround('ramp(forest, 300, 3000)')).toBeNull();
+    expect(turnAround('let byzone = true  // Byzone\nzone == BYZONE && byzone')).toBeNull();
+    expect(turnAround('let full = slider(30, 0, 120, 1)\nlet zero = slider(150, 0, 180, 1)\nramp(work_car, full, zero)')).toBeNull();
+    // Labels the user wrote are kept
+    expect(turnAround('let full = 300  // Close enough (m)\nlet zero = 3000  // Too far (m)\nramp(forest, full, zero)'))
+      .toBe('let full = 3000  // Close enough (m)\nlet zero = 300  // Too far (m)\nramp(forest, full, zero)');
   });
 });

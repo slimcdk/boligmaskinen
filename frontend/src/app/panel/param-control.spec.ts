@@ -28,7 +28,7 @@ describe('ParamControl', () => {
 
   it('shows a number as a slider with its label and unit, and rewrites the code when it moves', () => {
     const { element, block } = render('forest', 'full');
-    expect(element.textContent).toContain('Full points up to');
+    expect(element.textContent).toContain('Full points at');
     expect(element.textContent).toContain('300 m');
     // Distances use a square-root scale: half way along the slider is a quarter of the 20 km range
     const input = element.querySelector<HTMLInputElement>('input[type="range"]')!;

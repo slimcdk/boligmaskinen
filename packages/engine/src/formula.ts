@@ -41,6 +41,8 @@ export interface FormulaParam {
   min: number;
   max: number;
   step: number;
+  /** True when the code sets the range, with slider(…); otherwise it follows the value. */
+  fixedRange: boolean;
   /** choice: what the options are called. */
   options: string[];
   /** Where the value is in the source, to rewrite it. */
@@ -413,17 +415,17 @@ function paramOf(name: string, expr: Expr, pos: number, source: string): Formula
   const { label, unit } = labelOf(source, pos, name);
   const base = { name, label, unit, options: [] as string[] };
   if (expr.t === 'num' && expr.bool && expr.end !== undefined) {
-    return { ...base, kind: 'flag', value: expr.v, min: 0, max: 1, step: 1, start: expr.pos, end: expr.end };
+    return { ...base, kind: 'flag', value: expr.v, min: 0, max: 1, step: 1, fixedRange: true, start: expr.pos, end: expr.end };
   }
   const plain = literal(expr);
-  if (plain) return { ...base, kind: 'number', ...plain, ...autoRange(plain.value) };
+  if (plain) return { ...base, kind: 'number', ...plain, ...autoRange(plain.value), fixedRange: false };
   if (expr.t !== 'call') return null;
   if (expr.name === 'slider') {
     const args = expr.args.map(literal);
     if (args.some((a) => !a)) throw new FormulaSyntaxError('slider() takes plain numbers: slider(value, min, max, step)', expr.pos);
     const [value, min, max, step] = args as { value: number; start: number; end: number }[];
     if (!(min.value < max.value)) throw new FormulaSyntaxError('slider(value, min, max): min has to be below max', expr.pos);
-    return { ...base, kind: 'number', value: value.value, start: value.start, end: value.end, min: min.value, max: max.value, step: step?.value ?? autoRange(max.value).step };
+    return { ...base, kind: 'number', value: value.value, start: value.start, end: value.end, min: min.value, max: max.value, step: step?.value ?? autoRange(max.value).step, fixedRange: true };
   }
   if (expr.name === 'choice') {
     const index = literal(expr.args[0]);
@@ -431,7 +433,7 @@ function paramOf(name: string, expr: Expr, pos: number, source: string): Formula
     if (!index || !Number.isInteger(index.value) || index.value < 1 || index.value > count) {
       throw new FormulaSyntaxError(`choice(n, …): n has to be a whole number from 1 to ${count}`, expr.pos);
     }
-    return { ...base, kind: 'choice', value: index.value, min: 1, max: count, step: 1, options: optionNames(expr.args.slice(1), source), start: index.start, end: index.end };
+    return { ...base, kind: 'choice', value: index.value, min: 1, max: count, step: 1, fixedRange: true, options: optionNames(expr.args.slice(1), source), start: index.start, end: index.end };
   }
   return null;
 }
@@ -516,6 +518,31 @@ export function setParam(source: string, param: FormulaParam, value: number): st
     text = String(Number(value.toFixed(decimals)));
   }
   return source.slice(0, param.start) + text + source.slice(param.end);
+}
+
+/** The label comments of a ramp's two ends, which say which way it points. */
+const END_LABELS = /^(\s*let\s+(full|zero)\s*=[^\n]*?\/\/\s*)(Full points up to|Full points from|No points from|No points below)/gm;
+
+/**
+ * The code turned around: the values of `full` and `zero`, the two ends of a ramp, swap places.
+ * A block that gave full points for little of something then gives them for a lot, and the other
+ * way round. The two lines' labels become "Full points at" and "No points at", which hold in
+ * either direction. Null when the code has no such pair, or one value does not fit the other's
+ * slider.
+ */
+export function turnAround(source: string): string | null {
+  const params = formulaParams(source);
+  const full = params.find((p) => p.name === 'full' && p.kind === 'number');
+  const zero = params.find((p) => p.name === 'zero' && p.kind === 'number');
+  if (!full || !zero || full.value === zero.value) return null;
+  // A plain number's slider follows its value; slider(…) keeps the range the code gives it
+  const fits = (p: FormulaParam, value: number) => !p.fixedRange || (value >= p.min && value <= p.max);
+  if (!fits(full, zero.value) || !fits(zero, full.value)) return null;
+  // The later value first, so the earlier one is still where it was
+  const [first, second] = full.start < zero.start ? [full, zero] : [zero, full];
+  let code = setParam(source, second, (second === full ? zero : full).value);
+  code = setParam(code, first, (first === full ? zero : full).value);
+  return code.replace(END_LABELS, (_match, start: string, name: string) => `${start}${name === 'full' ? 'Full points at' : 'No points at'}`);
 }
 
 /**

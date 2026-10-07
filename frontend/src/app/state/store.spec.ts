@@ -40,6 +40,28 @@ describe('Store', () => {
     expect(values(store.blocks()[0].code)).toEqual({ full: 300, zero: 3000 });
   });
 
+  it('turns a block around under its opposite name, back again, and resets it', () => {
+    store.addTemplate('noise');
+    const id = store.blocks()[0].id;
+    store.turnAround(id);
+    expect(store.blocks()[0]).toMatchObject({ name: 'Noisy' });
+    expect(values(store.blocks()[0].code)).toEqual({ full: 65, zero: 45 });
+    store.turnAround(id);
+    expect(store.blocks()[0]).toMatchObject({ name: 'Quiet' });
+    expect(values(store.blocks()[0].code)).toEqual({ full: 45, zero: 65 });
+    // A name of the user's own stays, and Reset brings back the direction
+    store.turnAround(id);
+    store.updateBlock(id, { name: 'Lively streets' });
+    store.turnAround(id);
+    expect(store.blocks()[0].name).toBe('Lively streets');
+    store.turnAround(id);
+    store.resetBlock(id);
+    expect(values(store.blocks()[0].code)).toEqual({ full: 45, zero: 65 });
+    store.updateBlock(id, { name: 'Noisy' });
+    store.resetBlock(id);
+    expect(store.blocks()[0].name).toBe('Quiet');
+  });
+
   it('gives a new place a block, renames its values with the place and removes it with the place', () => {
     const place = store.addPlace(10, 56);
     store.addBlock({ id: 'custom', name: 'Mine', code: `ramp(min(${'place_1_car'}, school), 0, 30)`, role: 'want', weight: 2 });

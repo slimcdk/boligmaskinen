@@ -47,11 +47,23 @@ test('moving a slider rewrites the code and changes the result', async ({ page }
   const before = await page.locator('app-panel .headline').textContent();
   const row = await expand(page, 'Supermarket');
   // Distance sliders use a square-root scale over 20 km: 30 % of the way is 1.8 km
-  await row.getByRole('slider', { name: 'No points from' }).fill('300');
+  await row.getByRole('slider', { name: 'No points at' }).fill('300');
   await expect(row.locator('.rule')).toContainText('No points from 1.8 km');
   await expect(page.locator('app-panel .headline')).not.toHaveText(before!);
   await row.getByRole('button', { name: 'Code' }).click();
   await expect(page.getByRole('textbox', { name: 'Code' })).toHaveValue(/let zero = slider\(1800, 0, 20000, 50\)/);
+});
+
+test('turning a block around gives full points at the other end', async ({ page }) => {
+  await open(page);
+  await page.locator('mat-chip', { hasText: 'Quiet' }).click();
+  await expect(block(page, 'Quiet').locator('.rule')).toHaveText('Full points up to 45 dB · No points from 65 dB');
+  const row = await expand(page, 'Quiet');
+  await row.getByRole('button', { name: 'Turn around' }).click();
+  const noisy = block(page, 'Noisy');
+  await expect(noisy.locator('.rule')).toHaveText('No points below 45 dB · Full points from 65 dB');
+  await noisy.getByRole('button', { name: 'Code' }).click();
+  await expect(page.getByRole('textbox', { name: 'Code' })).toHaveValue(/let full = slider\(65, .*\/\/ Full points at \(dB\)/);
 });
 
 test('the code editor checks the code and applies it', async ({ page }) => {

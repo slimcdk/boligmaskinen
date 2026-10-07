@@ -10,6 +10,8 @@ import { MODES, placeValueName } from './values.ts';
 export interface BlockTemplate {
   id: string;
   name: string;
+  /** The block's name when it is turned around, e.g. "Noisy" for "Quiet". */
+  opposite?: string;
   group: string;
   description: string;
   role: Role;
@@ -45,18 +47,18 @@ export function criterionCode(c: Criterion): string {
     ].join('\n');
   }
   const s = scaleOf(c);
-  const closer = c.full <= c.zero;
   const unit = s.unit ? ` (${s.unit})` : '';
+  // The labels hold in either direction, so the block can be turned around (turnAround in formula.ts)
   return [
     `// ${c.note}`,
-    `let full = slider(${c.full}, ${s.min}, ${s.max}, ${s.step})  // ${closer ? 'Full points up to' : 'Full points from'}${unit}`,
-    `let zero = slider(${c.zero}, ${s.min}, ${s.max}, ${s.step})  // ${closer ? 'No points from' : 'No points below'}${unit}`,
+    `let full = slider(${c.full}, ${s.min}, ${s.max}, ${s.step})  // Full points at${unit}`,
+    `let zero = slider(${c.zero}, ${s.min}, ${s.max}, ${s.step})  // No points at${unit}`,
     `ramp(${name}, full, zero)`,
   ].join('\n');
 }
 
 export function criterionTemplate(c: Criterion): BlockTemplate {
-  return { id: c.id, name: c.name, group: c.group, description: c.note, role: c.role, weight: c.weight, code: criterionCode(c) };
+  return { id: c.id, name: c.name, opposite: c.opposite, group: c.group, description: c.note, role: c.role, weight: c.weight, code: criterionCode(c) };
 }
 
 /** Blocks that show what code can do beyond one value. */
@@ -113,8 +115,8 @@ export function placeTemplate(place: Place, curve: { mode: TravelMode; full: num
     code: [
       `// Travel time to ${place.name}, estimated from the straight-line distance`,
       `let travel = choice(${index}, ${MODES.map((m) => placeValueName(place, m.mode)).join(', ')})  // Travel by`,
-      `let full = slider(${curve.full}, 0, 120, 1)  // Full points up to (min)`,
-      `let zero = slider(${curve.zero}, 0, 180, 1)  // No points from (min)`,
+      `let full = slider(${curve.full}, 0, 120, 1)  // Full points at (min)`,
+      `let zero = slider(${curve.zero}, 0, 180, 1)  // No points at (min)`,
       'ramp(travel, full, zero)',
     ].join('\n'),
   };

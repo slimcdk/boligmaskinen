@@ -144,9 +144,19 @@ export const MAX_WEIGHT = 10;
 export function blockSummary(block: Block, params: FormulaParam[] = formulaParams(block.code)): string {
   const parts: string[] = [];
   const flags = params.filter((p) => p.kind === 'flag');
+  // The two ends of a ramp are described together, in the direction it points
+  const full = params.find((p) => p.kind === 'number' && p.name === 'full');
+  const zero = params.find((p) => p.kind === 'number' && p.name === 'zero');
+  const ramp = full && zero ? { full, zero } : null;
   for (const p of params) {
-    if (p.kind === 'number') parts.push(`${p.label} ${formatWithUnit(p.value, p.unit)}`);
+    if (p.kind === 'number' && !(ramp && (p === full || p === zero))) parts.push(`${p.label} ${formatWithUnit(p.value, p.unit)}`);
     if (p.kind === 'choice') parts.push(capitalise(p.options[p.value - 1] ?? ''));
+  }
+  if (ramp) {
+    const at = (p: FormulaParam) => formatWithUnit(p.value, p.unit || ramp.full.unit);
+    parts.push(ramp.full.value <= ramp.zero.value
+      ? `Full points up to ${at(ramp.full)} · No points from ${at(ramp.zero)}`
+      : `No points below ${at(ramp.zero)} · Full points from ${at(ramp.full)}`);
   }
   if (flags.length) {
     const on = flags.filter((p) => p.value).map((p) => p.label);
