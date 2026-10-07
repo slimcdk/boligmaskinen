@@ -1,0 +1,47 @@
+<div class="line">
+  <button mat-icon-button class="expand" (click)="open.set(!open())" [attr.aria-expanded]="open()"
+          [attr.aria-label]="(open() ? 'Hide settings for ' : 'Show settings for ') + block().name">
+    <mat-icon>{{ open() ? 'expand_less' : 'expand_more' }}</mat-icon>
+  </button>
+  <div class="text">
+    <div class="name">{{ block().name }}</div>
+    <div class="rule" [class.error]="problem()" [title]="problem() ?? summary()">
+      @if (problem()) {
+        <mat-icon>error_outline</mat-icon>The code needs attention
+      } @else {
+        {{ summary() }}
+      }
+    </div>
+  </div>
+  @if (block().role === 'must') {
+    <span class="required">Required</span>
+  } @else {
+    <div class="weight" [matTooltip]="'Weight in the weighting (0 turns the block off)'">
+      <mat-slider class="weight-slider" min="0" [max]="MAX_WEIGHT" step="1">
+        <input matSliderThumb [value]="block().weight" (input)="onWeight($event)" [attr.aria-label]="'Weight of ' + block().name">
+      </mat-slider>
+      <span class="weight-value">{{ block().weight }}</span>
+    </div>
+  }
+</div>
+
+@if (open()) {
+  <div class="details">
+    @for (p of params(); track p.name) {
+      <app-param-control [param]="p" [block]="block().id" />
+    }
+    <mat-button-toggle-group class="role" hideSingleSelectionIndicator [value]="block().role" (change)="setRole($event.value)" aria-label="Use the block as">
+      <mat-button-toggle value="want">Preference</mat-button-toggle>
+      <mat-button-toggle value="must">Requirement</mat-button-toggle>
+    </mat-button-toggle-group>
+    @if (problem(); as p) {
+      <p class="note error">{{ p }}</p>
+    } @else if (preview()) {
+      <p class="note">{{ block().role === 'must' ? 'Passes' : 'Score' }}: {{ preview() }}</p>
+    }
+    <div class="actions">
+      <button mat-button (click)="editCode()"><mat-icon>code</mat-icon>Code</button>
+      <button mat-button (click)="remove()"><mat-icon>delete</mat-icon>Remove</button>
+    </div>
+  </div>
+}

@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  background: #e7ebe5;
+}
+
+.map.placing ::ng-deep .maplibregl-canvas {
+  cursor: crosshair;
+}
+
+:host ::ng-deep .maplibregl-canvas {
+  cursor: pointer;
+}
+
+:host ::ng-deep .place-pin {
+  width: 28px;
+  height: 28px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--pin, #1f6feb);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: 600 13px/24px Roboto, system-ui, sans-serif;
+  text-align: center;
+  cursor: grab;
+}
+
+:host ::ng-deep .maplibregl-popup-content {
+  font: var(--mat-sys-body-medium);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 260px;
+  box-shadow: var(--mat-sys-level3);
+}
+
+:host ::ng-deep .maplibregl-popup-tip {
+  border-top-color: var(--mat-sys-surface-container-high) !important;
+  border-bottom-color: var(--mat-sys-surface-container-high) !important;
+}
+
+:host ::ng-deep .pop {
+  h3 { margin: 0 0 2px; font: var(--mat-sys-title-medium); }
+  .sub { color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-body-small); margin-bottom: 6px; }
+  table { border-collapse: collapse; width: 100%; font: var(--mat-sys-body-small); }
+  td { padding: 3px 0; border-top: 1px solid var(--mat-sys-outline-variant); vertical-align: top; }
+  td.v { color: var(--mat-sys-on-surface-variant); padding-left: 8px; }
+  td.p { text-align: right; font-variant-numeric: tabular-nums; padding-left: 8px; white-space: nowrap; }
+  td.fail { color: var(--mat-sys-error); font-weight: 600; }
+}
+
+.problem {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(520px, 90%);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-body-medium);
+  box-shadow: var(--mat-sys-level2);
+  z-index: 3;
+}

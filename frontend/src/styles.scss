@@ -1,0 +1,61 @@
+@use '@angular/material' as mat;
+@use 'maplibre-gl/dist/maplibre-gl.css';
+
+// Material 3 theme. `color-scheme: light dark` follows the viewer's system setting;
+// the [data-theme] rules let an explicit light or dark choice win.
+html {
+  height: 100%;
+  color-scheme: light dark;
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$orange-palette,
+    ),
+    typography: Roboto,
+    density: -2,
+  ));
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+}
+
+// Compact toggles for importance and travel mode inside the panel
+app-block-row .role,
+app-param-control .toggles,
+app-code-dialog .role {
+  @include mat.button-toggle-overrides((
+    height: 28px,
+    label-text-size: 12px,
+    shape: 8px,
+  ));
+}
+
+// Expansion panel headers in the side panel: keep the title whole and shorten the summary
+app-panel .mat-expansion-panel-header-title {
+  flex: 0 0 auto;
+}
+
+app-panel .mat-expansion-panel-header-description {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+  text-align: right;
+}

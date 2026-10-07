@@ -1,0 +1,54 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.shell {
+  height: 100%;
+}
+
+.side {
+  width: min(380px, 92vw);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.content {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-area {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.open-panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+}
+
+.placing-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: var(--mat-sys-label-large);
+  box-shadow: var(--mat-sys-level2);
+}
+
+.legend {
+  position: absolute;
+  right: 12px;
+  bottom: 34px;
+  z-index: 2;
+}

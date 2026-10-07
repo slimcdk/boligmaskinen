@@ -1,0 +1,113 @@
+<div mat-dialog-title class="bar">
+  <div class="title">
+    <h2>Data jobs</h2>
+    <p>Prototype: runs are simulated until the backend runs them</p>
+  </div>
+  <mat-chip-set aria-label="Summary">
+    <mat-chip [class.warn]="counts().failing">{{ counts().failing }} failing</mat-chip>
+    <mat-chip>{{ counts().running }} running</mat-chip>
+    <mat-chip>{{ counts().blocked }} waiting for access</mat-chip>
+  </mat-chip-set>
+</div>
+
+<mat-dialog-content class="body">
+  <section aria-label="Tasks">
+    <table mat-table [dataSource]="jobs.jobs()" class="tasks">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Task</th>
+        <td mat-cell *matCellDef="let job">
+          <div class="name">{{ job.name }} <span class="source">{{ job.source }}</span></div>
+          <div class="description">{{ job.description }}</div>
+          @if (job.blocked) {
+            <span class="blocked"><mat-icon>lock</mat-icon>{{ job.blocked }}</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="schedule">
+        <th mat-header-cell *matHeaderCellDef>Schedule</th>
+        <td mat-cell *matCellDef="let job" [title]="job.schedule">{{ describe(job.schedule) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="last">
+        <th mat-header-cell *matHeaderCellDef>Last run</th>
+        <td mat-cell *matCellDef="let job">
+          @if (jobs.latest().get(job.id); as run) {
+            @if (run.status === 'running') {
+              <div class="status running"><mat-icon>{{ icon(run.status) }}</mat-icon>Running</div>
+              <mat-progress-bar mode="determinate" [value]="(run.progress ?? 0) * 100" [attr.aria-label]="job.name + ' progress'"></mat-progress-bar>
+            } @else {
+              <div class="status" [class]="run.status" [title]="exact(run.startedAt)"><mat-icon>{{ icon(run.status) }}</mat-icon>{{ ago(run.finishedAt ?? run.startedAt) }}</div>
+              <div class="description">{{ duration(run) }}{{ run.result ? ' · ' + run.result : '' }}</div>
+            }
+          } @else {
+            <span class="description">Never</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="next">
+        <th mat-header-cell *matHeaderCellDef>Next run</th>
+        <td mat-cell *matCellDef="let job" [title]="nextExact(job)">{{ when(job) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Actions</span></th>
+        <td mat-cell *matCellDef="let job" class="actions">
+          <mat-slide-toggle [checked]="job.enabled" [disabled]="!!job.blocked" (change)="jobs.setEnabled(job.id, $event.checked)"
+                            [attr.aria-label]="'Schedule ' + job.name"></mat-slide-toggle>
+          <button mat-icon-button (click)="jobs.runNow(job.id)" [disabled]="!!job.blocked || !job.enabled || jobs.isActive(job.id)"
+                  [matTooltip]="'Run ' + job.name + ' now'" [attr.aria-label]="'Run ' + job.name + ' now'">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="taskColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: taskColumns" [class.inactive]="row.blocked || !row.enabled"></tr>
+    </table>
+  </section>
+
+  <mat-expansion-panel class="history">
+    <mat-expansion-panel-header>
+      <mat-panel-title>Recent runs</mat-panel-title>
+      <mat-panel-description>Results and logs</mat-panel-description>
+    </mat-expansion-panel-header>
+    <table mat-table [dataSource]="history()" class="runs">
+      <ng-container matColumnDef="job">
+        <th mat-header-cell *matHeaderCellDef>Task</th>
+        <td mat-cell *matCellDef="let run">{{ names().get(run.jobId) }} <span class="source">{{ run.trigger }}</span></td>
+      </ng-container>
+      <ng-container matColumnDef="started">
+        <th mat-header-cell *matHeaderCellDef>Started</th>
+        <td mat-cell *matCellDef="let run" [title]="exact(run.startedAt)">{{ ago(run.startedAt) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="duration">
+        <th mat-header-cell *matHeaderCellDef>Duration</th>
+        <td mat-cell *matCellDef="let run">{{ duration(run) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="result">
+        <th mat-header-cell *matHeaderCellDef>Result</th>
+        <td mat-cell *matCellDef="let run">{{ run.message ?? run.result ?? '' }}{{ run.bytes ? ' · ' + bytes(run.bytes) : '' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let run"><span class="status" [class]="run.status"><mat-icon>{{ icon(run.status) }}</mat-icon>{{ statusLabel(run.status) }}</span></td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="runColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: runColumns" class="clickable" [class.selected]="row.id === selected()" (click)="select(row)"
+          tabindex="0" (keydown.enter)="select(row)"></tr>
+    </table>
+    @if (selectedRun(); as run) {
+      <div class="log" role="log" [attr.aria-label]="'Log of ' + names().get(run.jobId)">
+        <div class="log-head">
+          <strong>{{ names().get(run.jobId) }}</strong> · {{ exact(run.startedAt) }}
+          @if (run.status === 'running') {
+            <button mat-button (click)="jobs.cancel(run.id)"><mat-icon>stop</mat-icon>Cancel</button>
+          }
+        </div>
+        @for (line of run.log; track $index) {
+          <div class="line" [class]="line.level"><time>{{ line.at.slice(11, 19) }}</time>{{ line.text }}</div>
+        }
+      </div>
+    }
+  </mat-expansion-panel>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-flat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

@@ -1,0 +1,124 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .title {
+    flex: 1;
+  }
+
+  h2 {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+  }
+
+  p {
+    margin: 2px 0 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .warn {
+    --mat-chip-label-text-color: var(--mat-sys-error);
+  }
+}
+
+.history {
+  margin-top: 16px;
+  --mat-expansion-container-background-color: transparent;
+}
+
+table {
+  width: 100%;
+  background: transparent;
+}
+
+.name {
+  font: var(--mat-sys-title-small);
+}
+
+.source {
+  margin-left: 6px;
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.description {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.blocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-tertiary);
+
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+
+  &.succeeded mat-icon { color: #2e7d32; }
+  &.failed { color: var(--mat-sys-error); }
+  &.running mat-icon { color: var(--mat-sys-primary); }
+  &.cancelled mat-icon { color: var(--mat-sys-outline); }
+}
+
+.actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+tr.inactive td {
+  opacity: 0.7;
+}
+
+tr.clickable {
+  cursor: pointer;
+
+  &:hover,
+  &.selected {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+.log {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  font: 12px/1.6 ui-monospace, 'Roboto Mono', monospace;
+
+  .log-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font: var(--mat-sys-body-medium);
+  }
+
+  .line time {
+    margin-right: 10px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .warn { color: #b26a00; }
+  .error { color: var(--mat-sys-error); }
+}

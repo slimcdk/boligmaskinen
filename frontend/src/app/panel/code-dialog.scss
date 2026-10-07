@@ -1,0 +1,141 @@
+.title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .name {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    border-bottom: 1px dashed transparent;
+    background: transparent;
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-title-large);
+    padding: 2px 0;
+
+    &:hover,
+    &:focus {
+      border-bottom-color: var(--mat-sys-outline);
+      outline: none;
+    }
+  }
+}
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  max-height: 70vh;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.code {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 320px;
+  padding: 10px 12px;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+  font: 13px/1.5 ui-monospace, 'Roboto Mono', monospace;
+  white-space: pre;
+  resize: vertical;
+  tab-size: 2;
+
+  &:focus {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -1px;
+  }
+}
+
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: #2e7d32;
+
+  &.error {
+    color: var(--mat-sys-error);
+  }
+
+  mat-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+code {
+  font: 12px ui-monospace, 'Roboto Mono', monospace;
+}
+
+.reference {
+  overflow-y: auto;
+  padding-right: 4px;
+
+  h3 {
+    margin: 12px 0 4px;
+    font: var(--mat-sys-title-small);
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h4 {
+    margin: 10px 0 2px;
+    font: var(--mat-sys-label-medium);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  code {
+    color: var(--mat-sys-primary);
+  }
+
+  span {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+@media (max-width: 760px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+}

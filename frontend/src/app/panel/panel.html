@@ -1,0 +1,130 @@
+<header class="head">
+  <div class="title">
+    <h1>Boligmaskinen</h1>
+    <p>Pilot{{ region() ? ' · ' + region() : '' }} · {{ cell() }} m cells from open data</p>
+  </div>
+  <button mat-icon-button (click)="closePanel.emit()" aria-label="Hide panel"><mat-icon>chevron_left</mat-icon></button>
+</header>
+@if (data.state() === 'loading') {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading data"></mat-progress-bar>
+}
+
+<div class="body">
+  @if (data.state() === 'error') {
+    <p class="error">{{ data.message() }}</p>
+  }
+
+
+  <section class="result" aria-label="Result">
+    @if (stats()?.hasPreferences) {
+      <div class="headline">{{ headline() }}</div>
+      <div class="subline">{{ subline() }}</div>
+      <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().show" (change)="setView({ show: $event.value })" aria-label="Which cells to show">
+        <mat-button-toggle value="all">All</mat-button-toggle>
+        <mat-button-toggle value="top">Best %</mat-button-toggle>
+        <mat-button-toggle value="abs">Min. points</mat-button-toggle>
+      </mat-button-toggle-group>
+      @if (view().show === 'top') {
+        <mat-slider discrete min="1" max="100" step="1" [displayWith]="best">
+          <input matSliderThumb [value]="view().top" (input)="onLimit($event)" aria-label="Share of the best cells to show">
+        </mat-slider>
+      } @else if (view().show === 'abs') {
+        <mat-slider discrete min="0" max="100" step="1">
+          <input matSliderThumb [value]="view().abs" (input)="onLimit($event)" aria-label="Lowest points to show">
+        </mat-slider>
+      }
+      <app-histogram [histogram]="stats()!.histogram" [limit]="stats()!.limit" [showLimit]="view().show !== 'all'" [lo]="stats()!.lo" [hi]="stats()!.hi" />
+    } @else {
+      <div class="empty">
+        <h2>Where would you like to live?</h2>
+        <p>Pick what matters to you. The map colours every {{ cell() }} m cell by how well it fits.</p>
+        @if (suggestions().length) {
+          <mat-chip-set aria-label="Suggestions">
+            @for (c of suggestions(); track c.id) {
+              <mat-chip (click)="store.addTemplate(c.id)" (keydown.enter)="store.addTemplate(c.id)" tabindex="0"><mat-icon matChipAvatar>add</mat-icon>{{ c.name }}</mat-chip>
+            }
+          </mat-chip-set>
+        }
+      </div>
+    }
+  </section>
+
+  <section aria-labelledby="t-criteria">
+    <div class="section-head">
+      <h2 id="t-criteria">What matters to you</h2>
+      <button mat-stroked-button (click)="openCatalog()"><mat-icon>add</mat-icon>Add</button>
+    </div>
+    @for (b of store.blocks(); track b.id) {
+      <app-block-row [block]="b" />
+    } @empty {
+      <p class="hint">Nothing chosen yet. Add a predefined block, an example of code, or one of the suggestions above.</p>
+    }
+  </section>
+
+  <section aria-labelledby="t-places">
+    <div class="section-head">
+      <h2 id="t-places">Your places</h2>
+      <button mat-stroked-button (click)="togglePlacing()" [class.active]="store.placing()">
+        <mat-icon>{{ store.placing() ? 'close' : 'add_location_alt' }}</mat-icon>{{ store.placing() ? 'Cancel' : 'Add place' }}
+      </button>
+    </div>
+    @if (store.placing()) {
+      <p class="hint strong">Click on the map where the place is.</p>
+    }
+    @for (p of store.places(); track p.id; let i = $index) {
+      <div class="place">
+        <span class="pin" [style.background]="colour(i)" aria-hidden="true">{{ i + 1 }}</span>
+        <input class="name" [value]="p.name" (change)="rename(p.id, $event)" aria-label="Name of the place" maxlength="40">
+        <button mat-icon-button (click)="store.removePlace(p.id)" [attr.aria-label]="'Remove ' + p.name"><mat-icon>close</mat-icon></button>
+      </div>
+    } @empty {
+      @if (!store.placing()) {
+        <p class="hint">Add work, family, friends or anything else you want to be close to. Each place gets a block with the travel time to it. Drag a pin to move it.</p>
+      }
+    }
+  </section>
+
+  <mat-accordion multi displayMode="flat">
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Map settings</mat-panel-title>
+        <mat-panel-description>{{ mapSummary() }}</mat-panel-description>
+      </mat-expansion-panel-header>
+      <div class="settings">
+        <span class="label">Smoothing</span>
+        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().smooth" (change)="setView({ smooth: $event.value })" aria-label="Smoothing">
+          <mat-button-toggle [value]="0">Off</mat-button-toggle>
+          <mat-button-toggle [value]="1">Light</mat-button-toggle>
+          <mat-button-toggle [value]="2">Strong</mat-button-toggle>
+        </mat-button-toggle-group>
+        <span class="label">Cells</span>
+        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().cells" (change)="setView({ cells: $event.value })" aria-label="Cells">
+          <mat-button-toggle value="homes">Where homes are</mat-button-toggle>
+          <mat-button-toggle value="land">All land</mat-button-toggle>
+        </mat-button-toggle-group>
+        <mat-checkbox [checked]="view().showBelow" [disabled]="view().show === 'all'" (change)="setView({ showBelow: $event.checked })">Show cells below the limit in grey</mat-checkbox>
+        <span class="label">Opacity</span>
+        <mat-slider discrete min="0.2" max="1" step="0.05" [displayWith]="percent">
+          <input matSliderThumb [value]="view().opacity" (input)="onOpacity($event)" aria-label="Heatmap opacity">
+        </mat-slider>
+      </div>
+    </mat-expansion-panel>
+
+  </mat-accordion>
+</div>
+
+<footer class="foot">
+  <button mat-button (click)="openAbout()"><mat-icon>info</mat-icon>About the data</button>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="openJobs()" matTooltip="Data jobs" aria-label="Data jobs"><mat-icon>settings</mat-icon></button>
+  @let v = version();
+  @if (v.url) {
+    <a class="version" [href]="v.url" target="_blank" rel="noopener" [title]="v.title" [attr.aria-label]="'Version ' + v.text + ' on GitHub'">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg>{{ v.text }}
+    </a>
+  } @else {
+    <span class="version" [title]="v.title" [attr.aria-label]="'Version ' + v.text">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg>{{ v.text }}
+    </span>
+  }
+</footer>

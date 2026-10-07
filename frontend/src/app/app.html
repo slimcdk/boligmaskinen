@@ -1,0 +1,17 @@
+<mat-sidenav-container class="shell" autosize>
+  <mat-sidenav class="side" [mode]="mobile() ? 'over' : 'side'" [opened]="panelOpen()" (openedChange)="panelOpen.set($event); onPanelToggled()">
+    <app-panel (closePanel)="panelOpen.set(false)" />
+  </mat-sidenav>
+  <mat-sidenav-content class="content">
+    <div class="map-area">
+      <app-map-view />
+      @if (!panelOpen()) {
+        <button mat-flat-button class="open-panel" (click)="panelOpen.set(true)"><mat-icon>tune</mat-icon>What matters to you</button>
+      }
+      @if (store.placing()) {
+        <div class="placing-hint" role="status">Click on the map to add the place · Esc to cancel</div>
+      }
+      <app-legend class="legend" />
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

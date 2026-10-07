@@ -1,0 +1,18 @@
+[project]
+name = "boligmaskinen-pilot"
+version = "0.1.0"
+description = "Pilot: location-suitability grid for East Jutland built from open data"
+requires-python = ">=3.12"
+dependencies = [
+    "geopandas>=1.0",
+    "pyogrio>=0.10",
+    "shapely>=2.0",
+    "pyproj>=3.7",
+    "numpy>=2.0",
+    "scipy>=1.14",
+    "rasterio>=1.4",
+    "osmium>=4.0",
+    "pillow>=11.0",
+    "openpyxl>=3.1",
+    "httpx>=0.28",
+]

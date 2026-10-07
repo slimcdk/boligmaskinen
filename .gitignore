@@ -1,0 +1,9 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Benchmark builds (docs/benchmarks)
+docs/benchmarks/**/blocks.mjs
+docs/benchmarks/**/bench_rs
