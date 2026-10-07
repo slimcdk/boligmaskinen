@@ -23,7 +23,23 @@ uv run python -I web/pack_site.py "$WORK/out/site" "$WORK/raw/basemap/denmark_z1
 - The rasters are sampled onto a Web Mercator display grid, so the browser can draw them
   directly. The grid is 200 m for all of Denmark and 100 m for `--region oestjylland`.
 - All of Denmark takes about 2.5 minutes and 3.7 GB of memory.
+- `--region aarhus` builds only Aarhus Kommune, in 15 seconds. It is the frontend's test
+  data pack (see below).
 - `docs/data-sources.md` in the repository root describes each source and how it is fetched.
+
+## Test data pack
+
+The frontend's end-to-end tests use a small data pack for Aarhus Kommune, committed in
+`frontend/e2e/data-pack` (about 5 MB). After changes to the pipeline or the pack format, rebuild
+it from the national build's downloads, OSM extract, styles, sprites and world layers:
+
+```sh
+uv run python -I pipeline/build_grid.py "$WORK/raw" "$WORK/work/osm" "$WORK/out/test-site/data" --region aarhus
+cp -r "$WORK/out/site/sprites" "$WORK/out/site/world" "$WORK/out/site"/style-layers*.json "$WORK/out/test-site/"
+"$WORK/tools/pmtiles" extract "$WORK/raw/basemap/denmark_z12.pmtiles" "$WORK/raw/basemap/aarhus_z11.pmtiles" \
+    --region="$WORK/out/test-site/data/basemap-region.geojson" --maxzoom=11
+uv run python -I web/pack_site.py "$WORK/out/test-site" "$WORK/raw/basemap/aarhus_z11.pmtiles" "$WORK/out/site/fonts" ../frontend/e2e/data-pack
+```
 
 ## Page
 
@@ -34,8 +50,11 @@ plus the scoring engine, which uses one lookup table per criterion.
 - `web/pack_site.py` packs the binary files into byte-container PNGs and the glyphs into
   JSON, because the artifact host only serves standard web types.
 
-The basemap style comes from `@protomaps/basemaps` (flavour "light", Danish labels), with
-font names rewritten to `noto-regular`, `noto-medium` and `noto-italic`.
+The basemap styles come from `@protomaps/basemaps` (flavours "light" and "dark", Danish labels),
+with font names rewritten to `noto-regular`, `noto-medium` and `noto-italic`. The app uses
+`style-layers.json` and `sprites/light` in light mode and `style-layers-dark.json` and
+`sprites/dark` in dark mode. The two flavours have the same layers, so the app switches by
+changing colours only.
 
 ## Sources
 

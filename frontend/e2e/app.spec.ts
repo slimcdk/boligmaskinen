@@ -23,10 +23,11 @@ async function cellsShown(page: Page): Promise<number> {
   return Number(/([\d,]+) cells/.exec(text ?? '')![1].replace(/,/g, ''));
 }
 
-test('shows the map of Denmark and asks what matters', async ({ page }) => {
+test('shows the map of the region and asks what matters', async ({ page }) => {
   await open(page);
   await expect(page.getByRole('heading', { name: 'Where would you like to live?' })).toBeVisible();
-  await expect(page.locator('app-panel .head p')).toContainText('Danmark');
+  // The test data pack covers Aarhus Kommune
+  await expect(page.locator('app-panel .head p')).toContainText('Aarhus Kommune');
   await expect(page.locator('.problem')).toHaveCount(0);
 });
 
@@ -124,7 +125,7 @@ async function zoom(page: Page): Promise<number> {
 test('the whole world is open to explore', async ({ page }) => {
   await open(page);
   await expect.poll(() => zoom(page)).toBeGreaterThan(5);
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     await page.locator('.maplibregl-ctrl-zoom-out').click();
     await page.waitForTimeout(300);
   }

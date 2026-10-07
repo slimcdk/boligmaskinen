@@ -7,7 +7,42 @@
 .map {
   position: absolute;
   inset: 0;
-  background: #e7ebe5;
+}
+
+// MapLibre's controls in the theme's colours. Their icons are dark SVGs, so dark mode inverts them.
+:host ::ng-deep {
+  .maplibregl-ctrl-group {
+    background: var(--mat-sys-surface-container-high);
+    box-shadow: var(--mat-sys-level1);
+  }
+
+  .maplibregl-ctrl-group button + button {
+    border-top-color: var(--mat-sys-outline-variant);
+  }
+
+  .maplibregl-ctrl button:not(:disabled):hover {
+    background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+  }
+
+  .maplibregl-ctrl.maplibregl-ctrl-attrib {
+    background: color-mix(in srgb, var(--mat-sys-surface-container-high) 80%, transparent);
+    color: var(--mat-sys-on-surface-variant);
+
+    a {
+      color: var(--mat-sys-on-surface);
+    }
+  }
+
+  .maplibregl-ctrl-attrib.maplibregl-compact {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+.map.dark ::ng-deep {
+  .maplibregl-ctrl-icon,
+  .maplibregl-ctrl-attrib-button {
+    filter: invert(1);
+  }
 }
 
 .map.placing ::ng-deep .maplibregl-canvas {

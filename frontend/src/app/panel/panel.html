@@ -116,6 +116,7 @@
 <footer class="foot">
   <button mat-button (click)="openAbout()"><mat-icon>info</mat-icon>About the data</button>
   <span class="spacer"></span>
+  <app-theme-toggle />
   <button mat-icon-button (click)="openJobs()" matTooltip="Data jobs" aria-label="Data jobs"><mat-icon>settings</mat-icon></button>
   @let v = version();
   @if (v.url) {

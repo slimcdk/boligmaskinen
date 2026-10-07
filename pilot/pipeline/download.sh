@@ -58,7 +58,7 @@ done
 curl -sSL -o "$WORK/tools/pmtiles.tgz" "https://github.com/protomaps/go-pmtiles/releases/download/v1.31.2/go-pmtiles_1.31.2_Linux_x86_64.tar.gz"
 tar -xzf "$WORK/tools/pmtiles.tgz" -C "$WORK/tools" pmtiles
 
-# Basemap fonts, icons and style (Protomaps "light" flavour with Danish labels)
+# Basemap fonts, icons and styles (Protomaps "light" and "dark" flavours with Danish labels)
 SITE="$WORK/out/site"
 mkdir -p "$SITE/fonts" "$SITE/sprites" "$WORK/tools/style"
 for pair in "Noto Sans Regular:noto-regular" "Noto Sans Medium:noto-medium" "Noto Sans Italic:noto-italic"; do
@@ -67,12 +67,18 @@ for pair in "Noto Sans Regular:noto-regular" "Noto Sans Medium:noto-medium" "Not
     curl -sS -o "$SITE/fonts/$id/$range.pbf" "https://protomaps.github.io/basemaps-assets/fonts/${name// /%20}/$range.pbf"
   done
 done
-for f in light.json light.png light@2x.json light@2x.png; do
-  curl -sS -o "$SITE/sprites/$f" "https://protomaps.github.io/basemaps-assets/sprites/v4/$f"
+for flavour in light dark; do
+  for f in "$flavour.json" "$flavour.png" "$flavour@2x.json" "$flavour@2x.png"; do
+    curl -sS -o "$SITE/sprites/$f" "https://protomaps.github.io/basemaps-assets/sprites/v4/$f"
+  done
 done
 (cd "$WORK/tools/style" && npm init -y >/dev/null && npm install --silent @protomaps/basemaps@5 \
-  && node --input-type=module -e 'import { layers, namedFlavor } from "@protomaps/basemaps"; console.log(JSON.stringify(layers("protomaps", namedFlavor("light"), { lang: "da" })))' > layers_light_da.json)
-python3 -I - "$WORK/tools/style/layers_light_da.json" "$SITE/style-layers.json" <<'PY'
+  && for flavour in light dark; do
+    node --input-type=module -e "import { layers, namedFlavor } from '@protomaps/basemaps'; console.log(JSON.stringify(layers('protomaps', namedFlavor('$flavour'), { lang: 'da' })))" > "layers_${flavour}_da.json"
+  done)
+# The app reads style-layers.json in light mode and style-layers-dark.json in dark mode
+for pair in light:style-layers.json dark:style-layers-dark.json; do
+python3 -I - "$WORK/tools/style/layers_${pair%%:*}_da.json" "$SITE/${pair#*:}" <<'PY'
 import json, sys
 rename = {"Noto Sans Regular": "noto-regular", "Noto Sans Medium": "noto-medium", "Noto Sans Italic": "noto-italic"}
 def walk(node):
@@ -85,5 +91,6 @@ def walk(node):
     return node
 json.dump(walk(json.load(open(sys.argv[1]))), open(sys.argv[2], "w"), separators=(",", ":"))
 PY
+done
 
 echo "Downloaded into $RAW"

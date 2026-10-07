@@ -1,11 +1,9 @@
 @use '@angular/material' as mat;
 @use 'maplibre-gl/dist/maplibre-gl.css';
 
-// Material 3 theme. `color-scheme: light dark` follows the viewer's system setting;
-// the [data-theme] rules let an explicit light or dark choice win.
+// Material 3 theme. Its colours are light-dark() pairs, so `color-scheme` picks the theme.
 html {
   height: 100%;
-  color-scheme: light dark;
   @include mat.theme((
     color: (
       primary: mat.$azure-palette,
@@ -14,13 +12,32 @@ html {
     typography: Roboto,
     density: -2,
   ));
+
+  // Colours Material has no role for
+  --app-success: light-dark(#2e7d32, #81c995);
+  --app-warning: light-dark(#b26a00, #ffb95c);
 }
 
-html[data-theme='light'] {
+// `light dark` follows the viewer's system setting. A page that embeds the app may pin a theme
+// with data-theme on the root (the artifact viewer does), and the viewer's choice in the app,
+// data-scheme, wins over both (see ThemeService). `html:root` outranks a host's `:root` reset.
+html:root {
+  color-scheme: light dark;
+}
+
+html:root[data-theme='light'] {
   color-scheme: light;
 }
 
-html[data-theme='dark'] {
+html:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html:root[data-scheme='light'] {
+  color-scheme: light;
+}
+
+html:root[data-scheme='dark'] {
   color-scheme: dark;
 }
 

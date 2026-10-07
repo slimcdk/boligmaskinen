@@ -1,12 +1,14 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
+import { Scheme, ThemeService } from '../theme/theme.service';
 import { BlockInputs, evaluateBlocks } from '../scoring/blocks';
 import { boxBlur, decodeValue, DecodeContext, lowerLimit, percentile, total } from '../scoring/engine';
 import { compileCached } from '../scoring/formula';
 import { minutesLayer, mercatorFrame, MercatorFrame } from '../scoring/travel';
 import { Grid } from '../scoring/types';
 import { DATA_VALUES, formatValueOf, placeValues, ValueInfo } from '../scoring/values';
+import { BELOW_LIMIT, RAMPS, Rgb } from './colours';
 
 export interface HeatStats {
   hasPreferences: boolean;
@@ -25,26 +27,16 @@ export interface Breakdown {
   rows: { name: string; value: string; result: string; failed: boolean }[];
 }
 
-/** Sequential single-hue ramp (light to dark orange), 101 steps. */
-export const RAMP: [number, number, number][] = (() => {
-  const stops: [number, [number, number, number]][] = [
-    [0, [254, 230, 206]], [25, [253, 174, 107]], [50, [241, 105, 19]], [75, [217, 72, 1]], [100, [127, 39, 4]],
-  ];
-  const out: [number, number, number][] = [];
-  for (let s = 0; s <= 100; s++) {
-    let j = 0;
-    while (j < stops.length - 2 && s > stops[j + 1][0]) j++;
-    const [s0, c0] = stops[j];
-    const [s1, c1] = stops[j + 1];
-    const t = (s - s0) / (s1 - s0);
-    out.push([0, 1, 2].map((k) => Math.round(c0[k] + (c1[k] - c0[k]) * t)) as [number, number, number]);
-  }
-  return out;
-})();
-
-/** The ramp as RGB packed into the low bytes of a little-endian RGBA pixel. */
-const RAMP_PACKED = Uint32Array.from(RAMP, ([r, g, b]) => (b << 16) | (g << 8) | r);
-const BELOW_LIMIT = (90 << 24) | (133 << 16) | (129 << 8) | 125;
+/** Colours as little-endian RGBA pixels; the ramps leave alpha to the renderer. */
+const pixel = ([r, g, b]: Rgb, alpha = 0) => ((alpha << 24) | (b << 16) | (g << 8) | r) >>> 0;
+const RAMP_PACKED: Record<Scheme, Uint32Array> = {
+  light: Uint32Array.from(RAMPS.light, (c) => pixel(c)),
+  dark: Uint32Array.from(RAMPS.dark, (c) => pixel(c)),
+};
+const BELOW_LIMIT_PACKED: Record<Scheme, number> = {
+  light: pixel(BELOW_LIMIT.light.rgb, BELOW_LIMIT.light.alpha),
+  dark: pixel(BELOW_LIMIT.dark.rgb, BELOW_LIMIT.dark.alpha),
+};
 
 /** Smoothing radius in metres for "light" and "strong". */
 const SMOOTHING_METRES = [0, 200, 500] as const;
@@ -54,6 +46,7 @@ const SMOOTHING_METRES = [0, 200, 500] as const;
 export class HeatService {
   private readonly data = inject(PilotData);
   private readonly store = inject(Store);
+  private readonly theme = inject(ThemeService);
 
   readonly canvas = document.createElement('canvas');
   /** Increments every time the canvas has new pixels. */
@@ -92,6 +85,7 @@ export class HeatService {
       this.store.blocks();
       this.store.places();
       this.store.view();
+      this.theme.scheme();
       if (grid) this.schedule();
     });
   }
@@ -237,17 +231,20 @@ export class HeatService {
       hi = Math.min(100, mid + 3);
     }
 
+    const scheme = this.theme.scheme();
+    const ramp = RAMP_PACKED[scheme];
+    const below = BELOW_LIMIT_PACKED[scheme];
     if (view.showBelow && view.show !== 'all') {
       for (let i = 0; i < cells.length; i++) {
         const score = scores[i];
-        if (score >= 0 && score < limit) pixels[cells[i]] = BELOW_LIMIT;
+        if (score >= 0 && score < limit) pixels[cells[i]] = below;
       }
     }
     for (let i = 0; i < land.length; i++) {
       const c = cover[i];
       if (!c) continue;
       const t = Math.max(0, Math.min(1, (value[i] - lo) / (hi - lo)));
-      pixels[land[i]] = ((Math.round(255 * c * (0.5 + 0.5 * t)) << 24) | RAMP_PACKED[Math.round(t * 100)]) >>> 0;
+      pixels[land[i]] = ((Math.round(255 * c * (0.5 + 0.5 * t)) << 24) | ramp[Math.round(t * 100)]) >>> 0;
     }
     this.canvas.getContext('2d')!.putImageData(this.image, 0, 0);
 

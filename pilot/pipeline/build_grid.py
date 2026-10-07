@@ -1,4 +1,4 @@
-"""Build the feature grid for a region: all of Denmark, or the East Jutland pilot.
+"""Build the feature grid for a region: all of Denmark, the East Jutland pilot, or Aarhus for tests.
 
 Every criterion becomes one 8-bit raster on a 100 m grid in EPSG:25832, aligned to
 Det Danske Kvadratnet. The rasters are then sampled onto a Web Mercator display grid
@@ -37,6 +37,8 @@ DIST_MAX = 20_000  # metres; distances are stored with a square-root encoding up
 REGIONS = {
     "denmark": {"name": "Danmark", "codes": None},  # every municipality
     "oestjylland": {"name": "Østjylland", "codes": ["751", "730", "710", "740", "746", "615", "727", "766", "706", "707", "741"]},
+    # A small region for the frontend's end-to-end tests (frontend/e2e/data-pack)
+    "aarhus": {"name": "Aarhus Kommune", "codes": ["751"]},
 }
 
 ROAD_NOISE_AT_10M = {"motorway": 76.0, "trunk": 72.0, "primary": 69.0, "secondary": 65.0}

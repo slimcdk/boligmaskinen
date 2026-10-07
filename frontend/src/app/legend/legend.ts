@@ -1,6 +1,8 @@
 import { Component, computed, inject } from '@angular/core';
+import { rampGradient } from '../map/colours';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
+import { ThemeService } from '../theme/theme.service';
 
 /** Colour ramp with the point range currently shown. */
 @Component({
@@ -9,7 +11,7 @@ import { Store } from '../state/store';
     @if (stats()?.hasPreferences) {
       <div class="legend" aria-label="Legend">
         <div class="title">Points</div>
-        <div class="ramp" aria-hidden="true"></div>
+        <div class="ramp" aria-hidden="true" [style.background]="gradient()"></div>
         <div class="ticks"><span>{{ lo() }}</span><span>{{ mid() }}</span><span>{{ hi() }}</span></div>
         <div class="caption">{{ caption() }}</div>
       </div>
@@ -26,7 +28,7 @@ import { Store } from '../state/store';
       font: var(--mat-sys-body-small);
     }
     .title { font: var(--mat-sys-label-large); }
-    .ramp { height: 10px; border-radius: 5px; margin: 6px 0 3px; background: linear-gradient(90deg, #fee6ce, #fdae6b 25%, #f16913 50%, #d94801 75%, #7f2704); }
+    .ramp { height: 10px; border-radius: 5px; margin: 6px 0 3px; }
     .ticks { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: var(--mat-sys-on-surface-variant); }
     .caption { color: var(--mat-sys-on-surface-variant); margin-top: 2px; }
   `],
@@ -35,6 +37,8 @@ export class Legend {
   private readonly heat = inject(HeatService);
   private readonly store = inject(Store);
   protected readonly stats = this.heat.stats;
+  private readonly theme = inject(ThemeService);
+  protected readonly gradient = computed(() => rampGradient(this.theme.scheme()));
   protected readonly lo = computed(() => Math.round(this.stats()?.lo ?? 0));
   protected readonly hi = computed(() => Math.round(this.stats()?.hi ?? 100));
   protected readonly mid = computed(() => Math.round(((this.stats()?.lo ?? 0) + (this.stats()?.hi ?? 100)) / 2));

@@ -1,0 +1,14 @@
+# Only the sources of the frontend and the backend go into the image build
+*
+!Dockerfile
+!frontend
+!backend
+**/node_modules
+frontend/dist
+frontend/.angular
+frontend/public/data-pack
+frontend/public/build-info.json
+frontend/e2e
+frontend/playwright-report
+frontend/test-results
+backend/test
