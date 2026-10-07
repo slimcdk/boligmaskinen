@@ -26,6 +26,10 @@ export interface Block {
   template?: string;
   /** The version of the block language the code is written for; missing means 1 (see migrations.ts). */
   language?: number;
+  /** The group it is in (maps.ts). */
+  group?: string;
+  /** False when the user has switched the block off; it then counts for nothing. */
+  enabled?: boolean;
 }
 
 /** The data a formula can read, per evaluated cell. */

@@ -77,6 +77,14 @@
   box-shadow: var(--mat-sys-level3);
 }
 
+// Big enough to hit with a finger
+:host ::ng-deep .maplibregl-popup-close-button {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 :host ::ng-deep .maplibregl-popup-tip {
   border-top-color: var(--mat-sys-surface-container-high) !important;
   border-bottom-color: var(--mat-sys-surface-container-high) !important;

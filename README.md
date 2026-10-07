@@ -1,15 +1,17 @@
 # Boligmaskinen
 
-A self-hosted, map-first home search for Denmark. A full-screen map shows how well every
-place fits what you care about. The weighting is a list of blocks, each a small formula over
-open data, with sliders like free values in GeoGebra.
+A self-hosted, map-first home search for Denmark. A full-screen map shows how well every place
+fits what you care about. You say what that is with blocks: small formulas over open data, whose
+numbers become sliders.
 
-**Status:** prototype. The backend so far only serves the app; the frontend runs on a
-precomputed data pack built by the pilot pipeline.
+**Status:** prototype. It covers all of Denmark with 13 layers of open data, keeps several maps of
+blocks, and runs its data jobs in the backend. Still to come: the jobs that build the data
+([milestone 2](docs/plan.md#milestone-2-the-data-pipeline-as-jobs); until then the pilot pipeline
+builds the data pack) and data about homes ([milestone 4](docs/plan.md#milestone-4-homes)).
 
 | Folder | What it is |
 |---|---|
-| [`frontend/`](frontend/README.md) | Angular 22 + Angular Material app: the map, the blocks and their code, the data jobs, light and dark mode. Vitest and Playwright tests. |
+| [`frontend/`](frontend/README.md) | Angular 22 + Angular Material app: the map, several saved maps, the blocks in groups and their code, the data jobs, light and dark mode, on phones too. Vitest and Playwright tests. |
 | [`backend/`](backend/README.md) | Node 24 + Fastify server that serves the frontend, the data pack and the API. |
 | [`packages/engine/`](packages/engine/README.md) | The scoring engine and the block language, shared by the frontend and the backend. |
 | [`pilot/`](pilot/README.md) | Python pipeline that fetches the open data for all of Denmark and builds the grid and the data pack. |

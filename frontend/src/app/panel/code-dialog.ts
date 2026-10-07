@@ -100,7 +100,7 @@ export class CodeDialog {
 
   protected setRole(role: Role): void {
     const block = this.block();
-    if (block) this.store.updateBlock(block.id, { role });
+    if (block) this.store.setRole(block.id, role);
   }
 
   protected reset(): void {

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Store } from '../state/store';
 import { BlockRow } from './block-row';
 
@@ -12,6 +12,8 @@ describe('BlockRow', () => {
     TestBed.configureTestingModule({ imports: [BlockRow] });
     store = TestBed.inject(Store);
   });
+
+  afterEach(() => TestBed.resetTestingModule());
 
   function render(template: string) {
     store.addTemplate(template);
@@ -42,10 +44,34 @@ describe('BlockRow', () => {
     expect(element.querySelector('.weight-value')!.textContent).toBe('7');
   });
 
-  it('marks a requirement instead of showing a weight', () => {
-    const { element } = render('zone');
-    expect(element.querySelector('.required')!.textContent).toBe('Required');
+  it('gives a requirement a switch instead of a weight', () => {
+    const { fixture, element } = render('zone');
+    const toggle = element.querySelector<HTMLButtonElement>('.required [role="switch"]')!;
+    expect(toggle.getAttribute('aria-label')).toBe('Required: Planning zone');
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
     expect(element.querySelector('.weight')).toBeNull();
+    toggle.click();
+    fixture.componentRef.setInput('block', store.blocks()[0]);
+    fixture.detectChanges();
+    expect(store.activeBlocks()).toEqual([]);
+    expect(element.querySelector('.line')!.classList).toContain('off');
+  });
+
+  it('moves the block to another group, or removes it, from its menu', () => {
+    store.addTemplate('noise');
+    const { fixture, element } = render('forest');
+    const item = (text: string) => [...document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-item')]
+      .find((i) => i.querySelector('.mat-mdc-menu-item-text')!.textContent!.trim() === text)!;
+    element.querySelector<HTMLButtonElement>('button.expand')!.click();
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('button[aria-label="More for Forest"]')!.click();
+    fixture.detectChanges();
+    item('Move to group').click();
+    fixture.detectChanges();
+    expect(item('Nature').getAttribute('aria-checked')).toBe('true');
+    item('Peace and quiet').click();
+    expect(store.groups().map((g) => g.name)).toEqual(['Peace and quiet']);
+    expect(store.blocks().map((b) => b.group)).toEqual([store.groups()[0].id, store.groups()[0].id]);
   });
 
   it('turns a block with a ramp around, and offers nothing to turn for one without', () => {
@@ -63,6 +89,15 @@ describe('BlockRow', () => {
     zone.element.querySelector<HTMLButtonElement>('button.expand')!.click();
     zone.fixture.detectChanges();
     expect(zone.element.textContent).not.toContain('Turn around');
+  });
+
+  it('dims a preference that counts for nothing', () => {
+    const { fixture, element } = render('forest');
+    expect(element.querySelector('.line')!.classList).not.toContain('off');
+    store.updateBlock(store.blocks()[0].id, { weight: 0 });
+    fixture.componentRef.setInput('block', store.blocks()[0]);
+    fixture.detectChanges();
+    expect(element.querySelector('.line')!.classList).toContain('off');
   });
 
   it('folds out the controls and the role', () => {

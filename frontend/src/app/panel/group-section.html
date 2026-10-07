@@ -1,0 +1,18 @@
+<div class="head" [class.off]="!group().enabled">
+  <button mat-icon-button class="fold" (click)="fold()" [attr.aria-expanded]="!collapsed()"
+          [attr.aria-label]="(collapsed() ? 'Show the blocks in ' : 'Hide the blocks in ') + group().name">
+    <mat-icon>{{ collapsed() ? 'expand_more' : 'expand_less' }}</mat-icon>
+  </button>
+  <div class="text">
+    <input class="name" [value]="group().name" (change)="rename($event)" aria-label="Name of the group" maxlength="40">
+    @if (collapsed()) {
+      <div class="count">{{ blocks().length === 1 ? '1 block' : blocks().length + ' blocks' }}{{ group().enabled ? '' : ', switched off' }}</div>
+    }
+  </div>
+  <mat-slide-toggle [checked]="group().enabled" (change)="store.setGroupEnabled(group().id, $event.checked)" [aria-label]="'Use ' + group().name" />
+</div>
+@if (!collapsed()) {
+  @for (b of blocks(); track b.id) {
+    <app-block-row [block]="b" [groupOff]="!group().enabled" />
+  }
+}

@@ -1,9 +1,12 @@
 <header class="head">
-  <div class="title">
-    <h1>Boligmaskinen</h1>
-    <p>Pilot{{ region() ? ' · ' + region() : '' }} · {{ cell() }} m cells from open data</p>
+  <div class="top">
+    <div class="title">
+      <h1>Boligmaskinen</h1>
+      <p>Pilot{{ region() ? ' · ' + region() : '' }} · {{ cell() }} m cells from open data</p>
+    </div>
+    <button mat-icon-button (click)="closePanel.emit()" aria-label="Hide panel"><mat-icon>chevron_left</mat-icon></button>
   </div>
-  <button mat-icon-button (click)="closePanel.emit()" aria-label="Hide panel"><mat-icon>chevron_left</mat-icon></button>
+  <app-map-switcher />
 </header>
 @if (data.state() === 'loading') {
   <mat-progress-bar mode="indeterminate" aria-label="Loading data"></mat-progress-bar>
@@ -33,6 +36,11 @@
       }
       <app-histogram [histogram]="stats()!.histogram" [limit]="stats()!.limit" [showLimit]="view().show !== 'all'" [lo]="stats()!.lo" [hi]="stats()!.hi"
                      [description]="resultDescription()" />
+    } @else if (allOff()) {
+      <div class="empty">
+        <h2>Everything is switched off</h2>
+        <p>Switch a group on, or give one of your preferences some weight, to colour the map.</p>
+      </div>
     } @else {
       <div class="empty">
         <h2>Where would you like to live?</h2>
@@ -53,11 +61,13 @@
       <h2 id="t-criteria">What matters to you</h2>
       <button mat-stroked-button (click)="openCatalog()"><mat-icon>add</mat-icon>Add</button>
     </div>
-    @for (b of store.blocks(); track b.id) {
-      <app-block-row [block]="b" />
-    } @empty {
-      <p class="hint">Nothing chosen yet. Add a predefined block, an example of code, or one of the suggestions above.</p>
-    }
+    <div class="groups">
+      @for (g of grouped(); track g.group.id) {
+        <app-group-section [group]="g.group" [blocks]="g.blocks" />
+      } @empty {
+        <p class="hint">Nothing chosen yet. Add a predefined block, an example of code, or one of the suggestions above.</p>
+      }
+    </div>
   </section>
 
   <section aria-labelledby="t-places">
@@ -68,7 +78,7 @@
       </button>
     </div>
     @if (store.placing()) {
-      <p class="hint strong">Click on the map where the place is.</p>
+      <p class="hint strong">Click or tap the map where the place is.</p>
     }
     @for (p of store.places(); track p.id; let i = $index) {
       <div class="place">
@@ -78,7 +88,7 @@
       </div>
     } @empty {
       @if (!store.placing()) {
-        <p class="hint">Add work, family, friends or anything else you want to be close to. Each place gets a block with the travel time to it. Drag a pin to move it.</p>
+        <p class="hint">Add work, family, friends or anything else you want to be close to. Each place gets a block with the travel time to it, and your other maps can add it under Add. Drag a pin to move it.</p>
       }
     }
   </section>
@@ -140,11 +150,11 @@
   @let v = version();
   @if (v.url) {
     <a class="version" [href]="v.url" target="_blank" rel="noopener" [title]="v.title" [attr.aria-label]="'Boligmaskinen on GitHub, version ' + v.text">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg>{{ v.text }}
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg><span class="text">{{ v.text }}</span>
     </a>
   } @else {
     <span class="version" [title]="v.title" [attr.aria-label]="'Version ' + v.text">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg>{{ v.text }}
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg><span class="text">{{ v.text }}</span>
     </span>
   }
 </footer>

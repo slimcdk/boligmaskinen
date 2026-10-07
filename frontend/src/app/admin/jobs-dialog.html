@@ -31,11 +31,11 @@
       </ng-container>
       <ng-container matColumnDef="schedule">
         <th mat-header-cell *matHeaderCellDef>Schedule</th>
-        <td mat-cell *matCellDef="let job" [title]="job.schedule">{{ describe(job.schedule) }}</td>
+        <td mat-cell *matCellDef="let job" [title]="job.schedule" data-label="Schedule">{{ describe(job.schedule) }}</td>
       </ng-container>
       <ng-container matColumnDef="last">
         <th mat-header-cell *matHeaderCellDef>Last run</th>
-        <td mat-cell *matCellDef="let job">
+        <td mat-cell *matCellDef="let job" data-label="Last run">
           @if (jobs.latest().get(job.id); as run) {
             @if (run.status === 'running') {
               <div class="status running"><mat-icon>{{ icon(run.status) }}</mat-icon>Running</div>
@@ -51,7 +51,7 @@
       </ng-container>
       <ng-container matColumnDef="next">
         <th mat-header-cell *matHeaderCellDef>Next run</th>
-        <td mat-cell *matCellDef="let job" [title]="nextExact(job)">{{ when(job) }}</td>
+        <td mat-cell *matCellDef="let job" [title]="nextExact(job)" data-label="Next run">{{ when(job) }}</td>
       </ng-container>
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef><span class="cdk-visually-hidden">Actions</span></th>
@@ -83,11 +83,11 @@
       </ng-container>
       <ng-container matColumnDef="started">
         <th mat-header-cell *matHeaderCellDef>Started</th>
-        <td mat-cell *matCellDef="let run" [title]="exact(run.startedAt)">{{ ago(run.startedAt) }}</td>
+        <td mat-cell *matCellDef="let run" [title]="exact(run.startedAt)" data-label="Started">{{ ago(run.startedAt) }}</td>
       </ng-container>
       <ng-container matColumnDef="duration">
         <th mat-header-cell *matHeaderCellDef>Duration</th>
-        <td mat-cell *matCellDef="let run">{{ duration(run) }}</td>
+        <td mat-cell *matCellDef="let run" data-label="Duration">{{ duration(run) }}</td>
       </ng-container>
       <ng-container matColumnDef="result">
         <th mat-header-cell *matHeaderCellDef>Result</th>

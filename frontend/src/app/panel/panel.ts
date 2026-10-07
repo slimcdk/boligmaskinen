@@ -19,17 +19,22 @@ import { ThemeService } from '../theme/theme.service';
 import { Store } from '../state/store';
 import { PLACE_COLOURS, SUGGESTED, ViewState } from '@boligmaskinen/engine';
 import { AboutDialog } from './about-dialog';
-import { BlockRow } from './block-row';
 import { CatalogData, CatalogDialog, CatalogResult } from './catalog-dialog';
 import { ThemeToggle } from '../theme/theme-toggle';
+import { GroupSection } from './group-section';
 import { Histogram } from './histogram';
+import { MapSwitcher } from './map-switcher';
 
-/** The side panel: result, the blocks of the weighting with their controls, own places and folded settings. */
+/**
+ * The side panel: the open map, its result, its blocks of the weighting in groups, the places and
+ * the folded settings.
+ */
 @Component({
   selector: 'app-panel',
   imports: [
     MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatChipsModule, MatExpansionModule, MatIconModule,
-    MatProgressBarModule, MatSliderModule, MatTooltipModule, MatFormFieldModule, MatSelectModule, BlockRow, Histogram, ThemeToggle,
+    MatProgressBarModule, MatSliderModule, MatTooltipModule, MatFormFieldModule, MatSelectModule, GroupSection, Histogram, MapSwitcher,
+    ThemeToggle,
   ],
   templateUrl: './panel.html',
   styleUrl: './panel.scss',
@@ -46,6 +51,16 @@ export class Panel {
 
   protected readonly stats = this.heat.stats;
   protected readonly view = this.store.view;
+
+  /** The open map's groups, each with its blocks. */
+  protected readonly grouped = computed(() => {
+    const blocks = this.store.blocks();
+    return this.store.groups().map((group) => ({ group, blocks: blocks.filter((b) => b.group === group.id) }));
+  });
+
+  /** There are preferences, but none of them counts: their groups are off, or their weight is 0. */
+  protected readonly allOff = computed(() =>
+    this.store.blocks().some((b) => b.role === 'want') && !this.store.activeBlocks().some((b) => b.role === 'want' && b.weight > 0));
 
   protected readonly suggestions = computed(() => {
     const present = this.store.templatesInUse();
@@ -94,12 +109,13 @@ export class Panel {
   }
 
   protected openCatalog(): void {
-    const data: CatalogData = { inUse: [...this.store.templatesInUse()] };
+    const data: CatalogData = { inUse: [...this.store.templatesInUse()], places: this.store.places() };
     this.dialog.open(CatalogDialog, { data, width: '460px', maxWidth: '95vw', autoFocus: 'first-tabbable' })
       .afterClosed()
       .subscribe((result?: CatalogResult) => {
         if (!result) return;
         this.store.setCatalogue(result.catalogue);
+        this.store.setPlaceBlocks(result.places);
         for (const id of result.examples) this.store.addTemplate(id);
       });
   }

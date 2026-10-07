@@ -1,7 +1,9 @@
+// The chips go under the title when the dialog is narrow
 .bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
 
   // Material's title has an empty ::before for its baseline, which a flex gap would push the title away from
   &::before {
@@ -9,7 +11,7 @@
   }
 
   .title {
-    flex: 1;
+    flex: 1 1 240px;
   }
 
   h2 {
@@ -202,4 +204,64 @@ tr.clickable {
 
   .warn { color: var(--app-warning); }
   .error { color: var(--mat-sys-error); }
+}
+
+// On a phone the tables would run off the side, so each task and each run becomes a block of its own:
+// its name and controls, then the rest under it, each with the label its column header had
+.body {
+  container-type: inline-size;
+}
+
+@container (width < 640px) {
+  // The table makes its thead and tbody itself, so they are outside this component's styles
+  .body ::ng-deep {
+    table.mat-mdc-table,
+    table.mat-mdc-table > tbody {
+      display: block;
+    }
+
+    table.mat-mdc-table > thead {
+      display: none;
+    }
+  }
+
+  tr.mat-mdc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    // Short values pair up in a row, whatever their order in the table
+    grid-auto-flow: row dense;
+    gap: 8px 16px;
+    height: auto;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  // Also over the columns' fixed widths
+  .tasks td.mat-mdc-cell,
+  .runs td.mat-mdc-cell {
+    display: block;
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font: var(--mat-sys-label-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .tasks {
+    .mat-column-name { grid-column: 1 / 3; }
+    .mat-column-actions { grid-column: 3; grid-row: 1; }
+    .mat-column-last { grid-column: 1 / -1; }
+    .mat-column-next { white-space: normal; }
+  }
+
+  .runs {
+    .mat-column-job { grid-column: 1 / 3; }
+    .mat-column-status { grid-column: 3; grid-row: 1; }
+    .mat-column-result { grid-column: 1 / -1; grid-row: 3; }
+  }
 }

@@ -1,4 +1,4 @@
-<div class="line">
+<div class="line" [class.off]="!counts()">
   <button mat-icon-button class="expand" (click)="open.set(!open())" [attr.aria-expanded]="open()"
           [attr.aria-label]="(open() ? 'Hide settings for ' : 'Show settings for ') + block().name">
     <mat-icon>{{ open() ? 'expand_less' : 'expand_more' }}</mat-icon>
@@ -9,14 +9,15 @@
       @if (problem()) {
         <mat-icon>error_outline</mat-icon>The code needs attention
       } @else {
-        {{ summary() }}
+        <span class="summary">{{ summary() }}</span>
       }
     </div>
   </div>
   @if (block().role === 'must') {
-    <span class="required">Required</span>
+    <mat-slide-toggle class="required" labelPosition="before" [checked]="block().enabled !== false"
+                      (change)="store.setEnabled(block().id, $event.checked)" [aria-label]="'Required: ' + block().name">Required</mat-slide-toggle>
   } @else {
-    <div class="weight" [matTooltip]="'Weight in the weighting (0 turns the block off)'">
+    <div class="weight" [matTooltip]="'Weight in the weighting (0 turns the block off)'" matTooltipTouchGestures="off">
       <mat-slider class="weight-slider" min="0" [max]="MAX_WEIGHT" step="1">
         <input matSliderThumb [value]="block().weight" (input)="onWeight($event)" [attr.aria-label]="'Weight of ' + block().name">
       </mat-slider>
@@ -44,7 +45,22 @@
         <button mat-button (click)="turnAround()" matTooltip="Full points at the other end"><mat-icon>swap_horiz</mat-icon>Turn around</button>
       }
       <button mat-button (click)="editCode()"><mat-icon>code</mat-icon>Code</button>
-      <button mat-button (click)="remove()"><mat-icon>delete</mat-icon>Remove</button>
+      <button mat-icon-button [matMenuTriggerFor]="more" [attr.aria-label]="'More for ' + block().name"><mat-icon>more_vert</mat-icon></button>
     </div>
   </div>
 }
+
+<mat-menu #more="matMenu">
+  <button mat-menu-item [matMenuTriggerFor]="groups"><mat-icon>drive_file_move</mat-icon><span>Move to group</span></button>
+  <button mat-menu-item (click)="remove()"><mat-icon>delete</mat-icon><span>Remove</span></button>
+</mat-menu>
+<mat-menu #groups="matMenu">
+  @for (g of store.groups(); track g.id) {
+    @let here = g.id === block().group;
+    <button mat-menu-item role="menuitemradio" [attr.aria-checked]="here" (click)="store.moveToGroup(block().id, g.id)">
+      <mat-icon>{{ here ? 'check' : '' }}</mat-icon><span>{{ g.name }}</span>
+    </button>
+  }
+  <mat-divider />
+  <button mat-menu-item (click)="newGroup()"><mat-icon>add</mat-icon><span>New group…</span></button>
+</mat-menu>

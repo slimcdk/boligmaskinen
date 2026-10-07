@@ -8,6 +8,7 @@ the same points in the browser and on the server.
 | `src/formula.ts` | The block language: tokenizer, parser and compiler, and the controls from `let` lines. See `docs/block-language.md`. |
 | `src/blocks.ts` | Evaluating the blocks over cells: preferences, requirements, weights, missing data. |
 | `src/library.ts` | The predefined blocks. |
+| `src/maps.ts` | Saved maps, and the groups of blocks in them that can be switched off together. |
 | `src/migrations.ts` | The language version, and the migrations that bring saved code up to it. |
 | `src/values.ts` | What a block can read: the data, and the travel times to the user's places. |
 | `src/engine.ts` | Decoding the data layers, lower limits, blur. |

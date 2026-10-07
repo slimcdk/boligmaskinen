@@ -32,18 +32,26 @@
   z-index: 2;
 }
 
+// Like a snackbar: inverse colours, with its action in inverse-primary
 .placing-hint {
   position: absolute;
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  box-sizing: border-box;
   background: var(--mat-sys-inverse-surface);
   color: var(--mat-sys-inverse-on-surface);
   border-radius: 999px;
-  padding: 8px 16px;
+  padding: 4px 4px 4px 16px;
   font: var(--mat-sys-label-large);
   box-shadow: var(--mat-sys-level2);
+  --mat-button-text-label-text-color: var(--mat-sys-inverse-primary);
 }
 
 .legend {

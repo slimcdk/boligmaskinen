@@ -37,6 +37,39 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   end: "Quiet" becomes "Noisy". The weight only says how much a block matters; which way it points
   is in its code.
 
+## Maps and groups
+
+- **A map** is a named weighting with its own blocks: "Family", "Near the sea". The menu under
+  the title switches between them, and starts a new map, duplicates, renames or deletes the open
+  one. There is always one map.
+- **The places are shared** by every map; each map has its own blocks for them. "Add" lists the
+  places, so another map can give a place a block too. A new name or a removed place reaches every
+  map.
+- **Groups** hold the blocks of a map. A predefined block starts in its catalogue group ("Nature",
+  "Peace and quiet", …), the user's own blocks in "My blocks", places in "Your places". The block's
+  menu moves it to another group or a new one, and a group without blocks is gone.
+- **A group can be switched off.** Its blocks then count for nothing, as if they were left out, and
+  keep their settings. A group has no weight of its own.
+- **A requirement has a switch** in place of a weight. A preference is turned off with its weight
+  (0), and a block that counts for nothing is dimmed.
+- Everything is saved in the browser (`boligmaskinen.prototype.v4`). What earlier versions saved
+  becomes the first map, "My map", with its blocks in groups. Milestone 6 moves the maps to the
+  server.
+- The logic is in `../packages/engine/src/maps.ts`; the store (`src/app/state/store.ts`) works on
+  the open map.
+
+## Phones and tablets
+
+- **Up to 700 px wide** the panel lies over the map and starts closed; "What matters to you" opens
+  it. Wider screens, tablets included, have the panel beside the map.
+- **Dropping a place on a phone:** the panel steps aside while the map is tapped, and comes back
+  with the new place's block. The hint at the top can cancel.
+- The panel's footer and the legend get smaller on small screens, and the data jobs show each task
+  as a block of its own when their dialog is narrow.
+- The weight sliders have no tooltip on touch screens, which would stop the panel from scrolling
+  under a finger.
+- The end-to-end tests run the panel and the data jobs at 390 × 844 with touch.
+
 ## Light and dark mode
 
 - The app follows the system's light or dark setting. The button with the half-filled
@@ -153,10 +186,10 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 |---|---|
 | `../packages/engine/` | The weighting engine, shared with the backend and imported as `@boligmaskinen/engine` (a path in `tsconfig.json`). See its README. |
 | `src/app/data/` | Loading the data pack (byte containers, chunked PMTiles source). |
-| `src/app/state/` | The blocks, places and map settings as signals, persisted in localStorage. `migrate.ts` carries over the earlier prototypes' choices. |
+| `src/app/state/` | The maps with their blocks and groups, the places and the map settings as signals, persisted in localStorage. `migrate.ts` carries over the earlier prototypes' choices. |
 | `src/app/map/` | MapLibre map, heatmap rendering (`heat.service.ts`) and the points breakdown. |
-| `src/app/panel/` | The Material side panel: result, catalogue dialog, block rows with their controls, the code editor dialog, places. |
-| `src/app/admin/` | The data-jobs dialog, the job model the backend should serve, and the simulated jobs. |
+| `src/app/panel/` | The Material side panel: the map switcher, the result, the catalogue dialog, the groups with their block rows and controls, the code editor dialog, places. |
+| `src/app/admin/` | The data-jobs dialog, its API client, the job model it shares with the backend, and the simulated preview. |
 | `src/app/theme/` | Light and dark mode: the viewer's choice and the footer button. |
 | `e2e/` | Playwright end-to-end tests, and `e2e/data-pack/`, the test data pack. |
 | `tools/` | `build-info.mjs` (the version label) and `to_artifact.py` (publishing). |
