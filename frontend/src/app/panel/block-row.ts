@@ -7,7 +7,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
-import { Block, blockSummary, formulaParams, MAX_WEIGHT, Role } from '@boligmaskinen/engine';
+import { Block, blockSummary, formulaParams, MAX_WEIGHT, Role, turnAround } from '@boligmaskinen/engine';
 import { CodeDialog, CodeDialogData } from './code-dialog';
 import { ParamControl } from './param-control';
 
@@ -30,6 +30,8 @@ export class BlockRow {
   protected readonly summary = computed(() => blockSummary(this.block(), this.params()));
   protected readonly problem = computed(() => this.heat.issues().get(this.block().id) ?? null);
   protected readonly preview = computed(() => this.heat.preview().get(this.block().id) ?? '');
+  /** Blocks with a ramp (`full` and `zero`) can give full points at the other end instead. */
+  protected readonly canTurnAround = computed(() => turnAround(this.block().code) !== null);
 
   protected onWeight(event: Event): void {
     this.store.updateBlock(this.block().id, { weight: Number((event.target as HTMLInputElement).value) });
@@ -37,6 +39,10 @@ export class BlockRow {
 
   protected setRole(role: Role): void {
     this.store.updateBlock(this.block().id, { role });
+  }
+
+  protected turnAround(): void {
+    this.store.turnAround(this.block().id);
   }
 
   protected editCode(): void {

@@ -33,6 +33,9 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   never removes a cell for missing data.
 - **Renaming a place** renames its values in every block's code.
 - **Every preference has a weight slider** from 0 (off) to 10 on its line in the panel.
+- **"Turn around"** swaps the two ends of a block's ramp in its code, so full points go to the other
+  end: "Quiet" becomes "Noisy". The weight only says how much a block matters; which way it points
+  is in its code.
 
 ## Light and dark mode
 

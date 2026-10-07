@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type Block, type BlockInputs, blockSummary, evaluateBlocks } from './blocks.ts';
+import { turnAround } from './formula.ts';
 import { decodeValue, scoreCells, type ScoringItem } from './engine.ts';
 import { blockFrom, criterionTemplate, LIBRARY, placeTemplate } from './library.ts';
 import { type Criterion, DEFAULT_CRITERIA, type LayerName, type Municipality } from './types.ts';
@@ -65,6 +66,10 @@ describe('helpers', () => {
   it('summarises a block from its controls', () => {
     const forest = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'forest')!));
     expect(blockSummary(forest)).toBe('Full points up to 300 m · No points from 3.0 km');
+    // Turned around, it reads in the other direction, whatever the labels in the code say
+    expect(blockSummary({ ...forest, code: turnAround(forest.code)! })).toBe('No points below 300 m · Full points from 3.0 km');
+    expect(blockSummary(block('let full = 2000  // Full points up to (m)\nlet zero = 500  // No points from (m)\nramp(turbine, full, zero)')))
+      .toBe('No points below 500 m · Full points from 2.0 km');
     const zone = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'zone')!));
     expect(blockSummary(zone)).toBe('Only Byzone, Landzone');
     expect(blockSummary(block('// Close to the sea\nramp(water, 0, 1000)'))).toBe('Close to the sea');
@@ -125,5 +130,14 @@ describe('the library', () => {
     }
     expect(left).toBeGreaterThan(100);
     expect(Array.from(actual.histogram)).toEqual(Array.from(expected.histogram));
+  });
+});
+
+describe('opposite names', () => {
+  it('names every predefined ramp block for when it is turned around', () => {
+    const ramps = LIBRARY.filter((t) => turnAround(t.code) !== null && !t.id.startsWith('place:') && t.group !== 'Examples');
+    expect(ramps.length).toBeGreaterThan(10);
+    expect(ramps.filter((t) => !t.opposite).map((t) => t.id)).toEqual([]);
+    expect(LIBRARY.find((t) => t.id === 'noise')).toMatchObject({ name: 'Quiet', opposite: 'Noisy' });
   });
 });
