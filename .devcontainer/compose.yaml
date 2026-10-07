@@ -1,0 +1,35 @@
+name: boligmaskinen-dev
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces/boligmaskinen:cached
+    command: sleep infinity
+    environment:
+      DATABASE_URL: postgres://boligmaskinen:boligmaskinen@db:5432/boligmaskinen
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # PostGIS for the backend. The data stays in the postgis volume when the container is rebuilt;
+  # remove the volume to start over.
+  db:
+    image: postgis/postgis:18-3.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: boligmaskinen
+      POSTGRES_USER: boligmaskinen
+      POSTGRES_PASSWORD: boligmaskinen
+    volumes:
+      - postgis:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boligmaskinen -d boligmaskinen"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgis:

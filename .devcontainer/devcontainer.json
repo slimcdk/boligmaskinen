@@ -1,0 +1,39 @@
+// The development environment: every tool the project uses, in one container, next to a PostGIS
+// database. Open the repository in VS Code and pick "Reopen in Container".
+{
+  "name": "Boligmaskinen",
+  "dockerComposeFile": "compose.yaml",
+  "service": "dev",
+  "runServices": ["dev", "db"],
+  "workspaceFolder": "/workspaces/boligmaskinen",
+  "shutdownAction": "stopCompose",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    // Build and run the app image (../Dockerfile) with the host's Docker
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "containerEnv": {
+    // Playwright's own Chromium, which exists for both amd64 and arm64, drawing WebGL in software
+    "PLAYWRIGHT_CHANNEL": "chromium",
+    "PLAYWRIGHT_SOFTWARE_GL": "1"
+  },
+  "forwardPorts": [4200, 8080, "db:5432"],
+  "portsAttributes": {
+    "4200": { "label": "Frontend (npm start)" },
+    "8080": { "label": "Backend (npm run dev)" },
+    "db:5432": { "label": "PostGIS", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "angular.ng-template",
+        "esbenp.prettier-vscode",
+        "vitest.explorer",
+        "ms-playwright.playwright",
+        "ms-python.python",
+        "ms-azuretools.vscode-containers"
+      ]
+    }
+  }
+}

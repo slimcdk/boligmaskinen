@@ -1,0 +1,33 @@
+name: Dev container
+
+# Builds the dev container when its configuration changes, and checks that its tools and the
+# database work, so a broken container is found here and not on someone's machine.
+
+on:
+  pull_request:
+    paths: ['.devcontainer/**', '.github/workflows/devcontainer.yml']
+  push:
+    branches: [master]
+    paths: ['.devcontainer/**', '.github/workflows/devcontainer.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and check the dev container
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: |
+            set -e
+            node --version
+            uv --version
+            pmtiles version
+            psql "$DATABASE_URL" -c 'select postgis_full_version()'
+            cd frontend && npm test
