@@ -2,9 +2,9 @@
  * Predefined blocks. They are ordinary code, so the user can read every one of them and
  * change it; "Reset" brings back the code below.
  */
-import { Block, newId } from './blocks';
-import { Criterion, DEFAULT_CRITERIA, MODE_MINUTES, Place, Role, TravelMode } from './types';
-import { MODES, placeValueName } from './values';
+import { type Block, newId } from './blocks.ts';
+import { type Criterion, DEFAULT_CRITERIA, MODE_MINUTES, type Place, type Role, type TravelMode } from './types.ts';
+import { MODES, placeValueName } from './values.ts';
 
 export interface BlockTemplate {
   id: string;

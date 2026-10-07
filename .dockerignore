@@ -1,9 +1,11 @@
-# Only the sources of the frontend and the backend go into the image build
+# Only the sources of the frontend, the backend and the engine go into the image build
 *
 !Dockerfile
 !frontend
 !backend
+!packages
 **/node_modules
+**/*.spec.ts
 frontend/dist
 frontend/.angular
 frontend/public/data-pack

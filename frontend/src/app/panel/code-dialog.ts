@@ -6,9 +6,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
-import { compileFormula, CONSTANTS, describeError, FUNCTIONS } from '../scoring/formula';
-import { templateOf } from '../scoring/library';
-import { Role } from '../scoring/types';
+import { compileFormula, CONSTANTS, describeError, FUNCTIONS } from '@boligmaskinen/engine';
+import { templateOf } from '@boligmaskinen/engine';
+import { Role } from '@boligmaskinen/engine';
 
 export interface CodeDialogData {
   blockId: string;

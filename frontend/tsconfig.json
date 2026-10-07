@@ -12,7 +12,12 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    // The engine is shared with the backend, which runs its TypeScript directly, so its imports end in .ts
+    "rewriteRelativeImportExtensions": true,
+    "paths": {
+      "@boligmaskinen/engine": ["../packages/engine/src/index.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formulaParams } from '../scoring/formula';
-import { DEFAULT_CRITERIA } from '../scoring/types';
+import { formulaParams } from '@boligmaskinen/engine';
+import { DEFAULT_CRITERIA } from '@boligmaskinen/engine';
 import { migrateV1, migrateV2 } from './migrate';
 
 const values = (code: string) => Object.fromEntries(formulaParams(code).map((p) => [p.name, p.value]));

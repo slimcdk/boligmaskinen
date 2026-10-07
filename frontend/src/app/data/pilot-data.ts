@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Grid, GridMeta, LayerName, Municipality } from '../scoring/types';
+import { Grid, GridMeta, LayerName, Municipality } from '@boligmaskinen/engine';
 import { loadByteContainer } from './byte-container';
 
 /** Base URL of the data pack that the pilot pipeline produces (public/data-pack). */

@@ -5,9 +5,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Store } from '../state/store';
-import { capitalise } from '../scoring/blocks';
-import { FormulaParam } from '../scoring/formula';
-import { formatWithUnit } from '../scoring/values';
+import { capitalise } from '@boligmaskinen/engine';
+import { FormulaParam } from '@boligmaskinen/engine';
+import { formatWithUnit } from '@boligmaskinen/engine';
 
 const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions_bike', walk: 'directions_walk', train: 'train' };
 

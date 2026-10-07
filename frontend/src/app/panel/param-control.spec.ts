@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Store } from '../state/store';
-import { formulaParams } from '../scoring/formula';
+import { formulaParams } from '@boligmaskinen/engine';
 import { ParamControl } from './param-control';
 
 const values = (code: string) => Object.fromEntries(formulaParams(code).map((p) => [p.name, p.value]));

@@ -11,6 +11,8 @@ FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
+# The scoring engine, shared with the backend
+COPY packages/engine/ /src/packages/engine/
 COPY frontend/ ./
 ARG REVISION=""
 ARG SOURCE=""
@@ -18,6 +20,7 @@ RUN REVISION="$REVISION" SOURCE="$SOURCE" npm run build
 
 FROM node:24-alpine AS backend
 WORKDIR /src/backend
+COPY packages/engine/ /src/packages/engine/
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
@@ -36,7 +39,10 @@ ENV NODE_ENV=production \
     APP_SOURCE="$SOURCE" \
     APP_CREATED="$CREATED"
 WORKDIR /app
+# node_modules/@boligmaskinen/engine links to ../packages/engine, which Node runs as TypeScript
 COPY --from=backend /src/backend/node_modules backend/node_modules
+COPY packages/engine/package.json packages/engine/
+COPY packages/engine/src packages/engine/src
 COPY backend/package.json backend/
 COPY backend/src backend/src
 COPY backend/migrations backend/migrations

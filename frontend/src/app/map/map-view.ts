@@ -7,7 +7,7 @@ import { PMTiles, Protocol } from 'pmtiles';
 import { ChunkedPmtilesSource } from '../data/byte-container';
 import { DATA_BASE, PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
-import { PLACE_COLOURS } from '../scoring/types';
+import { PLACE_COLOURS } from '@boligmaskinen/engine';
 import { Scheme, ThemeService } from '../theme/theme.service';
 import { BASEMAP_FILES, MAP_COLOURS, MapColours } from './colours';
 import { Breakdown, HeatService } from './heat.service';

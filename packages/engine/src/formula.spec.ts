@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoRange, compileFormula, formulaParams, renameValues, setParam, toVariableName } from './formula';
+import { autoRange, compileFormula, formulaParams, renameValues, setParam, toVariableName } from './formula.ts';
 
 const run = (code: string, inputs: Record<string, number> = {}) => {
   const result = compileFormula(code, Object.keys(inputs));

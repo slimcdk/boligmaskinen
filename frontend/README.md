@@ -7,12 +7,12 @@ about.
 ## How the weighting works
 
 - The weighting is a list of standalone **blocks**. Every block is a small formula over
-  the data, in a safe expression language (`src/app/scoring/formula.ts`) that is compiled
+  the data, in a safe expression language (`../packages/engine/src/formula.ts`) that is compiled
   to closures and never run as JavaScript.
   - Example: `ramp(forest, 300, 3000)`.
   - The formula can read every data layer (`forest`, `noise`, `zone`, `income_tax`, …)
     and the travel time to each of the user's places (`work_car`, `work_train`, …).
-- **Predefined blocks are code too** (`src/app/scoring/library.ts`). The user can read and
+- **Predefined blocks are code too** (`../packages/engine/src/library.ts`). The user can read and
   change them, and "Reset" brings back the original.
 - **A preference** gives a score from 0 to 1 per cell and counts with its importance.
   **A requirement** removes the cells where it is false.
@@ -126,7 +126,7 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 
 | Path | What it is |
 |---|---|
-| `src/app/scoring/` | The weighting engine, framework-free and unit-tested so it can move to a shared package for the backend. `blocks.ts`: evaluating the blocks. `formula.ts`: the block language. `library.ts`: the predefined blocks. `values.ts`: what a formula can read. `engine.ts`: decoding, lower limits, blur. `travel.ts`: travel-time estimates. |
+| `../packages/engine/` | The weighting engine, shared with the backend and imported as `@boligmaskinen/engine` (a path in `tsconfig.json`). See its README. |
 | `src/app/data/` | Loading the data pack (byte containers, chunked PMTiles source). |
 | `src/app/state/` | The blocks, places and map settings as signals, persisted in localStorage. `migrate.ts` carries over the earlier prototypes' choices. |
 | `src/app/map/` | MapLibre map, heatmap rendering (`heat.service.ts`) and the points breakdown. |

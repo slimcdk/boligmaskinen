@@ -2,9 +2,9 @@
  * Carries the earlier prototypes' choices over to blocks, so nothing the user set is lost:
  * v1 saved picked criteria and places with their curves, v2 saved groups of connected blocks.
  */
-import { Block, newId } from '../scoring/blocks';
-import { blockFrom, criterionTemplate, placeTemplate } from '../scoring/library';
-import { Criterion, Curve, MODE_MINUTES, Place, Role, TravelMode, ViewState } from '../scoring/types';
+import { Block, newId } from '@boligmaskinen/engine';
+import { blockFrom, criterionTemplate, placeTemplate } from '@boligmaskinen/engine';
+import { Criterion, Curve, MODE_MINUTES, Place, Role, TravelMode, ViewState } from '@boligmaskinen/engine';
 
 /** What the first prototype saved. */
 export interface SavedV1 {

@@ -79,8 +79,8 @@ Approvals take weeks or months, so they start before the code needs them.
    list, the runs, the log, run now and pause.
 4. **Frontend.** The jobs dialog reads the API. The simulation stays only for the preview
    without a backend.
-5. **Shared engine.** Move `frontend/src/app/scoring` to `packages/engine` (npm
-   workspaces), used by both frontend and backend, with its tests.
+5. **Shared engine.** Move `frontend/src/app/scoring` to `packages/engine`, used by both
+   frontend and backend, with its tests.
 6. **The block language, written down.** `docs/block-language.md` covers the grammar,
    missing data, the functions and the controls. Blocks get a language version, so the
    language can change without breaking saved blocks.

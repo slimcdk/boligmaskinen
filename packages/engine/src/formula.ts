@@ -21,7 +21,7 @@
  * A comment at the end of the line is the control's label, and "(m)", "(min)", "(dB)" or
  * "(%)" at its end is the unit. Changing a control rewrites the value in the code.
  */
-import { utility } from './engine';
+import { utility } from './engine.ts';
 
 export interface FormulaError {
   message: string;
@@ -116,8 +116,11 @@ interface Program {
 }
 
 class FormulaSyntaxError extends Error {
-  constructor(message: string, readonly pos: number) {
+  readonly pos: number;
+
+  constructor(message: string, pos: number) {
     super(message);
+    this.pos = pos;
   }
 }
 
@@ -155,7 +158,11 @@ function tokenize(source: string): Token[] {
 /** Recursive-descent parser. Precedence from low to high: ?: || && equality comparison + * unary **. */
 class Parser {
   private i = 0;
-  constructor(private readonly tokens: Token[]) {}
+  private readonly tokens: Token[];
+
+  constructor(tokens: Token[]) {
+    this.tokens = tokens;
+  }
 
   program(): Program {
     const lets: Program['lets'] = [];
