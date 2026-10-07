@@ -17,8 +17,10 @@
     "@boligmaskinen/engine": "file:../packages/engine",
     "@fastify/compress": "^9.2.0",
     "@fastify/static": "^10.1.5",
+    "cron-parser": "^5.10.1",
     "fastify": "^5.12.5",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "pg-boss": "^12.37.0"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",

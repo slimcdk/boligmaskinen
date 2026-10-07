@@ -1,10 +1,15 @@
 import compress from '@fastify/compress';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
+import { join } from 'node:path';
 import type pg from 'pg';
 import type { Config, LogLevel } from './config.ts';
 import { databaseHealth, openDatabase } from './db/database.ts';
 import { apiError, registerErrorHandler } from './errors.ts';
+import { JOBS } from './jobs/definitions.ts';
+import { JobRunner } from './jobs/runner.ts';
+import type { JobDefinition } from './jobs/types.ts';
+import { jobRoutes } from './routes/jobs.ts';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -13,9 +18,13 @@ declare module 'fastify' {
   }
 }
 
-export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'> & {
+export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'> & Partial<Pick<Config, 'timeZone'>> & {
   /** False for no logs, as in the tests. */
   logLevel?: LogLevel | false;
+  /** The data jobs; the tests bring their own. */
+  jobs?: JobDefinition[];
+  /** How often an idle job worker asks for work. */
+  jobPollSeconds?: number;
 };
 
 /** Angular's bundles have a hash in their name (main-V4FIJJ6A.js), so they never change. */
@@ -29,12 +38,23 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
 
   const db = options.databaseUrl ? await openDatabase(options.databaseUrl, app.log) : null;
   app.decorate('db', db);
-  app.addHook('onClose', async () => db?.end());
+  const runner = db && options.databaseUrl
+    ? await JobRunner.start({
+      db, databaseUrl: options.databaseUrl, definitions: options.jobs ?? JOBS, timeZone: options.timeZone ?? 'Europe/Copenhagen',
+      // Without a data pack folder of its own, the app serves the one in the frontend's build
+      dataPackDir: options.dataPackDir ?? join(options.staticDir, 'data-pack'), log: app.log, pollSeconds: options.jobPollSeconds,
+    })
+    : null;
+  app.addHook('onClose', async () => {
+    await runner?.stop();
+    await db?.end();
+  });
 
   app.get('/api/health', async (_request, reply) => {
     const database = await databaseHealth(db);
     return reply.code(database === 'unreachable' ? 503 : 200).send({ status: database === 'unreachable' ? 'degraded' : 'ok', database });
   });
+  await jobRoutes(app, runner);
   app.get('/api/version', async (_request, reply) => {
     if (!options.version) return reply.code(404).send(apiError(404, 'This build does not know its version'));
     return reply.header('cache-control', 'no-store').send(options.version);

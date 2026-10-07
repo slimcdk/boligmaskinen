@@ -1,57 +1,101 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
-import { nextRun } from './cron';
-import { Job, JobRun, JOBS, seedRuns } from './jobs';
+import { Job, JobRun } from './jobs';
+import { JobsApi, JobsApiError } from './jobs-api';
+import { JobsSimulation } from './jobs-simulation';
 
-/** How long a simulated run takes. */
-const SIMULATED_MS = 3000;
-const TICK_MS = 250;
+/** How often the open dialog asks the backend for news. */
+const POLL_MS = 2000;
 
 /**
- * The data jobs and their runs, as the admin page sees them.
- *
- * There is no backend yet, so runs are simulated: "Run now" queues a run, which progresses for a
- * few seconds, succeeds, and then starts the jobs that come after it. The real service will read
- * the same shapes from the API, where pg-boss runs the jobs and the source_run log keeps them.
+ * - live: the backend's jobs.
+ * - preview: no backend, so the runs are simulated.
+ * - unavailable: the backend answered but cannot show the jobs, e.g. without a database.
+ */
+export type JobsMode = 'loading' | 'live' | 'preview' | 'unavailable';
+
+/** The newest run per job, of the runs that pass the test. */
+function newestBy(runs: JobRun[], test: (run: JobRun) => boolean): Map<string, JobRun> {
+  const newest = new Map<string, JobRun>();
+  for (const run of runs) {
+    if (!test(run)) continue;
+    const current = newest.get(run.jobId);
+    if (!current || run.startedAt > current.startedAt) newest.set(run.jobId, run);
+  }
+  return newest;
+}
+
+/**
+ * The data jobs and their runs, as the jobs dialog shows them. With a backend they are the real
+ * jobs, read and started through its API. Without one, as on the artifact host, they are a
+ * simulated preview.
  */
 @Injectable({ providedIn: 'root' })
 export class JobsService {
-  readonly jobs = signal<Job[]>(JOBS.map((j) => ({ ...j })));
-  readonly runs = signal<JobRun[]>(seedRuns());
-  /** The clock the page shows relative times against; it ticks while the page is open. */
-  readonly now = signal(new Date());
-  private timers = new Map<string, ReturnType<typeof setInterval>>();
+  private readonly api = inject(JobsApi);
+  readonly mode = signal<JobsMode>('loading');
+  /** Why the jobs cannot be shown, or why the last action failed. */
+  readonly problem = signal<string | null>(null);
+  private problemFrom: 'refresh' | 'action' | null = null;
+  private readonly live = signal<{ jobs: Job[]; runs: JobRun[] }>({ jobs: [], runs: [] });
+  private readonly liveNow = signal(new Date());
+  private simulation: JobsSimulation | null = null;
+  private poll: ReturnType<typeof setInterval> | null = null;
+  private connecting: Promise<void> | null = null;
+
+  readonly jobs = computed(() => (this.mode() === 'preview' ? this.simulation!.jobs() : this.live().jobs));
+  readonly runs = computed(() => (this.mode() === 'preview' ? this.simulation!.runs() : this.live().runs));
+  /** The clock the dialog shows relative times against. */
+  readonly now = computed(() => (this.mode() === 'preview' ? this.simulation!.now() : this.liveNow()));
+  /** The latest run per job, finished or not. */
+  readonly latest = computed(() => newestBy(this.runs(), () => true));
+  /** The latest finished run per job. */
+  readonly lastFinished = computed(() => newestBy(this.runs(), (r) => !!r.finishedAt));
 
   constructor() {
-    const clock = setInterval(() => this.now.set(new Date()), 15_000);
     inject(DestroyRef).onDestroy(() => {
-      clearInterval(clock);
-      for (const timer of this.timers.values()) clearInterval(timer);
+      this.disconnect();
+      this.simulation?.destroy();
     });
   }
 
-  /** The latest run per job, and whether one is going now. */
-  readonly latest = computed(() => {
-    const latest = new Map<string, JobRun>();
-    for (const run of this.runs()) {
-      const current = latest.get(run.jobId);
-      if (!current || run.startedAt > current.startedAt) latest.set(run.jobId, run);
-    }
-    return latest;
-  });
+  /** Start showing the jobs, and keep them fresh until disconnect(). */
+  connect(): Promise<void> {
+    this.connecting ??= this.refresh().then(() => {
+      if (this.mode() !== 'preview' && !this.poll) this.poll = setInterval(() => void this.refresh(), POLL_MS);
+    });
+    return this.connecting;
+  }
 
-  /** The latest finished run per job. */
-  readonly lastFinished = computed(() => {
-    const done = new Map<string, JobRun>();
-    for (const run of this.runs()) {
-      if (!run.finishedAt) continue;
-      const current = done.get(run.jobId);
-      if (!current || run.startedAt > current.startedAt) done.set(run.jobId, run);
+  disconnect(): void {
+    if (this.poll) clearInterval(this.poll);
+    this.poll = null;
+    this.connecting = null;
+  }
+
+  /** Read the jobs and runs from the backend, or switch to the preview when there is none. */
+  async refresh(): Promise<void> {
+    if (this.mode() === 'preview') return;
+    try {
+      this.live.set(await this.api.list());
+      this.liveNow.set(new Date());
+      this.mode.set('live');
+      if (this.problemFrom === 'refresh') this.setProblem(null, null);
+    } catch (error) {
+      if (!(error instanceof JobsApiError)) throw error;
+      if (error.noBackend && this.mode() === 'loading') {
+        this.simulation = new JobsSimulation();
+        this.mode.set('preview');
+        return;
+      }
+      // A backend that answered before keeps its jobs on screen, with the reason it stopped answering
+      if (this.mode() === 'loading') this.mode.set('unavailable');
+      this.setProblem(error.message, 'refresh');
     }
-    return done;
-  });
+  }
 
   next(job: Job): Date | null {
-    return job.enabled && !job.blocked ? nextRun(job.schedule, this.now()) : null;
+    if (this.mode() === 'preview') return this.simulation!.next(job);
+    return job.nextRun ? new Date(job.nextRun) : null;
   }
 
   isActive(jobId: string): boolean {
@@ -59,63 +103,34 @@ export class JobsService {
     return run?.status === 'running' || run?.status === 'queued';
   }
 
-  /** Start a job now. Blocked, disabled and already running jobs are left alone. */
-  runNow(jobId: string, trigger: JobRun['trigger'] = 'manual'): JobRun | null {
-    const job = this.jobs().find((j) => j.id === jobId);
-    if (!job || job.blocked || !job.enabled || this.isActive(jobId)) return null;
-    const started = new Date();
-    const run: JobRun = {
-      id: `${jobId}-${started.getTime()}`, jobId, trigger, status: 'running', progress: 0,
-      startedAt: started.toISOString(),
-      log: [{ at: started.toISOString(), level: 'info', text: trigger === 'after' ? 'Started after the jobs before it' : 'Started' }],
-    };
-    this.runs.update((list) => [run, ...list]);
-    const timer = setInterval(() => this.advance(run.id), TICK_MS);
-    this.timers.set(run.id, timer);
-    return run;
-  }
-
-  cancel(runId: string): void {
-    this.finish(runId, 'cancelled', 'Cancelled by the user');
+  runNow(jobId: string): void {
+    if (this.mode() === 'preview') this.simulation!.runNow(jobId);
+    else void this.act(() => this.api.run(jobId));
   }
 
   setEnabled(jobId: string, enabled: boolean): void {
-    this.jobs.update((list) => list.map((j) => (j.id === jobId ? { ...j, enabled } : j)));
+    if (this.mode() === 'preview') this.simulation!.setEnabled(jobId, enabled);
+    else void this.act(() => this.api.setEnabled(jobId, enabled));
   }
 
-  private advance(runId: string): void {
-    const run = this.runs().find((r) => r.id === runId);
-    if (!run || run.status !== 'running') return;
-    const progress = Math.min(1, (run.progress ?? 0) + TICK_MS / SIMULATED_MS);
-    const step = progress >= 1 ? 'Done' : progress >= 0.66 ? 'Checking and loading into the database' : progress >= 0.33 ? 'Downloading' : 'Looking for changes';
-    const log = run.log.at(-1)?.text === step ? run.log : [...run.log, { at: new Date().toISOString(), level: 'info' as const, text: step }];
-    this.update(runId, { progress, log });
-    if (progress >= 1) {
-      this.finish(runId, 'succeeded');
-      const job = this.jobs().find((j) => j.id === run.jobId);
-      for (const id of job?.then ?? []) this.runNow(id, 'after');
+  cancel(runId: string): void {
+    if (this.mode() === 'preview') this.simulation!.cancel(runId);
+    else void this.act(() => this.api.cancel(runId));
+  }
+
+  private async act(action: () => Promise<unknown>): Promise<void> {
+    try {
+      await action();
+      if (this.problemFrom === 'action') this.setProblem(null, null);
+    } catch (error) {
+      if (!(error instanceof JobsApiError)) throw error;
+      this.setProblem(error.message, 'action');
     }
+    await this.refresh();
   }
 
-  private finish(runId: string, status: JobRun['status'], message?: string): void {
-    clearInterval(this.timers.get(runId));
-    this.timers.delete(runId);
-    const at = new Date().toISOString();
-    const run = this.runs().find((r) => r.id === runId);
-    if (!run || (run.status !== 'running' && run.status !== 'queued')) return;
-    const previous = this.lastFinished().get(run.jobId);
-    this.update(runId, {
-      status, finishedAt: at, progress: undefined, message,
-      // A simulated run reports what the previous real run fetched
-      bytes: status === 'succeeded' ? previous?.bytes : undefined,
-      result: status === 'succeeded' ? previous?.result ?? 'Simulated run' : undefined,
-      log: message ? [...run.log, { at, level: 'warn', text: message }] : run.log,
-    });
-  }
-
-  private update(runId: string, patch: Partial<JobRun>): void {
-    // Keep the clock in step with the runs, so a run that just ended reads "just now"
-    this.now.set(new Date());
-    this.runs.update((list) => list.map((r) => (r.id === runId ? { ...r, ...patch } : r)));
+  private setProblem(problem: string | null, from: 'refresh' | 'action' | null): void {
+    this.problem.set(problem);
+    this.problemFrom = from;
   }
 }

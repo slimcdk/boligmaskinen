@@ -23,6 +23,18 @@
   }
 }
 
+.problem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-body-medium);
+}
+
 .history {
   margin-top: 16px;
   --mat-expansion-container-background-color: transparent;

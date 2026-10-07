@@ -29,7 +29,8 @@ export class HttpError extends Error {
 export function registerErrorHandler(app: FastifyInstance): void {
   app.setErrorHandler((error: FastifyError, request, reply) => {
     const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
-    if (statusCode >= 500) {
+    // An HttpError says what it means on purpose; any other server error is a surprise
+    if (statusCode >= 500 && !(error instanceof HttpError)) {
       request.log.error({ err: error }, 'Request failed');
       return reply.code(statusCode).send(apiError(statusCode, 'Something went wrong on the server. Its log has the details.'));
     }

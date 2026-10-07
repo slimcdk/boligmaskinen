@@ -4,8 +4,8 @@ One Node server for the whole app: it serves the built frontend, its data pack a
 one port. The app image (`../Dockerfile`) runs it, so a single image is the whole app; PostGIS runs
 next to it as its own container when the backend starts using it.
 
-For now the API tells which version is running and how the database is. The data jobs and the
-vector tiles come next (see `../docs/plan.md`).
+The API tells which version is running and how the database is, and runs the data jobs. The
+vector tiles and the data itself come next (see `../docs/plan.md`).
 
 ## Run
 
@@ -19,6 +19,25 @@ npm run dev                          # http://localhost:8080, restarts on change
 npm test                             # Vitest; the database tests need TEST_DATABASE_URL (see below)
 npm run typecheck
 ```
+
+## Data jobs
+
+The jobs that fetch and build the data, like the task lists in Sonarr or Overseerr. They are defined
+in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the frontend has the same).
+
+- **pg-boss** queues them in PostgreSQL, in its own `pgboss` schema, in the same process as the
+  server. Each job has a queue that runs one run at a time and retries nothing: a failed run shows
+  in the dialog.
+- **Schedules** are cron expressions in `JOB_TIME_ZONE`. Switching a job off removes its schedule;
+  the choice is kept in `job_setting`.
+- **Runs** are kept in `job_run` with their status, progress, result, size and log. A run that was
+  going on when the app stopped is marked as failed at the next start.
+- **After a job succeeds**, the jobs in its `then` start.
+- **A job is a function** that gets a context: `log(text)`, `progress(fraction)`, a `signal` that
+  aborts when the run is cancelled, and the data pack folder. It returns `{ result, bytes }`.
+- **For now one job does real work:** "Check the data pack" reads the data pack and checks that every
+  file it names is there. The fetch and build jobs are listed as not built yet, and come with
+  milestone 2; the jobs that need access say what they wait for.
 
 ## Database
 
@@ -42,6 +61,10 @@ need the database say so.
 | `/` and the app's own paths | The frontend; unknown paths get `index.html`, because the app is a single page. Hashed bundles may be cached for good. |
 | `/data-pack/…` | The data pack, from `DATA_PACK_DIR`. |
 | `/api/version` | Which version is running, from the `APP_*` variables, named like the OCI image labels. Without them it answers 404 and the frontend reads its own `build-info.json`. |
+| `GET /api/jobs` | The data jobs and their latest 100 runs with logs: `{ jobs, runs }`. The data-jobs dialog reads it every 2 seconds while it is open. |
+| `POST /api/jobs/:id/run` | Starts a job now: 202 with the queued run, or 409 when it is blocked, switched off or already running. |
+| `PATCH /api/jobs/:id` | `{ "enabled": false }` switches a job's schedule off, `true` on again. |
+| `POST /api/runs/:id/cancel` | Cancels a waiting run at once and a running one at its next check. |
 | `/api/health` | `{"status":"ok","database":"ok"}`, for the image's health check. The database is `ok`, `not configured` or `unreachable`; unreachable answers 503. |
 
 ## Environment

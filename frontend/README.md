@@ -61,8 +61,13 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
 - **The gear** opens the data jobs: what each fetch or build does, how often it runs, when
   it runs next and when it last ran. "Run now" starts it, and the history shows each
   run's log.
-  - Until there is a backend, `src/app/admin/jobs.service.ts` simulates the runs.
-  - The shapes in `src/app/admin/jobs.ts` are what the backend's job API should serve.
+  - With a backend, the dialog shows its jobs through `api/jobs` and refreshes every 2 seconds
+    while it is open (`src/app/admin/jobs.service.ts`, `jobs-api.ts`).
+  - Without one, such as on the artifact host, it shows a simulated preview
+    (`jobs-simulation.ts`) and says so.
+  - When the backend answers but cannot show the jobs, for example without a database, the
+    dialog shows its reason.
+  - The shapes in `src/app/admin/jobs.ts` are the same as the backend's.
 - **The version label** shows the release tag, or the short commit hash, or "local build".
   - The app asks the backend's `api/version` first. Without a backend it reads
     `build-info.json`, which `tools/build-info.mjs` writes on every `npm start` and
@@ -121,6 +126,10 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
     SwiftShader (`PLAYWRIGHT_SOFTWARE_GL=1`, or automatically when `CI` is set).
 - `e2e/theme.spec.ts` checks light and dark mode by how bright the map actually is on a
   screenshot (`e2e/pixels.ts`).
+- `e2e-live/*.spec.ts` run against the whole app, with the backend and its database
+  (`npx playwright test -c playwright.live.config.ts`, with `BASE_URL`). CI runs them against
+  the image started with `compose.yaml`. They start a real job from the jobs dialog and read its
+  log, and check that the footer shows the version the server reports.
 - The map keeps its view in the address (`#map=zoom/lat/lng`). Tests and links can open a
   given view, and tests read the zoom from it.
 

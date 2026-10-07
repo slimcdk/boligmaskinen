@@ -1,12 +1,13 @@
 /**
- * The jobs that fetch and build the data, and their runs. This is the shape the backend's job
- * API will serve (pg-boss jobs plus the source_run log); until then JobsService simulates it.
+ * The jobs that fetch and build the data, and their runs: the shapes the backend's jobs API
+ * serves (backend/src/jobs/types.ts has the same). JOBS and seedRuns are the preview's own data,
+ * for when there is no backend.
  */
 
 export interface Job {
   id: string;
   name: string;
-  kind: 'fetch' | 'build';
+  kind: 'fetch' | 'build' | 'check';
   /** Who provides the data, e.g. "Geofabrik". */
   source: string;
   description: string;
@@ -15,8 +16,12 @@ export interface Job {
   enabled: boolean;
   /** Why the job cannot run yet, e.g. a missing API key. */
   blocked?: string;
+  /** True when the job is planned but not built yet; `blocked` says when it comes. */
+  planned?: boolean;
   /** Jobs that start when this one has succeeded. */
   then?: string[];
+  /** When the schedule starts it next, from the backend, in its time zone. */
+  nextRun?: string;
 }
 
 export type RunStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled';

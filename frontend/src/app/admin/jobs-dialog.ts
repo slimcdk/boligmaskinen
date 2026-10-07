@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -10,7 +10,14 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { describeCron, formatBytes, formatDuration, relativeTime } from './cron';
 import { Job, JobRun } from './jobs';
-import { JobsService } from './jobs.service';
+import { JobsMode, JobsService } from './jobs.service';
+
+const SUBTITLE: Record<JobsMode, string> = {
+  loading: 'Reading the jobs…',
+  live: 'Fetching and building the data on this server',
+  preview: 'Preview without a backend: the runs are simulated',
+  unavailable: 'The jobs cannot be shown',
+};
 
 const STATUS_ICON: Record<JobRun['status'], string> = {
   queued: 'schedule', running: 'progress_activity', succeeded: 'check_circle', failed: 'error', cancelled: 'cancel',
@@ -31,6 +38,12 @@ export class JobsDialog {
   protected readonly taskColumns = ['name', 'schedule', 'last', 'next', 'actions'];
   protected readonly runColumns = ['job', 'started', 'duration', 'result', 'status'];
   protected readonly selected = signal<string | null>(null);
+  protected readonly subtitle = computed(() => SUBTITLE[this.jobs.mode()]);
+
+  constructor() {
+    void this.jobs.connect();
+    inject(DestroyRef).onDestroy(() => this.jobs.disconnect());
+  }
 
   protected readonly names = computed(() => new Map(this.jobs.jobs().map((j) => [j.id, j.name])));
   protected readonly history = computed(() => [...this.jobs.runs()].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 30));
@@ -40,7 +53,8 @@ export class JobsDialog {
     return {
       failing: latest.filter((r) => r.status === 'failed').length,
       running: this.jobs.runs().filter((r) => r.status === 'running').length,
-      blocked: this.jobs.jobs().filter((j) => j.blocked).length,
+      blocked: this.jobs.jobs().filter((j) => j.blocked && !j.planned).length,
+      planned: this.jobs.jobs().filter((j) => j.planned).length,
     };
   });
 
@@ -60,7 +74,7 @@ export class JobsDialog {
   }
 
   protected when(job: Job): string {
-    if (job.blocked) return 'Not scheduled';
+    if (job.blocked) return job.planned ? 'Not built yet' : 'Not scheduled';
     if (!job.enabled) return 'Off';
     const next = this.jobs.next(job);
     return next ? relativeTime(next, this.jobs.now()) : '–';
