@@ -3,6 +3,11 @@
   align-items: center;
   gap: 12px;
 
+  // Material's title has an empty ::before for its baseline, which a flex gap would push the title away from
+  &::before {
+    display: none;
+  }
+
   .title {
     flex: 1;
   }
@@ -27,7 +32,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   padding: 8px 12px;
   border-radius: 8px;
   background: var(--mat-sys-error-container);
@@ -35,14 +40,78 @@
   font: var(--mat-sys-body-medium);
 }
 
-.history {
-  margin-top: 16px;
+// Everything starts at the dialog's content edge: the title, both tables, "Recent runs" and the
+// log. So the tables' outer cells have no padding of their own, and the runs panel is not a card.
+.history.mat-expansion-panel {
+  margin-top: 24px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 0;
+  box-shadow: none;
   --mat-expansion-container-background-color: transparent;
+  --mat-expansion-container-shape: 0;
+
+  mat-expansion-panel-header {
+    padding: 0;
+  }
+
+  ::ng-deep .mat-expansion-panel-body {
+    padding: 0 0 8px;
+  }
 }
 
 table {
   width: 100%;
   background: transparent;
+
+  th.mat-mdc-header-cell:first-child,
+  td.mat-mdc-cell:first-child {
+    padding-left: 0;
+  }
+
+  th.mat-mdc-header-cell:last-child,
+  td.mat-mdc-cell:last-child {
+    padding-right: 0;
+  }
+
+  td.mat-mdc-cell {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    vertical-align: middle;
+  }
+}
+
+.tasks {
+  .mat-column-schedule {
+    width: 210px;
+  }
+
+  .mat-column-last {
+    width: 190px;
+  }
+
+  .mat-column-next {
+    width: 140px;
+    white-space: nowrap;
+  }
+
+  .mat-column-actions {
+    width: 96px;
+  }
+}
+
+.runs {
+  .mat-column-started,
+  .mat-column-duration,
+  .mat-column-status {
+    white-space: nowrap;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
 }
 
 .name {
@@ -56,6 +125,7 @@ table {
 }
 
 .description {
+  margin-top: 2px;
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
 }
@@ -78,7 +148,9 @@ table {
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  white-space: nowrap;
+  vertical-align: middle;
 
   mat-icon {
     width: 18px;
@@ -90,11 +162,6 @@ table {
   &.failed { color: var(--mat-sys-error); }
   &.running mat-icon { color: var(--mat-sys-primary); }
   &.cancelled mat-icon { color: var(--mat-sys-outline); }
-}
-
-.actions {
-  white-space: nowrap;
-  text-align: right;
 }
 
 tr.inactive td {
@@ -111,8 +178,8 @@ tr.clickable {
 }
 
 .log {
-  margin-top: 12px;
-  padding: 12px 14px;
+  margin-top: 16px;
+  padding: 12px 16px;
   border-radius: 12px;
   background: var(--mat-sys-surface-container-lowest);
   border: 1px solid var(--mat-sys-outline-variant);

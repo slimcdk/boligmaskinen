@@ -16,10 +16,11 @@ test('"About the data" opens the text and the sources', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('the footer shows which version is running', async ({ page }) => {
+test('the footer shows which version is running, and links to the repository', async ({ page }) => {
   await open(page);
   // Without a git repository the build is labelled as local
   await expect(page.locator('app-panel .foot .version')).toHaveText(/local build|v\d|[0-9a-f]{7}/);
+  await expect(page.locator('app-panel .foot a.version')).toHaveAttribute('href', 'https://github.com/slimcdk/boligmaskinen');
 });
 
 test('the gear opens the data jobs, which can be run at once', async ({ page }) => {

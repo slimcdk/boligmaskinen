@@ -22,7 +22,7 @@ export interface BuildInfo {
 export interface VersionLabel {
   /** The release tag, the short commit hash, or "local build". */
   text: string;
-  /** The release or commit in the repository, when the repository is known. */
+  /** The repository, when it is known. */
   url: string | null;
   title: string;
 }
@@ -31,10 +31,7 @@ export function versionLabel(info: BuildInfo | null): VersionLabel {
   const short = info?.revision.slice(0, 7) ?? '';
   const text = info?.version || short || 'local build';
   if (!info) return { text, url: null, title: 'Built locally, not from git' };
-  const url = !info.source ? null
-    : info.version ? `${info.source}/releases/tag/${info.version}`
-    : info.revision ? `${info.source}/commit/${info.revision}`
-    : info.source;
+  const url = info.source || null;
   const what = info.version ? `Release ${info.version}` : info.revision ? `Commit ${short}` : 'Built locally, not from git';
   return { text, url, title: `${what}${info.created ? ` · built ${info.created.slice(0, 10)}` : ''}` };
 }
