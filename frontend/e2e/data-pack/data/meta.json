@@ -1,0 +1,59 @@
+{
+ "built": "2026-10-07",
+ "region": {
+  "id": "aarhus",
+  "name": "Aarhus Kommune"
+ },
+ "width": 277,
+ "height": 379,
+ "bounds": {
+  "west": 9.944938949597898,
+  "south": 55.99233826436222,
+  "east": 10.391812357677184,
+  "north": 56.33280102782615
+ },
+ "cellMetres": 100,
+ "distanceMax": 20000,
+ "files": {
+  "forest": "forest.png",
+  "water": "water.png",
+  "beach": "beach.png",
+  "noise": "noise.png",
+  "supermarket": "supermarket.png",
+  "school": "school.png",
+  "daycare": "daycare.png",
+  "station": "station.png",
+  "turbine": "turbine.png",
+  "density": "density.png",
+  "zone": "zone.png",
+  "municipality": "municipality.png",
+  "mask": "mask.png"
+ },
+ "municipalities": [
+  {
+   "index": 1,
+   "code": "751",
+   "name": "Aarhus",
+   "incomeTax": 24.52,
+   "landTax": 6,
+   "population": 378270,
+   "burglariesPer1000": 3.43
+  }
+ ],
+ "counts": {
+  "addresses": 2615038,
+  "homeCells": 14013,
+  "regionLandCells": 46501,
+  "supermarkets": 2815,
+  "stations": 619,
+  "schools": 1938,
+  "daycare": 4886,
+  "turbines": 4866,
+  "mstShareOfRegion": 0.1238
+ },
+ "basemap": {
+  "parts": 1,
+  "chunkSize": 5000000,
+  "size": 2159851
+ }
+}
