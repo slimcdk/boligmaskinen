@@ -120,7 +120,7 @@
   <button mat-icon-button (click)="openJobs()" matTooltip="Data jobs" aria-label="Data jobs"><mat-icon>settings</mat-icon></button>
   @let v = version();
   @if (v.url) {
-    <a class="version" [href]="v.url" target="_blank" rel="noopener" [title]="v.title" [attr.aria-label]="'Version ' + v.text + ' on GitHub'">
+    <a class="version" [href]="v.url" target="_blank" rel="noopener" [title]="v.title" [attr.aria-label]="'Boligmaskinen on GitHub, version ' + v.text">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg>{{ v.text }}
     </a>
   } @else {
