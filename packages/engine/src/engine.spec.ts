@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { boxBlur, buildLut, decodeValue, lowerLimit, percentile, scoreCells, ScoringItem, utility } from './engine';
+import { boxBlur, buildLut, decodeValue, lowerLimit, percentile, scoreCells, type ScoringItem, utility } from './engine.ts';
 
 const ctx = { distanceMax: 20000, municipalities: [] };
 

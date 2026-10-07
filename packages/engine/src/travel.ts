@@ -6,7 +6,7 @@
  * or cycles to the nearest station, waits, rides and walks from the station nearest
  * the place. Valhalla and OpenTripPlanner replace this when the routing service exists.
  */
-import { Grid, TravelMode } from './types';
+import { type Grid, type TravelMode } from './types.ts';
 
 const EARTH = 6378137;
 const WALK_MIN_PER_KM = 15; // 5 km/h with a 1.25 detour factor

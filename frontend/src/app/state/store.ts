@@ -1,9 +1,9 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
-import { Block } from '../scoring/blocks';
-import { formulaParams, renameValues, setParam } from '../scoring/formula';
-import { blockFrom, LIBRARY, placeTemplate, templateOf } from '../scoring/library';
-import { DEFAULT_CRITERIA, DEFAULT_VIEW, Place, ViewState } from '../scoring/types';
-import { MODES, placeValueName } from '../scoring/values';
+import { Block } from '@boligmaskinen/engine';
+import { formulaParams, renameValues, setParam } from '@boligmaskinen/engine';
+import { blockFrom, LIBRARY, placeTemplate, templateOf } from '@boligmaskinen/engine';
+import { DEFAULT_CRITERIA, DEFAULT_VIEW, Place, ViewState } from '@boligmaskinen/engine';
+import { MODES, placeValueName } from '@boligmaskinen/engine';
 import { migrateV1, migrateV2, Migrated, SavedV1, SavedV2 } from './migrate';
 
 const STORE_KEY = 'boligmaskinen.prototype.v3';

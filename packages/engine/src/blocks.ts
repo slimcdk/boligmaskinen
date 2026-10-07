@@ -9,9 +9,9 @@
  * The final weighting is the importance-weighted average of the preferences, renormalised
  * over the blocks that have data in each cell, exactly like the original engine.
  */
-import { compileCached, describeError, FormulaParam, formulaParams } from './formula';
-import { Role } from './types';
-import { formatWithUnit } from './values';
+import { compileCached, describeError, type FormulaParam, formulaParams } from './formula.ts';
+import { type Role } from './types.ts';
+import { formatWithUnit } from './values.ts';
 
 export interface Block {
   id: string;

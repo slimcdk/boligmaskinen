@@ -13,7 +13,7 @@ import { BuildInfoService } from '../data/build-info';
 import { PilotData } from '../data/pilot-data';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
-import { PLACE_COLOURS, SUGGESTED, ViewState } from '../scoring/types';
+import { PLACE_COLOURS, SUGGESTED, ViewState } from '@boligmaskinen/engine';
 import { AboutDialog } from './about-dialog';
 import { BlockRow } from './block-row';
 import { CatalogData, CatalogDialog, CatalogResult } from './catalog-dialog';

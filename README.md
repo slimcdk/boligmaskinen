@@ -11,6 +11,7 @@ precomputed data pack built by the pilot pipeline.
 |---|---|
 | [`frontend/`](frontend/README.md) | Angular 22 + Angular Material app: the map, the blocks and their code, the data jobs, light and dark mode. Vitest and Playwright tests. |
 | [`backend/`](backend/README.md) | Node 24 + Fastify server that serves the frontend, the data pack and the API. |
+| [`packages/engine/`](packages/engine/README.md) | The scoring engine and the block language, shared by the frontend and the backend. |
 | [`pilot/`](pilot/README.md) | Python pipeline that fetches the open data for all of Denmark and builds the grid and the data pack. |
 | [`docs/`](docs) | [Data sources and how they are fetched](docs/data-sources.md), [findings](docs/findings.md), [benchmarks](docs/benchmarks/weighting/README.md). |
 | [`.devcontainer/`](.devcontainer) | The development environment: Node 24, uv, go-pmtiles, Playwright's Chromium and psql, next to a PostGIS database. |
@@ -49,7 +50,7 @@ as `v0.1.0`.
 
 GitHub Actions (`.github/workflows/`):
 
-- **Every push and pull request:** frontend unit tests and build, backend tests against
+- **Every push and pull request:** engine tests, frontend unit tests and build, backend tests against
   PostGIS, the end-to-end tests in Chrome with the test data pack, and the image started with
   `compose.yaml` and checked.
 - **Every commit on master that passes:** the image is built once and pushed as

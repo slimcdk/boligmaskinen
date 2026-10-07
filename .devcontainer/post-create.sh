@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+(cd packages/engine && npm ci)
 (cd frontend && npm ci && npx playwright install chromium)
 (cd backend && npm ci)
 (cd pilot && uv sync)

@@ -5,7 +5,7 @@
  * Every criterion reads one 8-bit layer. Its curve and weight are baked into a
  * 256-entry lookup table, so scoring a cell is a handful of table lookups.
  */
-import { CriterionKind, Municipality, MunicipalField, Role, ViewState } from './types';
+import { type CriterionKind, type Municipality, type MunicipalField, type Role, type ViewState } from './types.ts';
 
 /** Everything the engine needs to know about one criterion or place. */
 export interface ScoringItem {

@@ -2,9 +2,9 @@
  * The values a block's code can read: the data layers, the statistics per municipality and
  * the travel times to the user's own places.
  */
-import { formatDistance } from './format';
-import { toVariableName } from './formula';
-import { CriterionKind, LayerName, MunicipalField, Place, TravelMode } from './types';
+import { formatDistance } from './format.ts';
+import { toVariableName } from './formula.ts';
+import { type CriterionKind, type LayerName, type MunicipalField, type Place, type TravelMode } from './types.ts';
 
 export type ValueGroup = 'Nature' | 'Peace and quiet' | 'Everyday life' | 'Area and economy' | 'Your places';
 

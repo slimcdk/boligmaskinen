@@ -18,7 +18,7 @@ The same weighting in five ways:
 Run them again with:
 
 ```sh
-npx esbuild ../../../frontend/src/app/scoring/blocks.ts --bundle --format=esm --platform=node --outfile=blocks.mjs
+npx esbuild ../../../packages/engine/src/blocks.ts --bundle --format=esm --platform=node --outfile=blocks.mjs
 node bench.mjs                       # Node 24
 uv run --project ../../../pilot python -I bench_numpy.py
 go run bench.go

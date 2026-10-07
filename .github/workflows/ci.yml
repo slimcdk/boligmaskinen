@@ -37,6 +37,24 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  engine:
+    name: Engine tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/engine
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: packages/engine/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
   backend:
     name: Backend tests
     runs-on: ubuntu-24.04
@@ -135,7 +153,7 @@ jobs:
 
   image:
     name: Container image
-    needs: [frontend, backend, e2e, compose]
+    needs: [engine, frontend, backend, e2e, compose]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     timeout-minutes: 20

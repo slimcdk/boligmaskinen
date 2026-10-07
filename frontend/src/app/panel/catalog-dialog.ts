@@ -3,8 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule, MatSelectionList } from '@angular/material/list';
-import { BlockTemplate, EXAMPLES, LIBRARY } from '../scoring/library';
-import { CRITERION_GROUPS } from '../scoring/types';
+import { BlockTemplate, EXAMPLES, LIBRARY } from '@boligmaskinen/engine';
+import { CRITERION_GROUPS } from '@boligmaskinen/engine';
 
 export interface CatalogData {
   /** Predefined blocks already in use. */

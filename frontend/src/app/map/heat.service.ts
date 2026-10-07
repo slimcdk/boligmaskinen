@@ -2,12 +2,12 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
 import { Scheme, ThemeService } from '../theme/theme.service';
-import { BlockInputs, evaluateBlocks } from '../scoring/blocks';
-import { boxBlur, decodeValue, DecodeContext, lowerLimit, percentile, total } from '../scoring/engine';
-import { compileCached } from '../scoring/formula';
-import { minutesLayer, mercatorFrame, MercatorFrame } from '../scoring/travel';
-import { Grid } from '../scoring/types';
-import { DATA_VALUES, formatValueOf, placeValues, ValueInfo } from '../scoring/values';
+import { BlockInputs, evaluateBlocks } from '@boligmaskinen/engine';
+import { boxBlur, decodeValue, DecodeContext, lowerLimit, percentile, total } from '@boligmaskinen/engine';
+import { compileCached } from '@boligmaskinen/engine';
+import { minutesLayer, mercatorFrame, MercatorFrame } from '@boligmaskinen/engine';
+import { Grid } from '@boligmaskinen/engine';
+import { DATA_VALUES, formatValueOf, placeValues, ValueInfo } from '@boligmaskinen/engine';
 import { BELOW_LIMIT, RAMPS, Rgb } from './colours';
 
 export interface HeatStats {

@@ -1,0 +1,21 @@
+{
+  "name": "@boligmaskinen/engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The scoring engine and the block language, shared by the frontend and the backend",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

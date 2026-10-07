@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Store } from '../state/store';
-import { blockFrom, LIBRARY } from '../scoring/library';
+import { blockFrom, LIBRARY } from '@boligmaskinen/engine';
 import { CodeDialog } from './code-dialog';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

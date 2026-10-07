@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { Block, BlockInputs, blockSummary, evaluateBlocks } from './blocks';
-import { decodeValue, scoreCells, ScoringItem } from './engine';
-import { blockFrom, criterionTemplate, LIBRARY, placeTemplate } from './library';
-import { Criterion, DEFAULT_CRITERIA, LayerName, Municipality } from './types';
-import { DATA_VALUES, placeValues } from './values';
+import { type Block, type BlockInputs, blockSummary, evaluateBlocks } from './blocks.ts';
+import { decodeValue, scoreCells, type ScoringItem } from './engine.ts';
+import { blockFrom, criterionTemplate, LIBRARY, placeTemplate } from './library.ts';
+import { type Criterion, DEFAULT_CRITERIA, type LayerName, type Municipality } from './types.ts';
+import { DATA_VALUES, placeValues } from './values.ts';
 
 /** Inputs from plain arrays, one entry per cell. */
 function inputs(values: Record<string, number[]>, names = Object.keys(values)): BlockInputs {
