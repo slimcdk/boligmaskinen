@@ -31,6 +31,10 @@ import { ThemeService } from '../theme/theme.service';
     .ramp { height: 10px; border-radius: 5px; margin: 6px 0 3px; }
     .ticks { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: var(--mat-sys-on-surface-variant); }
     .caption { color: var(--mat-sys-on-surface-variant); margin-top: 2px; }
+    @media (max-width: 700px), (max-height: 500px) {
+      .legend { width: 170px; padding: 6px 10px; }
+      .caption { display: none; }
+    }
   `],
 })
 export class Legend {

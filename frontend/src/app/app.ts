@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, signal, viewChild } from '@angular/core';
+import { Component, effect, HostListener, inject, signal, untracked, viewChild } from '@angular/core';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -30,6 +30,20 @@ export class App {
 
   constructor() {
     void this.data.load();
+    // On a phone the panel lies over the map: it steps aside while a place is dropped, and comes back after
+    let stepAside = false;
+    effect(() => {
+      const placing = this.store.placing();
+      untracked(() => {
+        if (placing && this.mobile() && this.panelOpen()) {
+          stepAside = true;
+          this.panelOpen.set(false);
+        } else if (!placing && stepAside) {
+          stepAside = false;
+          this.panelOpen.set(true);
+        }
+      });
+    });
   }
 
   protected onPanelToggled(): void {

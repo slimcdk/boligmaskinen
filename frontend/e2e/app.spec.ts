@@ -110,13 +110,73 @@ test('a requirement removes the cells that do not meet it', async ({ page }) => 
   await page.getByRole('option', { name: /Planning zone/ }).click();
   await page.getByRole('button', { name: 'Done' }).click();
   const row = block(page, 'Planning zone');
-  await expect(row.locator('.required')).toHaveText('Required');
+  const required = row.getByRole('switch', { name: 'Required: Planning zone' });
+  await expect(required).toBeChecked();
   await expect(result(page)).toHaveAttribute('aria-label', /meet your requirements/);
   const before = await cellsShown(page);
   await expand(page, 'Planning zone');
   await row.getByRole('checkbox', { name: 'Landzone' }).uncheck();
   await expect.poll(() => cellsShown(page)).toBeLessThan(before);
   await expect(row.locator('.rule')).toHaveText('Only Byzone');
+  // Switched off, the requirement removes nothing, but keeps its settings
+  const fewer = await cellsShown(page);
+  await required.click();
+  await expect.poll(() => cellsShown(page)).toBeGreaterThan(fewer);
+  await expect(row.locator('.rule')).toHaveText('Only Byzone');
+});
+
+test('each map has its own blocks, and the maps are remembered', async ({ page }) => {
+  await open(page);
+  await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await expect(block(page, 'Forest')).toBeVisible();
+  await page.getByRole('button', { name: /^Map: My map/ }).click();
+  await page.getByRole('menuitem', { name: 'New map' }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Name of the map' }).fill('Near the sea');
+  await page.getByRole('button', { name: 'Create' }).click();
+  // A new map starts empty
+  await expect(page.getByRole('button', { name: /^Map: Near the sea/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Where would you like to live?' })).toBeVisible();
+  await expect(block(page, 'Forest')).toHaveCount(0);
+  await page.locator('mat-chip', { hasText: 'Supermarket' }).click();
+  await expect(block(page, 'Supermarket')).toBeVisible();
+
+  await page.reload();
+  await open(page);
+  await expect(page.getByRole('button', { name: /^Map: Near the sea/ })).toBeVisible();
+  await expect(block(page, 'Supermarket')).toBeVisible();
+  await page.getByRole('button', { name: /^Map: / }).click();
+  await page.getByRole('menuitemradio', { name: 'My map' }).click();
+  await expect(block(page, 'Forest')).toBeVisible();
+  await expect(block(page, 'Supermarket')).toHaveCount(0);
+});
+
+test('a group switches its blocks off together, and blocks move between groups', async ({ page }) => {
+  await open(page);
+  await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('option', { name: /^Quiet Road/ }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(block(page, 'Quiet')).toBeVisible();
+  await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
+  const both = await result(page).getAttribute('aria-label');
+  await page.getByRole('switch', { name: 'Use Nature' }).click();
+  await expect(result(page)).not.toHaveAttribute('aria-label', both!);
+  await page.getByRole('switch', { name: 'Use Peace and quiet' }).click();
+  await expect(page.getByRole('heading', { name: 'Everything is switched off' })).toBeVisible();
+  await page.getByRole('switch', { name: 'Use Nature' }).click();
+  await page.getByRole('switch', { name: 'Use Peace and quiet' }).click();
+  await expect(result(page)).toHaveAttribute('aria-label', both!);
+
+  const row = await expand(page, 'Quiet');
+  await row.getByRole('button', { name: 'More for Quiet' }).click();
+  await page.getByRole('menuitem', { name: 'Move to group' }).click();
+  await page.getByRole('menuitem', { name: 'New group…' }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Name of the group' }).fill('Evenings');
+  await page.getByRole('button', { name: 'Move', exact: true }).click();
+  await expect(page.getByRole('switch', { name: 'Use Evenings' })).toBeVisible();
+  // The group it left is empty, so it is gone
+  await expect(page.getByRole('switch', { name: 'Use Peace and quiet' })).toHaveCount(0);
+  await expect(result(page)).toHaveAttribute('aria-label', both!);
 });
 
 test('a new place gets a block with a choice of how to travel, and its name follows the place', async ({ page }) => {
@@ -168,4 +228,36 @@ test('a link opens the same view', async ({ page }) => {
   await page.goto('/#map=10/55.676/12.568');
   await expect(page.locator('mat-progress-bar')).toHaveCount(0, { timeout: 60_000 });
   await expect.poll(() => zoom(page)).toBeCloseTo(10, 0);
+});
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('the panel lies over the map and steps aside to drop a place', async ({ page }) => {
+    await open(page);
+    const hide = page.getByRole('button', { name: 'Hide panel' });
+    await expect(hide).toBeHidden();
+    await page.getByRole('button', { name: 'What matters to you' }).tap();
+    await page.locator('mat-chip', { hasText: 'Forest' }).tap();
+    await expect(block(page, 'Forest')).toBeVisible();
+    await page.getByRole('button', { name: 'Add place' }).tap();
+    await expect(page.locator('.placing-hint')).toContainText('Click or tap the map where the place is');
+    await expect(hide).toBeHidden();
+    const map = (await page.locator('.maplibregl-canvas').boundingBox())!;
+    await page.locator('.maplibregl-canvas').tap({ position: { x: map.width / 2, y: map.height / 2 } });
+    // The panel comes back with the new place's block
+    await expect(block(page, 'Place 1')).toBeVisible();
+    await expect(hide).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
+  });
+
+  test('the data jobs fit the screen', async ({ page }) => {
+    await open(page);
+    await page.getByRole('button', { name: 'What matters to you' }).tap();
+    await page.getByRole('button', { name: 'Data jobs' }).tap();
+    const run = page.getByRole('button', { name: 'Run OpenStreetMap now' });
+    await expect(run).toBeInViewport();
+    const body = page.locator('app-jobs-dialog .body');
+    expect(await body.evaluate((el) => el.scrollWidth - el.clientWidth)).toBe(0);
+  });
 });

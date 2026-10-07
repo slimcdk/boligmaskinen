@@ -3,18 +3,25 @@
   flex-direction: column;
   height: 100%;
   background: var(--mat-sys-surface-container-low);
+  // The panel is narrower than 380px on a phone; the footer adapts to the panel, not the screen
+  container-type: inline-size;
 }
 
 .head {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  padding: 14px 8px 10px 16px;
+  gap: 4px;
+  padding: 14px 8px 8px 16px;
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 
+  .top { display: flex; align-items: flex-start; gap: 8px; align-self: stretch; }
   .title { flex: 1; min-width: 0; }
   h1 { margin: 0; font: var(--mat-sys-title-large); }
   p { margin: 2px 0 0; font: var(--mat-sys-body-small); color: var(--mat-sys-on-surface-variant); }
+
+  // The text button's own padding lines its icon up with the title
+  app-map-switcher { max-width: 100%; margin-left: -12px; }
 }
 
 .body {
@@ -89,6 +96,12 @@ mat-slider {
   }
 }
 
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .settings {
   display: flex;
   flex-direction: column;
@@ -159,9 +172,14 @@ mat-slider {
     padding: 2px 0;
   }
 
-  .name:hover,
-  .name:focus {
+  .name:hover {
     border-bottom-color: var(--mat-sys-outline);
+  }
+
+  // A clear focus, without the line moving the text
+  .name:focus {
+    border-bottom-color: transparent;
+    box-shadow: inset 0 -2px 0 var(--mat-sys-primary);
     outline: none;
   }
 }
@@ -176,6 +194,10 @@ mat-slider {
 
   .spacer {
     flex: 1;
+  }
+
+  button {
+    white-space: nowrap;
   }
 
   .version {
@@ -199,5 +221,13 @@ mat-slider {
   a.version:hover {
     color: var(--mat-sys-on-surface);
     background: var(--mat-sys-surface-container-high);
+  }
+}
+
+// On a phone the version leaves room for the rest: the GitHub mark stays, and the link's label still
+// names the version
+@container (width < 380px) {
+  .foot .version .text {
+    display: none;
   }
 }

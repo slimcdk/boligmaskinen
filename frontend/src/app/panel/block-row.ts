@@ -2,19 +2,26 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
 import { Block, blockSummary, formulaParams, MAX_WEIGHT, Role, turnAround } from '@boligmaskinen/engine';
 import { CodeDialog, CodeDialogData } from './code-dialog';
+import { NameDialog, NameDialogData } from './name-dialog';
 import { ParamControl } from './param-control';
 
-/** One block of the weighting: name, weight, and the controls its code exposes. */
+/** One block of the weighting: name, weight or switch, and the controls its code exposes. */
 @Component({
   selector: 'app-block-row',
-  imports: [MatButtonModule, MatButtonToggleModule, MatIconModule, MatSliderModule, MatTooltipModule, ParamControl],
+  imports: [
+    MatButtonModule, MatButtonToggleModule, MatDividerModule, MatIconModule, MatMenuModule, MatSlideToggleModule, MatSliderModule,
+    MatTooltipModule, ParamControl,
+  ],
   templateUrl: './block-row.html',
   styleUrl: './block-row.scss',
 })
@@ -23,6 +30,8 @@ export class BlockRow {
   private readonly heat = inject(HeatService);
   private readonly dialog = inject(MatDialog);
   readonly block = input.required<Block>();
+  /** True when the block's group is switched off. */
+  readonly groupOff = input(false);
   protected readonly open = signal(false);
   protected readonly MAX_WEIGHT = MAX_WEIGHT;
 
@@ -32,13 +41,18 @@ export class BlockRow {
   protected readonly preview = computed(() => this.heat.preview().get(this.block().id) ?? '');
   /** Blocks with a ramp (`full` and `zero`) can give full points at the other end instead. */
   protected readonly canTurnAround = computed(() => turnAround(this.block().code) !== null);
+  /** Whether the block counts: a requirement that is switched on, or a preference with weight, in a group that is on. */
+  protected readonly counts = computed(() => {
+    const block = this.block();
+    return !this.groupOff() && block.enabled !== false && (block.role === 'must' || block.weight > 0);
+  });
 
   protected onWeight(event: Event): void {
     this.store.updateBlock(this.block().id, { weight: Number((event.target as HTMLInputElement).value) });
   }
 
   protected setRole(role: Role): void {
-    this.store.updateBlock(this.block().id, { role });
+    this.store.setRole(this.block().id, role);
   }
 
   protected turnAround(): void {
@@ -48,6 +62,13 @@ export class BlockRow {
   protected editCode(): void {
     const data: CodeDialogData = { blockId: this.block().id };
     this.dialog.open(CodeDialog, { data, width: '980px', maxWidth: '96vw', autoFocus: 'textarea' });
+  }
+
+  protected newGroup(): void {
+    const id = this.block().id;
+    const data: NameDialogData = { title: 'Move to a new group', label: 'Name of the group', value: this.store.freeGroupName('New group'), action: 'Move' };
+    this.dialog.open<NameDialog, NameDialogData, string>(NameDialog, { data, width: '400px', maxWidth: '92vw', autoFocus: 'first-tabbable' })
+      .afterClosed().subscribe((name) => name && this.store.moveToNewGroup(id, name));
   }
 
   protected remove(): void {

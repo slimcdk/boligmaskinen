@@ -30,9 +30,6 @@
   gap: 4px;
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 
   mat-icon {
     flex: none;
@@ -42,16 +39,36 @@
   }
 }
 
+// Up to two lines, so the far end of a ramp shows in the narrow panel too
+.summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
 .error {
   color: var(--mat-sys-error);
 }
 
+// A block that counts for nothing (switched off, weight 0, or its group off) keeps its controls
+.off .text {
+  opacity: 0.6;
+}
+
+// As wide as the weight slider, so switches and sliders line up down the list
 .required {
   flex: none;
-  font: var(--mat-sys-label-medium);
-  border: 1px solid var(--mat-sys-outline);
-  border-radius: 999px;
-  padding: 2px 10px;
+  display: flex;
+  justify-content: flex-end;
+  width: 128px;
+  --mat-slide-toggle-label-text-font: var(--mat-sys-label-large-font);
+  --mat-slide-toggle-label-text-size: var(--mat-sys-label-large-size);
+  --mat-slide-toggle-label-text-weight: var(--mat-sys-label-large-weight);
+  --mat-slide-toggle-label-text-line-height: var(--mat-sys-label-large-line-height);
+  --mat-slide-toggle-label-text-tracking: var(--mat-sys-label-large-tracking);
+  --mat-slide-toggle-label-text-color: var(--mat-sys-on-surface-variant);
 }
 
 .weight {
@@ -98,5 +115,6 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 4px;
 }

@@ -1,0 +1,61 @@
+// A filled card per group, a step above the panel's own surface
+:host {
+  display: block;
+  padding: 4px 12px;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+}
+
+.fold {
+  flex: none;
+  margin-left: -8px;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+// Renamed in place, like a place's name
+.name {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
+
+  &:hover {
+    border-bottom-color: var(--mat-sys-outline);
+  }
+
+  // A clear focus, without the line moving the text
+  &:focus {
+    border-bottom-color: transparent;
+    box-shadow: inset 0 -2px 0 var(--mat-sys-primary);
+    outline: none;
+  }
+}
+
+.off .name {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.count {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+mat-slide-toggle {
+  flex: none;
+}

@@ -5,11 +5,14 @@
   <mat-sidenav-content class="content">
     <div class="map-area">
       <app-map-view />
-      @if (!panelOpen()) {
+      @if (!panelOpen() && !store.placing()) {
         <button mat-flat-button class="open-panel" (click)="panelOpen.set(true)"><mat-icon>tune</mat-icon>What matters to you</button>
       }
       @if (store.placing()) {
-        <div class="placing-hint" role="status">Click on the map to add the place · Esc to cancel</div>
+        <div class="placing-hint" role="status">
+          <span>Click or tap the map where the place is</span>
+          <button mat-button (click)="store.placing.set(false)">Cancel</button>
+        </div>
       }
       <app-legend class="legend" />
     </div>

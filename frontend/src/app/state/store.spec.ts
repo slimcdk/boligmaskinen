@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { formulaParams, LANGUAGE_VERSION } from '@boligmaskinen/engine';
-import { Store } from './store';
+import { formulaParams, LANGUAGE_VERSION, OWN_GROUP } from '@boligmaskinen/engine';
+import { FIRST_MAP, Store } from './store';
 
 const values = (code: string) => Object.fromEntries(formulaParams(code).map((p) => [p.name, p.value]));
 
@@ -91,6 +91,129 @@ describe('Store', () => {
     }));
     TestBed.resetTestingModule();
     expect(TestBed.inject(Store).blocks()[0]).toMatchObject({ code: 'ramp(forest, 300, 3000)', language: LANGUAGE_VERSION });
+  });
+
+  it('keeps the blocks of each map apart', () => {
+    store.addTemplate('forest');
+    const first = store.map().id;
+    store.newMap('Near the sea');
+    expect(store.map().name).toBe('Near the sea');
+    expect(store.blocks()).toEqual([]);
+    store.addTemplate('water');
+    store.openMap(first);
+    expect(store.blocks().map((b) => b.template)).toEqual(['forest']);
+    expect(store.maps().map((m) => m.name)).toEqual([FIRST_MAP, 'Near the sea']);
+  });
+
+  it('duplicates, renames and deletes maps, but never the last one', () => {
+    store.addTemplate('forest');
+    store.duplicateMap('Family');
+    expect(store.map().name).toBe('Family');
+    const family = store.map().id;
+    store.setParam(store.blocks()[0].id, 'full', 500);
+    store.renameMap(family, 'Family, near work');
+    expect(store.map().name).toBe('Family, near work');
+    // The copy changes on its own
+    store.openMap(store.maps()[0].id);
+    expect(values(store.blocks()[0].code)).toEqual({ full: 300, zero: 3000 });
+    // Deleting the open map opens another
+    store.deleteMap(store.map().id);
+    expect(store.maps().map((m) => m.name)).toEqual(['Family, near work']);
+    expect(store.map().id).toBe(family);
+    store.deleteMap(family);
+    expect(store.maps()).toHaveLength(1);
+    expect(store.freeMapName('Family, near work')).toBe('Family, near work 2');
+  });
+
+  it('puts blocks in their catalogue group, and a group that is off leaves its blocks out', () => {
+    store.addTemplate('forest');
+    store.addTemplate('noise');
+    store.addTemplate('empty');
+    expect(store.groups().map((g) => g.name)).toEqual(['Nature', 'Peace and quiet', OWN_GROUP]);
+    const nature = store.groups()[0].id;
+    store.setGroupEnabled(nature, false);
+    expect(store.activeBlocks().map((b) => b.template)).toEqual(['noise', 'empty']);
+    store.setGroupEnabled(nature, true);
+    expect(store.activeBlocks()).toHaveLength(3);
+  });
+
+  it('moves blocks to other groups and new ones, and drops a group when it is empty', () => {
+    store.addTemplate('forest');
+    store.addTemplate('water');
+    store.addTemplate('noise');
+    const [forest, water] = store.blocks();
+    const quiet = store.groups()[1].id;
+    store.moveToGroup(forest.id, quiet);
+    store.moveToNewGroup(water.id, 'Weekends');
+    expect(store.groups().map((g) => g.name)).toEqual(['Peace and quiet', 'Weekends']);
+    expect(store.blocks().map((b) => store.groups().find((g) => g.id === b.group)!.name)).toEqual(['Peace and quiet', 'Weekends', 'Peace and quiet']);
+    store.renameGroup(quiet, 'Calm');
+    store.setGroupCollapsed(quiet, true);
+    expect(store.groups()[0]).toMatchObject({ name: 'Calm', collapsed: true, enabled: true });
+    expect(store.freeGroupName('Weekends')).toBe('Weekends 2');
+  });
+
+  it('switches a requirement off, and on again when it becomes a preference', () => {
+    store.addTemplate('zone');
+    const id = store.blocks()[0].id;
+    store.setEnabled(id, false);
+    expect(store.activeBlocks()).toEqual([]);
+    store.setRole(id, 'want');
+    expect(store.activeBlocks().map((b) => b.id)).toEqual([id]);
+  });
+
+  it('shares the places between maps, each with its own blocks for them', () => {
+    const place = store.addPlace(10, 56);
+    const first = store.map().id;
+    store.newMap('Second');
+    expect(store.places()).toHaveLength(1);
+    expect(store.blocks()).toEqual([]);
+    store.setPlaceBlocks([place.id]);
+    expect(store.blocks()[0]).toMatchObject({ name: 'Place 1', template: `place:${place.id}` });
+    expect(store.groups().map((g) => g.name)).toEqual(['Your places']);
+    // A new name and a removed place reach every map
+    store.updatePlace(place.id, { name: 'Arbejde' });
+    expect(store.blocks()[0].name).toBe('Arbejde');
+    store.openMap(first);
+    expect(store.blocks()[0].name).toBe('Arbejde');
+    store.removePlace(place.id);
+    expect(store.maps().map((m) => m.blocks.length)).toEqual([0, 0]);
+    // Unchecked in the catalogue, only this map's block goes
+    const other = store.addPlace(11, 56);
+    store.setPlaceBlocks([]);
+    expect(store.blocks()).toEqual([]);
+    expect(store.places().map((p) => p.id)).toEqual([other.id]);
+  });
+
+  it('remembers the maps, their groups and which map is open after a reload', () => {
+    store.addTemplate('forest');
+    store.newMap('Second');
+    store.addTemplate('noise');
+    store.setGroupEnabled(store.groups()[0].id, false);
+    TestBed.tick();
+    TestBed.resetTestingModule();
+    const reloaded = TestBed.inject(Store);
+    expect(reloaded.maps().map((m) => m.name)).toEqual([FIRST_MAP, 'Second']);
+    expect(reloaded.map().name).toBe('Second');
+    expect(reloaded.groups()).toMatchObject([{ name: 'Peace and quiet', enabled: false }]);
+    expect(reloaded.activeBlocks()).toEqual([]);
+  });
+
+  it('turns the blocks saved before there were maps into the first map, in groups', () => {
+    localStorage.setItem('boligmaskinen.prototype.v3', JSON.stringify({
+      blocks: [
+        { id: 'b1', name: 'Forest', code: 'ramp(forest, 300, 3000)', role: 'want', weight: 5, template: 'forest' },
+        { id: 'b2', name: 'Mine', code: 'ramp(noise, 45, 65)', role: 'want', weight: 1 },
+      ],
+      places: [],
+      view: { palette: 'azure' },
+    }));
+    TestBed.resetTestingModule();
+    const reloaded = TestBed.inject(Store);
+    expect(reloaded.maps().map((m) => m.name)).toEqual([FIRST_MAP]);
+    expect(reloaded.groups().map((g) => g.name)).toEqual(['Nature', OWN_GROUP]);
+    expect(reloaded.blocks().map((b) => b.id)).toEqual(['b1', 'b2']);
+    expect(reloaded.view().palette).toBe('azure');
   });
 
   it('carries over what the first prototype saved', () => {

@@ -31,25 +31,28 @@ These hold for every milestone.
   where the terms forbid it.
 - **Personal data.** No owner names and no search by name, after Datatilsynet's 2024
   decision on Boliglag. Sale prices need a GDPR legal basis.
-- **Small steps.** Each step leaves the app working and is released on its own.
+- **Small steps.** Each step leaves the app working and is merged on its own. `master` is always
+  ready to run: the test instance runs it.
 
 ## Where we are (2026-10-07)
 
-**Milestone 0: foundation, done**
+**Done: the prototype (milestone 0) and the backend foundation (milestone 1).**
 
-- The prototype covers all of Denmark. 13 layers from open data on a 100 m grid, shown at
-  200 m, with a world map around it.
-- The weighting is standalone blocks in our own formula language, with sliders, checkboxes
-  and choices from `let` lines. Predefined blocks are code too.
-- Places with estimated travel times by car, bike, walk and train.
-- Light and dark mode, and a simulated data-jobs dialog.
-- One app image: a Node backend serves the frontend and `/api/version`.
-- CI runs unit, backend and end-to-end tests. Master builds an image, and a release
-  versions it.
-- A dev container with PostGIS, and 79 Vitest, 14 Playwright and 6 backend tests.
+- All of Denmark: 13 layers of open data on a 100 m grid, shown at 200 m, with a world map
+  around it.
+- The weighting is blocks in our own language ([`block-language.md`](block-language.md)), with
+  versions and migrations. Predefined blocks are code too, and a block can be turned around.
+- Several maps, each with its own blocks in groups that can be switched off. The places, with
+  travel times estimated from the distance, are shared by the maps. All of it is kept in the
+  browser.
+- Material 3 in light and dark mode, on desktops, tablets and phones.
+- One image: the Node backend serves the app, the data pack and the API, with PostGIS beside
+  it. The data jobs run in the backend; one is real (checking the data pack), the others come
+  with milestone 2.
+- CI runs the engine, frontend, backend and end-to-end tests and starts the image. Every green
+  commit on `master` is published as `:master`, which the test instance on a home server runs.
 
-Not there yet: the backend has no database, jobs or API beyond the version. There is no
-data about homes, nothing for sale, and no alerts.
+**Not yet:** jobs that build the data, data about homes, homes for sale, and alerts.
 
 ## Track A: access applications (start now, runs alongside)
 
@@ -65,31 +68,16 @@ Approvals take weeks or months, so they start before the code needs them.
 
 **Done when** every row has an answer: access, a price, or a no with a fallback.
 
-## Milestone 1: backend foundation
+## Milestone 1: backend foundation (done)
 
-**Goal:** the backend owns the database and the jobs, and the jobs dialog shows real runs.
+The backend owns the database and the jobs:
 
-1. **Structure.** Fastify plugins for config, database, jobs and routes. Configuration
-   from the environment, checked at start. Structured logs and one error format.
-2. **Database.** PostgreSQL with PostGIS, with SQL migrations (`backend/migrations`) that run
-   when the app starts. A `compose.yaml` for self-hosting: the app image, PostGIS and the data
-   volume.
-3. **Job runner.** pg-boss in the same process: cron schedules, retries, and a run log
-   (`source_run`). The API serves the shapes in `frontend/src/app/admin/jobs.ts`: the
-   list, the runs, the log, run now and pause.
-4. **Frontend.** The jobs dialog reads the API. The simulation stays only for the preview
-   without a backend.
-5. **Shared engine.** Move `frontend/src/app/scoring` to `packages/engine`, used by both
-   frontend and backend, with its tests.
-6. **The block language, written down.** `docs/block-language.md` covers the grammar,
-   missing data, the functions and the controls. Blocks get a language version, so the
-   language can change without breaking saved blocks.
-
-**Done when:**
-
-- `docker compose up` starts the app and PostGIS.
-- "Run now" in the jobs dialog runs a real job, and its log shows in the dialog.
-- The engine package is tested in CI.
+- Fastify, with its configuration checked at start.
+- PostGIS with SQL migrations that run when the app starts, and a `compose.yaml` for the app
+  and the database.
+- pg-boss for schedules and runs, and the jobs API that the jobs dialog reads.
+- The engine is a package shared by the frontend and the backend.
+- The block language is written down, with versions and migrations.
 
 ## Milestone 2: the data pipeline as jobs
 
@@ -181,7 +169,8 @@ explanation.
 **Goal:** Boligmaskinen watches for you.
 
 1. **Saved weightings** on the server. There is one profile per instance until there are
-   users.
+   users. The browser already keeps several maps, each with its own blocks in groups that can be
+   switched off (2026-10-07); this moves them to the server.
 2. **Alerts** on absolute points ("tell me when a home for sale gets 80 points"), by
    e-mail (SMTP) or push (ntfy or Web Push).
 3. **Share a weighting** as a link.
@@ -196,7 +185,6 @@ explanation.
   switching language in the app; choose before the texts multiply.
 - **Accessibility, WCAG 2.2 AA.** Keyboard use, labels, and contrast in both themes.
   axe runs in Playwright.
-- **Phones.** The panel as a bottom sheet.
 - **Security and upkeep:**
   - Content Security Policy and security headers.
   - Dependabot for npm and Actions.
@@ -230,4 +218,3 @@ self-hosting guide.
 | Listings source and budget | Track A | E-mails first, then a licence |
 | Who applies for EJF, and for what purpose | Track A | Ask GST first |
 | Translation framework | Before milestone 7 | Transloco |
-| Where it runs | Before milestone 2 | A home server with Docker |

@@ -87,7 +87,7 @@ export class HeatService {
   constructor() {
     effect(() => {
       const grid = this.data.grid();
-      this.store.blocks();
+      this.store.activeBlocks();
       this.store.places();
       this.store.view();
       this.theme.scheme();
@@ -169,7 +169,7 @@ export class HeatService {
     pixels.fill(0);
     const cells = view.cells === 'homes' ? grid.homeCells : grid.landCells;
 
-    const blocks = this.store.blocks();
+    const blocks = this.store.activeBlocks();
     const result = evaluateBlocks(blocks, cells.length, this.inputs(grid, cells, view.cells));
     const { scores, histogram } = result;
     const hasPreferences = result.hasScore;
@@ -288,7 +288,7 @@ export class HeatService {
       ? ` · area ${Math.round(this.buffers.sb[cell] / this.buffers.mb[cell])} points` : '';
 
     // Blocks that failed on the full set of cells give nothing here either
-    const blocks = this.store.blocks();
+    const blocks = this.store.activeBlocks();
     const inputs = this.inputs(grid, Uint32Array.of(cell), null);
     const result = evaluateBlocks(blocks, 1, inputs, { skip: new Set(this.issues().keys()) });
     const infos = new Map(this.values().map((v) => [v.name, v]));

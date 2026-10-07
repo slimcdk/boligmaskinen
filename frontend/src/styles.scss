@@ -4,6 +4,8 @@
 // Material 3 theme. Its colours are light-dark() pairs, so `color-scheme` picks the theme.
 html {
   height: 100%;
+  // The visible height on phones, whose browser bars come and go
+  height: 100dvh;
   @include mat.theme((
     color: (
       primary: mat.$azure-palette,
