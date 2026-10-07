@@ -1,0 +1,40 @@
+# Boligmaskinen on your own machine: the app and its database.
+#
+#   docker compose up -d       then open http://localhost:8080
+#
+# The app keeps its data in ./data; put the data pack in ./data/data-pack (see README.md).
+# Set POSTGRES_PASSWORD in an .env file next to this one before the first start. The database is
+# only reachable from the app, not from outside.
+name: boligmaskinen
+
+services:
+  app:
+    image: ${BOLIGMASKINEN_IMAGE:-ghcr.io/slimcdk/boligmaskinen}:${BOLIGMASKINEN_TAG:-master}
+    restart: unless-stopped
+    ports:
+      - "${BOLIGMASKINEN_PORT:-8080}:8080"
+    environment:
+      DATABASE_URL: postgres://boligmaskinen:${POSTGRES_PASSWORD:-boligmaskinen}@db:5432/boligmaskinen
+    volumes:
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgis/postgis:18-3.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: boligmaskinen
+      POSTGRES_USER: boligmaskinen
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boligmaskinen}
+    volumes:
+      - db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boligmaskinen -d boligmaskinen"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db:

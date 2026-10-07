@@ -30,21 +30,28 @@ npm run e2e          # Playwright, with the test data pack in e2e/data-pack
 
 Without the dev container, Node 24 is needed (`frontend/.nvmrc`), and uv for the pilot.
 
-## The app image
+## Running it
 
 One image runs the whole app: the backend serves the frontend, the data pack and the API on
-port 8080. The data pack is not in the image; mount it at `/data/data-pack`:
+port 8080. PostGIS runs next to it. `compose.yaml` starts both:
 
 ```sh
-docker run -p 8080:8080 -v /path/to/data-pack:/data/data-pack:ro ghcr.io/slimcdk/boligmaskinen:latest
+echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" > .env
+mkdir -p data && cp -r /path/to/data-pack data/data-pack
+docker compose up -d                 # http://localhost:8080
 ```
+
+The data pack is not in the image; the app reads it from `./data/data-pack`. `BOLIGMASKINEN_TAG`
+picks the image: `master` (the default) is the newest build, and a release has its version, such
+as `v0.1.0`.
 
 ## CI and releases
 
 GitHub Actions (`.github/workflows/`):
 
-- **Every push and pull request:** frontend unit tests and build, backend tests, and the
-  end-to-end tests in Chrome with the test data pack.
+- **Every push and pull request:** frontend unit tests and build, backend tests against
+  PostGIS, the end-to-end tests in Chrome with the test data pack, and the image started with
+  `compose.yaml` and checked.
 - **Every commit on master that passes:** the image is built once and pushed as
   `ghcr.io/slimcdk/boligmaskinen:sha-<commit>`, also tagged `master`.
 - **A published release** (tag e.g. `v0.1.0`) builds nothing. It gives the image of the

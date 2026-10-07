@@ -39,9 +39,10 @@ WORKDIR /app
 COPY --from=backend /src/backend/node_modules backend/node_modules
 COPY backend/package.json backend/
 COPY backend/src backend/src
+COPY backend/migrations backend/migrations
 COPY --from=frontend /src/frontend/dist/frontend/browser frontend
 USER node
 EXPOSE 8080
 VOLUME /data
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO /dev/null http://127.0.0.1:8080/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --start-interval=2s CMD wget -qO /dev/null http://127.0.0.1:8080/api/health || exit 1
 CMD ["node", "backend/src/server.ts"]

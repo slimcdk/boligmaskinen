@@ -21,7 +21,7 @@ beforeAll(() => {
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 const app = (version = versionFromEnv({ APP_REVISION: 'abcdef1234567', APP_SOURCE: 'https://github.com/owner/boligmaskinen' })) =>
-  buildApp({ staticDir: join(dir, 'app'), dataPackDir: join(dir, 'pack'), version });
+  buildApp({ staticDir: join(dir, 'app'), dataPackDir: join(dir, 'pack'), databaseUrl: null, version, logLevel: false });
 
 describe('the app server', () => {
   it('serves the frontend, and its own paths as the single page', async () => {
@@ -67,8 +67,8 @@ describe('the app server', () => {
     const server = await app();
     const response = await server.inject('/api/nothing');
     expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({ error: 'Not found: /api/nothing' });
-    expect((await server.inject('/api/health')).json()).toEqual({ status: 'ok' });
+    expect(response.json()).toEqual({ statusCode: 404, error: 'Not Found', message: 'Not found: /api/nothing' });
+    expect((await server.inject('/api/health')).json()).toEqual({ status: 'ok', database: 'not configured' });
   });
 });
 
