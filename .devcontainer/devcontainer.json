@@ -9,8 +9,9 @@
   "shutdownAction": "stopCompose",
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    // Build and run the app image (../Dockerfile) with the host's Docker
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    // Build and run the app image (../Dockerfile) with the host's Docker. Moby has no packages
+    // for Debian trixie, so the feature installs Docker's own CLI
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": { "moby": false }
   },
   "containerEnv": {
     // Playwright's own Chromium, which exists for both amd64 and arm64, drawing WebGL in software
