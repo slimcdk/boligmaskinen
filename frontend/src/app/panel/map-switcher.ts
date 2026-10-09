@@ -37,6 +37,7 @@ import { NameDialog, NameDialogData } from './name-dialog';
     </mat-menu>
   `,
   styles: [`
+    :host { display: inline-flex; min-width: 0; }
     .current { max-width: 100%; }
     .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .picked { --mat-menu-item-label-text-color: var(--mat-sys-primary); }

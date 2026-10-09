@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Block, type BlockInputs, blockSummary, evaluateBlocks } from './blocks.ts';
+import { type Block, type BlockInputs, blockSummary, evaluateBlocks, newId } from './blocks.ts';
 import { turnAround } from './formula.ts';
 import { decodeValue, scoreCells, type ScoringItem } from './engine.ts';
 import { blockFrom, criterionTemplate, LIBRARY, placeTemplate } from './library.ts';
@@ -139,5 +139,13 @@ describe('opposite names', () => {
     expect(ramps.length).toBeGreaterThan(10);
     expect(ramps.filter((t) => !t.opposite).map((t) => t.id)).toEqual([]);
     expect(LIBRARY.find((t) => t.id === 'noise')).toMatchObject({ name: 'Quiet', opposite: 'Noisy' });
+  });
+});
+
+describe('new ids', () => {
+  it('are random, so maps saved from two devices never share one', () => {
+    const ids = Array.from({ length: 1000 }, () => newId('map'));
+    expect(new Set(ids).size).toBe(1000);
+    expect(ids[0]).toMatch(/^map-[0-9a-f]{24}$/);
   });
 });

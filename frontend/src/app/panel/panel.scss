@@ -20,8 +20,9 @@
   h1 { margin: 0; font: var(--mat-sys-title-large); }
   p { margin: 2px 0 0; font: var(--mat-sys-body-small); color: var(--mat-sys-on-surface-variant); }
 
-  // The text button's own padding lines its icon up with the title
-  app-map-switcher { max-width: 100%; margin-left: -12px; }
+  // The map's name and whether it is saved; the text button's own padding lines its icon up with the title
+  .map-row { display: flex; align-items: center; gap: 4px; align-self: stretch; min-width: 0; padding-right: 8px; }
+  app-map-switcher { min-width: 0; margin-left: -12px; }
 }
 
 .body {

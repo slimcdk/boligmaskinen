@@ -52,11 +52,35 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   keep their settings. A group has no weight of its own.
 - **A requirement has a switch** in place of a weight. A preference is turned off with its weight
   (0), and a block that counts for nothing is dimmed.
-- Everything is saved in the browser (`boligmaskinen.prototype.v4`). What earlier versions saved
-  becomes the first map, "My map", with its blocks in groups. Milestone 6 moves the maps to the
-  server.
+- What earlier versions saved becomes the first map, "My map", with its blocks in groups.
 - The logic is in `../packages/engine/src/maps.ts`; the store (`src/app/state/store.ts`) works on
   the open map.
+
+## Saved on the server
+
+The maps and places are kept on the server, so every browser has them (`src/app/state/profile-sync.ts`,
+with the backend's API in `profile-api.ts`). Which map is open and the map settings belong to each
+browser.
+
+- **The store works on its own copy,** which is also kept in localStorage (`boligmaskinen.prototype.v4`),
+  so the app opens at once and works while the server cannot be reached.
+- **A change is saved 0.8 seconds after the last one,** so a slider sends one save. When the page is
+  hidden, what waits is sent at once, in a request that outlives the page.
+- **Changes from other devices** are fetched when the page is shown again and every 30 seconds while
+  it is visible; the ETag makes that cheap.
+- **Merging** (`src/app/state/sync.ts`) goes one map or place at a time. The browser remembers each
+  one's version on the server and a hash of what the server has:
+  - what changed only on the server is taken, and what changed only here is saved;
+  - when both changed the same map, the change made here wins, saved from the server's version, and a
+    snackbar says so;
+  - what another device deleted goes, unless it was changed here since;
+  - a browser that meets the server for the first time adds its maps and places, under names of their
+    own when the server has ones like them. The empty map a new browser starts with is left out.
+- **The cloud beside the map's name** says the maps are saved. Without a backend, such as on the
+  artifact host or with `npm start` alone, nothing is said and the maps stay in the browser. When the
+  server cannot be reached, it says so in words and tries again every 30 seconds.
+- **Ids are random** (`newId` in the engine), so maps from two devices never share one.
+  `crypto.randomUUID` is not used, since it needs HTTPS and a home server on the LAN has none.
 
 ## Phones and tablets
 
@@ -148,6 +172,10 @@ npm install
 npx ng serve          # http://localhost:4200
 npx ng build
 ```
+
+To work with the backend (saved maps, the real data jobs), start it on port 8080 (`../backend`,
+`npm run dev` with `DATABASE_URL` and an absolute `DATA_PACK_DIR`), and the dev server with
+`npx ng serve --proxy-config proxy.conf.json`, which sends `/api` to it.
 
 ## Tests
 

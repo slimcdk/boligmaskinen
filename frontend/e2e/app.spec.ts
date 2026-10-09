@@ -153,11 +153,14 @@ test('each map has its own blocks, and the maps are remembered', async ({ page }
 test('a group switches its blocks off together, and blocks move between groups', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
+  const forest = await result(page).getAttribute('aria-label');
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.getByRole('option', { name: /^Quiet Road/ }).click();
   await page.getByRole('button', { name: 'Done' }).click();
   await expect(block(page, 'Quiet')).toBeVisible();
-  await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
+  // The map is drawn a moment later; wait until the result counts Quiet too
+  await expect(result(page)).not.toHaveAttribute('aria-label', forest!);
   const both = await result(page).getAttribute('aria-label');
   await page.getByRole('switch', { name: 'Use Nature' }).click();
   await expect(result(page)).not.toHaveAttribute('aria-label', both!);

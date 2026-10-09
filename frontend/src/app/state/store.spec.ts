@@ -216,6 +216,26 @@ describe('Store', () => {
     expect(reloaded.view().palette).toBe('azure');
   });
 
+  it('takes the maps and places the server has, with what it knows of them, and keeps them after a reload', () => {
+    const synced = { epoch: 'e1', entities: { 'map:m1': { version: 2, hash: 'h' } } };
+    store.replaceAll({ maps: [{ id: 'm1', name: 'Family', blocks: [{ id: 'b1', name: 'Forest', code: 'ramp(forest, 300, 3000)', role: 'want', weight: 4 }], groups: [] }], places: [], synced });
+    // Put in a group, and in the current version of the language, like everything loaded
+    expect(store.groups().map((g) => g.name)).toEqual([OWN_GROUP]);
+    expect(store.blocks()[0].language).toBe(LANGUAGE_VERSION);
+    TestBed.tick();
+    TestBed.resetTestingModule();
+    const reloaded = TestBed.inject(Store);
+    expect(reloaded.synced()).toEqual(synced);
+    expect(reloaded.map().name).toBe('Family');
+    // There is always a map
+    reloaded.replaceAll({ maps: [], places: [], synced });
+    expect(reloaded.maps().map((m) => m.name)).toEqual([FIRST_MAP]);
+  });
+
+  it('gives a new place an id that works without HTTPS', () => {
+    expect(store.addPlace(10, 56).id).toMatch(/^place-[0-9a-f]{24}$/);
+  });
+
   it('carries over what the first prototype saved', () => {
     localStorage.setItem('boligmaskinen.prototype.v1', JSON.stringify({ active: ['beach'], criteria: [], places: [] }));
     TestBed.resetTestingModule();

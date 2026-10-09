@@ -28,3 +28,30 @@ test('shows the version the server reports', async ({ page }) => {
   test.skip(!revision, 'Set EXPECTED_REVISION to the commit the app was built from');
   await expect(page.locator('app-panel .foot .version')).toHaveText(revision!.slice(0, 7));
 });
+
+test('a map saved in one browser opens in another', async ({ browser, page }) => {
+  const name = `Saved map ${Date.now()}`;
+  const onServer = async () => ((await (await page.request.get('/api/profile')).json()) as { maps: { name: string; blocks: unknown[] }[] }).maps.find((m) => m.name === name);
+  await page.getByRole('button', { name: /^Map: / }).click();
+  await page.getByRole('menuitem', { name: 'New map' }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Name of the map' }).fill(name);
+  await page.getByRole('button', { name: 'Create' }).click();
+  await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await expect.poll(async () => (await onServer())?.blocks.length).toBe(1);
+  await expect(page.getByRole('img', { name: 'Your maps are saved on the server' })).toBeVisible();
+
+  // Another browser, with nothing of its own
+  const other = await (await browser.newContext()).newPage();
+  await other.goto('/');
+  await expect(other.locator('.maplibregl-canvas')).toBeVisible({ timeout: 60_000 });
+  await other.getByRole('button', { name: /^Map: / }).click();
+  await other.getByRole('menuitemradio', { name }).click();
+  await expect(other.locator('app-block-row .name', { hasText: /^Forest$/ })).toBeVisible();
+
+  // Deleted there, it is gone from the server
+  await other.getByRole('button', { name: /^Map: / }).click();
+  await other.getByRole('menuitem', { name: 'Delete this map' }).click();
+  await other.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect.poll(onServer).toBeUndefined();
+  await other.context().close();
+});

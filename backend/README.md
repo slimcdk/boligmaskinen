@@ -4,8 +4,8 @@ One Node server for the whole app: it serves the built frontend, its data pack a
 one port. The app image (`../Dockerfile`) runs it, so a single image is the whole app; PostGIS runs
 next to it as its own container when the backend starts using it.
 
-The API tells which version is running and how the database is, and runs the data jobs. The
-vector tiles and the data itself come next (see `../docs/plan.md`).
+The API tells which version is running and how the database is, keeps the user's maps and places,
+and runs the data jobs. The vector tiles and the data itself come next (see `../docs/plan.md`).
 
 ## Run
 
@@ -39,6 +39,26 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
   file it names is there. The fetch and build jobs are listed as not built yet, and come with
   milestone 2; the jobs that need access say what they wait for.
 
+## Saved maps and places
+
+The user's maps (each with its blocks and groups) and places, so every browser has them. There is one
+profile per instance until there are users. The code is in `src/profile/store.ts`, with the shapes in
+`../packages/engine/src/profile.ts`, which the frontend shares.
+
+- **Tables:** `saved_map` (blocks and groups as JSON) and `place`, whose `geom` is a PostGIS point
+  for the travel-time jobs to come. `profile` has the `epoch`, made with the database, and the
+  `revision`, which counts every change.
+- **Versions:** every map and place has one, raised with each change. A change names the version it
+  was made from, and a change from an older version is a conflict (409). Then nothing in that save is
+  kept, and the answer has the versions the server has, so the device can decide and save again.
+- **Saves are all or none,** one at a time. Deleting what is already gone is fine.
+- **The ETag** is the epoch and the revision, so a page that asks every half minute gets `304` when
+  nothing changed.
+- **What the frontend does** with it (when it saves, how it merges, who wins) is in
+  `../frontend/README.md`.
+- The API takes JSON only. Browsers send JSON to another site only after asking (CORS), and this
+  server does not answer that, so other web pages cannot change the maps.
+
 ## Database
 
 PostgreSQL with PostGIS. `DATABASE_URL` points at it; without it the app runs, and the parts that
@@ -65,6 +85,8 @@ need the database say so.
 | `POST /api/jobs/:id/run` | Starts a job now: 202 with the queued run, or 409 when it is blocked, switched off or already running. |
 | `PATCH /api/jobs/:id` | `{ "enabled": false }` switches a job's schedule off, `true` on again. |
 | `POST /api/runs/:id/cancel` | Cancels a waiting run at once and a running one at its next check. |
+| `GET /api/profile` | The maps and places: `{ epoch, revision, maps, places }`, each map and place with its `version`. With `If-None-Match` and an unchanged profile it answers 304. |
+| `POST /api/profile/changes` | Saves `{ changes: [{ kind, id, base, value }] }`: `kind` is `map` or `place`, `base` the version it was changed from (null for a new one), and a null `value` deletes. Answers `{ revision, saved }` with the new versions, or 409 with `conflicts` and nothing saved. |
 | `/api/health` | `{"status":"ok","database":"ok"}`, for the image's health check. The database is `ok`, `not configured` or `unreachable`; unreachable answers 503. |
 
 ## Environment
