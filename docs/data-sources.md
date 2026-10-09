@@ -118,6 +118,15 @@ The public sources beyond the ones above, from Danmarks Miljøportal, Klimadatas
 | Vejdirektoratet's road accidents | Accidents with a place | Points only in vejman.dk, for road authorities, researchers and the police; the public statistics are per municipality |
 | Danmarks Statistik's grid statistics (kvadratnet) | Population and variables such as income per 100 m cell, merged until 50–150 households | Paid: DKK 42,170 a year for the night population of all Denmark, plus DKK 54,821 per variable (2026 prices). Parish tables are free |
 
+### Catalogues to search
+
+Indexes of public data, to find sources from rather than to use.
+
+| Catalogue | What it lists | How to read it | Notes |
+|---|---|---|---|
+| [Datavejviser](https://datavejviser.dk) (Digitaliseringsstyrelsen) | 3,708 datasets from 60 publishers on 2026-10-09: 2,288 Statistikbanken tables, 264 records from geodata-info.dk, 184 from Jobindsats, 156 from Danmarks Miljøportal, 119 from Klimadatastyrelsen, 100 from Energidataservice, 65 from Uddannelsesstatistik, and fewer from about 50 others. About 380 offer WMS and 270 WFS | CKAN's API (`datavejviser-ckan.digst.govcloud.dk/api/3/action/package_search`, open); or the whole catalogue as DCAT-AP-DK at `datavejviser.dk/katalog.jsonld?page=N`, 100 datasets a page; also through data.europa.eu's SPARQL endpoint | The metadata is CC0; each dataset's own terms are set by its publisher. Not complete: it says it describes "some of the most used" public data. A good index to harvest and filter, for example to the datasets with WMS or WFS |
+| geodata-info.dk (Klimadatastyrelsen) | The national catalogue of geodata metadata, including INSPIRE | Its search portal; to check: the CSW endpoint and how many records it has | Fuller for geodata than Datavejviser, which carries 264 of its records |
+
 ## Practical aspects of fetching
 
 - **Range requests save a lot.** The noise archive (2 GB) and the Protomaps planet (120 GB)
