@@ -216,6 +216,9 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 
 - `src/**/*.spec.ts` are the Vitest tests. Among them is a parity test showing that the
   predefined blocks score exactly like the original engine.
+- `e2e/accessibility.spec.ts` runs axe (WCAG 2.2 A and AA) on the map and the panels, a block's
+  settings, the code editor, "About the data" and the data jobs, in light and dark mode and on a
+  phone. They must have no violations.
 - `e2e/*.spec.ts` are the Playwright tests. They start `ng serve --configuration e2e` on
   port 4310, which serves the test data pack in `e2e/data-pack` (Aarhus Kommune) instead
   of `public/data-pack`. So they give the same results on every machine and in CI, and a
