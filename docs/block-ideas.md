@@ -322,6 +322,72 @@ let kind = choice(1, airport, airfield, air_station)  // From
 let zero = slider(2000, 0, 20000, 100)                // No points at (m)
 let full = slider(8000, 0, 30000, 100)                // Full points at (m)
 ramp(kind, zero, full)
+## Blocks over the area, from the sources found on 2026-10-09
+
+Ideas for weightings that need no data about homes, so they can come before milestone 4. Some the
+user asked for, others follow from the sources in `data-sources.md` and `public-data.md`. Value
+names follow `public-data.md` where it already proposes one. "Both ways" means some users want it
+close and others far away, so the block is turned around rather than written twice.
+
+| Block | What it weighs | Values | Source | Notes |
+|---|---|---|---|---|
+| Big wind turbines | Distance to turbines, counting a tall turbine for more than a small one | `turbine` (today), `turbine_height`, or `turbine_big` (distance to turbines over a set total height) | Energistyrelsen's register (height, rotor) | The legal minimum to neighbours is 4 × the total height, so a ramp in "heights away" fits |
+| Solar parks | Distance to solar plants over 1 MW | `solar_park` | Energistyrelsen via PLST's "Vedvarende energi" WFS | Both ways: some mind the view, others do not |
+| Energy parks to come | Distance to designated or planned energy parks, wind and solar | `energy_park_planned` | PLST's state-designated energy parks; municipal plans (Plandata) | What will be built matters as much as what stands. Also offshore wind areas, as a view from the coast |
+| Soft or hard water | Drinking water hardness at the home's supply area | `water_hardness` (°dH) | GEUS, hardness per supply area | A preference for soft water; a requirement under a set hardness |
+| Clean drinking water | PFAS and nitrate in the waterworks' water | `pfas` (ng/l, sum of 4), `nitrate` (mg/l) | GEUS Jupiter | A requirement under the limit values, or a ramp below them |
+| Height and slope | Height above sea level and how steep the land is | `elevation` (m), `slope` (°) | Danmarks Højdemodel | High ground for flood safety or a view; flat land for a garden or a bike |
+| Low-lying land | Hollows that fill in a cloudburst, and land the sea reaches | `bluespot_depth` (m), `sea_flood_level` (the sea rise in m that reaches the cell) | Klimadatastyrelsen: Bluespot, Havvand på Land | Joins `flood_risk` above; `sea_flood_level` lets the user pick a scenario with a slider |
+| Radon | The share of houses over 100 Bq/m³ | `radon` (share, per municipality) or `radon_soil` (by soil type) | BUILD's 2022 survey; GEUS soil map with its radon classes; or DinGeo per address | Coarse at first; the soil-based value is our own estimate and says so |
+| Few burglaries | Home burglaries per 1,000 homes | `burglaries` (per municipality today; per postcode if DST has it) | DST STRAF22; the scene's postcode in DST's crime statistics | Finer data replaces the coarse one without changing the block |
+| Vulnerable housing areas | Distance to an area on the government's yearly list | `vulnerable_area` (m) | Social- og Boligministeriet's list and the parcels in its executive order | A political label, not a measure of crime: needs care in how it is named and shown |
+| Quiet roads, safe for children | Traffic on the nearest road: cars per day, the share of lorries, the share driving too fast | `traffic_aadt`, `traffic_lorries`, `traffic_speeding` | Vejdirektoratet's Mastra counts | Points on roads, so it needs a road network to spread them onto; the noise map covers some of it |
+| Clean air | Yearly NO₂ and PM2.5 | `no2`, `pm25` (µg/m³) | DCE's model for 2024, 1 km grid | Finer per street in Copenhagen (Air View) |
+| Away from power lines | Distance to 132–400 kV overhead lines | `power_line` (m) | Energinet | A requirement or a ramp |
+| No smell from livestock | Animal units within 1 km | `animal_units_1km` | Landbrugsstyrelsen's CHR; Plandata's large livestock farms | Both ways: country life for some |
+| Rail noise | Lden from railways | `noise_rail` (dB) | Miljøstyrelsen's noise mapping 2022 | Adds to today's road noise, or one `noise_all`; aircraft noise is `aircraft_noise` above |
+| A doctor nearby | Minutes to the nearest general practitioner | `minutes_to_gp` | Sundhedsdatastyrelsen's SOR | Also pharmacies and dentists |
+| Playgrounds and outdoor life | Distance to a playground, and to outdoor facilities (shelters, paths, fishing) | `playground`, `outdoors` (m) | GeoFA; OSM to fill the gaps | GeoFA has playgrounds from 62 municipalities only |
+| Charging an electric car | Distance to a public charger | `charger` (m) | GeoFA (37 municipalities); OSM | |
+| Trees | The share of the cell under tree crowns | `tree_cover` (%) | Copenhagen's crown map; nationally from the elevation model's surface minus terrain, or GeoDanmark | Different from `forest`: trees in streets and gardens count |
+| Building plots for sale | Plots on sale, with price and size | `plot_for_sale` (m), `plot_price` | Vejle, Silkeborg and Egedal on opendata.dk | For people who want to build; few municipalities so far |
+| Change coming nearby | A new local plan close by: building to come | `proposed_plan_500m`, `planned_use` | Plandata | See "What the plans say will change" above. Both ways: new shops and paths, or building sites and more traffic |
+| District heating | Inside a district heating area, and its price | `district_heating`, `heat_price` (kr. a year for a standard house) | Plandata's heat supply areas; Forsyningstilsynet's prices | Fits the heating blocks above |
+| Fast broadband | The highest speed at the addresses in the cell | `broadband_down` (Mbit/s) | Tjekditnet | Per cell first; per address later, asked before showing it |
+| A view of the water | Whether sea or a lake can be seen from the cell | `water_view` | Our own: the elevation model and the coastline, a viewshed job | Heavy to compute; a simpler start is height above the nearest coast within 2 km |
+| Dark nights | Little light at night | `night_light` | To find: satellite night lights (VIIRS) or similar | For people who want to see the stars |
+| Neighbours with an education | The share of adults with a further education in the parish | `education_higher` (%) | DST KMST007A per parish | Both ways. Small parishes are noisy: smooth over neighbours |
+| Neighbours at work | The share employed in the parish | `employed` (%) | DST KMSTA005 per parish | |
+| Young or quiet neighbourhood | Mean age in the parish; households with children in the town | `mean_age` (years), `families_with_children` (%) | DST KMGALDER per parish; BY4 per town | Both ways: playmates for children, or calm |
+| City or country | People per km² in the town, or none outside towns | `density` (people/km²) | DST BY3 per town | Both ways |
+| Busy by day, quiet by night | Day population against night population in the parish | `day_night_ratio` | DST KMSTA009 per parish | High in work areas, low in dormitory towns |
+| A growing municipality | Population forecast to 2050 | `growth_2050` (%) | DST FRKM126 | Growing towns keep schools and shops |
+| How the area votes | Party shares in the polling district at the last general election | `vote_<party>` (%) | DST FV26TOTA | Possible but sensitive; offer it only as the user's own choice, never as a predefined block |
+| Kinds of crime | Violence, vandalism, theft and burglary per 1,000 inhabitants, quarterly | `crime_violence`, `crime_vandalism`, … | DST STRAF11 per municipality | Coarse; extends `burglaries` |
+| Childcare and schools by the numbers | Childcare price, children per adult, and class size | `childcare_price` (kr. a month), `childcare_ratio`, `class_size` | DST RES88, BOERN8, KVOTIEN per municipality | Per institution later from the registers |
+| Income in the area | Mean income | `income` (kr.) | DST INDKP101 per municipality (free); per parish or postcode only paid | Both ways |
+| Fewer cars | Cars per household | `cars_per_household` | DST BIL800 per municipality | A rough proxy for how well a place does without a car |
+
+Not a block: residents' origin (DST KMSTA001 per parish). Weighing a place by its residents' origin would be discrimination in housing, so it is left out on purpose.
+
+```
+// Away from big turbines: full points from 10 heights away
+let full = slider(10, 4, 30, 1)  // Full points from (heights)
+let zero = slider(4, 0, 30, 1)   // No points up to (heights)
+ramp(turbine / turbine_height, full, zero)
+```
+
+```
+// Soft water
+let full = slider(8, 0, 30, 1)   // Full points up to (°dH)
+let zero = slider(20, 0, 30, 1)  // No points from (°dH)
+ramp(water_hardness, full, zero)
+```
+
+```
+// Dry in a storm surge: the sea has to rise this much to reach the cell
+let rise = slider(2, 0, 5, 0.1)  // Sea rise (m)
+sea_flood_level > rise
 ```
 
 ## What this needs, and when
@@ -329,7 +395,8 @@ ramp(kind, zero, full)
 - **Before milestone 4:** these need no data about homes:
   - the protected areas as cell values, with the other layers from Danmarks Miljøportal;
   - the plans' cell values from Plandata;
-  - the distances to airports and airfields from OSM.
+  - the distances to airports and airfields from OSM;
+  - the blocks over the area found on 2026-10-09, each once its source is fetched by a job.
 - **Milestone 4:**
   - BBR, DAR, MAT and VUR loaded per home, and the listed and preservation-worthy buildings (FBB,
     later the municipalities' SAVE values in GeoFA);
