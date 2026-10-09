@@ -5,6 +5,7 @@ import { REGIONS, type GridSettings } from '../config.ts';
 import { formatBytes } from '../jobs/data-pack.ts';
 import type { JobContext, JobDefinition, JobOutcome } from '../jobs/types.ts';
 import { USER_AGENT } from './archive.ts';
+import { describeChange, largeChanges, type PackFacts } from './checks.ts';
 import { runProgram, runStep } from './python.ts';
 import { FETCH_JOBS, type MadeFrom, NEEDS_DATA_DIR, NOISE_FILES, type PipelineOptions, readJson, sameInputs, versionId, type Work, work } from './sources.ts';
 import { FONTS, GLYPH_RANGES, styleLayers } from './styles.ts';
@@ -227,6 +228,22 @@ async function buildPack(w: Work, options: BuildOptions & { dataPackDir: string 
   const current = await packs.current();
   if (current && sameInputs(await readJson<MadeFrom>(join(current, 'made-from.json')), wanted)) {
     return waiting(`The data pack is up to date: ${basename(current)}`);
+  }
+
+  // A source that broke shows in the counts: the pack in use stays until a person has looked
+  const before = current ? await readJson<PackFacts>(join(current, 'data', 'meta.json')) : null;
+  const after = await readJson<PackFacts>(join(grid, 'meta.json'));
+  const changes = before && after ? largeChanges(before, after) : 'not comparable';
+  if (changes === 'not comparable') {
+    if (before) await w.context.log('A new region or cell size, so there is nothing to compare the counts with');
+  } else if (changes.length) {
+    const what = changes.map(describeChange).join('; ');
+    if (w.context.trigger !== 'manual') {
+      throw new Error(`The new data was not switched in, because ${what}. A source may be broken; the map keeps the data from ${basename(current!)}. Run "Pack the data" by hand to switch to it anyway.`);
+    }
+    await w.context.log(`Switched in although ${what}, because the pack was started by hand`, 'warn');
+  } else {
+    await w.context.log('The counts are close to those of the pack in use');
   }
 
   const id = versionId(w.context);

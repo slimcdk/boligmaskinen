@@ -55,6 +55,11 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
   - **Pack the data** packs the grid, the basemap and the world map in `DATA_DIR/packs/<id>`, beside
     the pack in use, and switches `DATA_DIR/data-pack` to it in one rename. The three newest packs
     stay. A pack from before the jobs (a folder, not a link) moves aside the first time.
+  - **Before it switches**, it compares the counts in the new `meta.json` (addresses, schools,
+    turbines …) with the pack in use (`src/pipeline/checks.ts`). When one changed by more than a
+    quarter, a source has most likely broken: the job fails and says which count changed, and the
+    map keeps its data. Running "Pack the data" by hand switches anyway. A new region or cell size
+    is not compared.
 - **The order:** a fetch that found something new starts the grid, the grid starts the basemap,
   and the basemap starts the pack. The world map starts the pack directly.
 - **A new install** has no data pack, so at its first start every fetch job runs, and the builds

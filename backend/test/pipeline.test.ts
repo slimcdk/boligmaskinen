@@ -110,6 +110,26 @@ describeWithDatabase('a new install', () => {
     expect(readFileSync(join(dataDir, 'data-pack', 'basemap', 'part-0.png'), 'utf8')).toContain('/tiles/20261010.pmtiles');
   });
 
+  it('keeps the pack in use when a source broke and says why, until a person switches anyway', async () => {
+    const before = await meta();
+    // The schools' register answered with almost nothing
+    writeFileSync(join(dataDir, 'counts.json'), JSON.stringify({ addresses: 2_615_075, homeCells: 459_924, schools: 12 }));
+    sources.zones = 4;
+    await app.inject({ method: 'POST', url: '/api/jobs/plandata/run' });
+    const runs = await settled();
+    expect(runs.filter((r) => r.jobId === 'pack').at(-1)).toMatchObject({
+      status: 'failed',
+      message: `The new data was not switched in, because schools fell from 1,963 to 12 (−99 %). A source may be broken; the map keeps the data from ${before.pack}. Run "Pack the data" by hand to switch to it anyway.`,
+    });
+    expect((await meta()).pack).toBe(before.pack);
+
+    await app.inject({ method: 'POST', url: '/api/jobs/pack/run' });
+    const forced = (await settled()).filter((r) => r.jobId === 'pack').at(-1)!;
+    expect(forced.status).toBe('succeeded');
+    expect(forced.log).toContainEqual(expect.objectContaining({ level: 'warn', text: 'Switched in although schools fell from 1,963 to 12 (−99 %), because the pack was started by hand' }));
+    expect((await meta()).pack).not.toBe(before.pack);
+  });
+
   it('refuses a pack path that is not a pack', async () => {
     expect((await app.inject('/data-packs/../../etc/passwd')).statusCode).toBe(404);
     expect((await app.inject('/data-packs/20991231T000000Z-run1/data/meta.json')).json()).toMatchObject({ statusCode: 404, message: 'There is no data pack 20991231T000000Z-run1' });

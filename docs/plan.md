@@ -34,9 +34,10 @@ These hold for every milestone.
 - **Small steps.** Each step leaves the app working and is merged on its own. `master` is always
   ready to run: the test instance runs it.
 
-## Where we are (2026-10-07)
+## Where we are (2026-10-10)
 
-**Done: the prototype (milestone 0) and the backend foundation (milestone 1).**
+**Done: the prototype (milestone 0), the backend foundation (milestone 1) and the data pipeline
+as jobs (milestone 2).**
 
 - All of Denmark: 13 layers of open data on a 100 m grid, shown at 200 m, with a world map
   around it.
@@ -47,12 +48,13 @@ These hold for every milestone.
   on the server, so every browser has them (issue #34, done early, 2026-10-09).
 - Material 3 in light and dark mode, on desktops, tablets and phones.
 - One image: the Node backend serves the app, the data pack and the API, with PostGIS beside
-  it. The data jobs run in the backend; one is real (checking the data pack), the others come
-  with milestone 2.
+  it, and its data jobs fetch every source and build the data pack every night. A new install
+  builds its own data at its first start.
 - CI runs the engine, frontend, backend and end-to-end tests and starts the image. Every green
   commit on `master` is published as `:master`, which the test instance on a home server runs.
 
-**Not yet:** jobs that build the data, data about homes, homes for sale, and alerts.
+**Not yet:** the map at full detail, data about homes, homes for sale, and alerts. The pipeline's
+steps need up to about 4 GB of memory, more than the home server gives them (#69).
 
 ## Track A: access applications (start now, runs alongside)
 
@@ -79,9 +81,13 @@ The backend owns the database and the jobs:
 - The engine is a package shared by the frontend and the backend.
 - The block language is written down, with versions and migrations.
 
-## Milestone 2: the data pipeline as jobs
+## Milestone 2: the data pipeline as jobs (done 2026-10-10)
 
 **Goal:** the app fetches and builds its own data on schedule. Nothing is built by hand.
+
+What was built is described in `backend/README.md` (the jobs, the raw archive, the builds) and
+`pipeline/README.md` (the steps). One follow-up is open: making the steps fit in less memory
+(#69).
 
 1. **Where the pipeline runs (decided 2026-10-09).** The Python steps stay in Python, in
    [`pipeline/`](../pipeline/README.md), and the jobs run them as commands. The jobs themselves,
@@ -91,15 +97,16 @@ The backend owns the database and the jobs:
    - The image is about 1.2 GB unpacked; Python and its packages are about 0.5 GB of it.
    - A step moves to Node only where that pays off.
 2. **Raw archive.** Every fetch is stored unchanged under `/data/raw` with its date, URL,
-   size, hash and licence, and a `source_run` row. Change detection (ETag,
+   size, hash and licence, and a `source_file` row. Change detection (ETag,
    Last-Modified, hash) means unchanged sources are not processed again.
 3. **One job per source.** OSM, Plandata, STIL schools and daycare, Energistyrelsen, DST,
-   noise, the Protomaps basemap and Natural Earth. "Build the grid" and "Pack the data"
-   follow when a source has changed.
+   noise, the Protomaps basemap and Natural Earth. "Build the grid", "Basemap" and "Pack the
+   data" follow when a source has changed.
 4. **Safe updates.** A new data pack is built beside the old one and switched in at once,
    so the app never serves half a pack.
 5. **Data checks.** Counts are compared with the previous build, such as the number of
-   addresses or schools. A large change stops the switch and shows on the jobs page.
+   addresses or schools. A large change (more than a quarter) stops the switch and shows on
+   the jobs page; running "Pack the data" by hand switches anyway.
 6. **Configuration.** The cell size (`GRID_CELL_METRES`, default 100) and the region are
    settings of the instance.
 
