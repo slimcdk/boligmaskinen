@@ -9,6 +9,7 @@ import { MapView } from './map/map-view';
 import { MapPanel } from './panel/map-panel';
 import { Panel } from './panel/panel';
 import { BottomSheet, PEEK_HEIGHT, SheetState } from './sheet/bottom-sheet';
+import { ShareService } from './state/share.service';
 import { Store } from './state/store';
 
 /** The floating panels' width, and their distance from the window's edges, on a larger screen. */
@@ -52,6 +53,8 @@ export class App {
 
   constructor() {
     void this.data.load();
+    // A link to a shared map offers to add it
+    void inject(ShareService).openLink();
     // The card at the top changes height as its settings fold out
     const observer = new ResizeObserver(([entry]) => this.mapCardHeight.set(Math.round(entry.target.getBoundingClientRect().height)));
     effect(() => {

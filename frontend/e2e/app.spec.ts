@@ -213,6 +213,32 @@ test('a new place gets a block with a choice of how to travel, and its name foll
   await expect(page.getByRole('textbox', { name: 'Code' })).toHaveValue(/choice\(2, arbejde_car, arbejde_bike, arbejde_walk, arbejde_train\)/);
 });
 
+test('a map shared as a link opens in another browser with its blocks and view', async ({ browser, page }) => {
+  await open(page);
+  await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await page.getByText('Map settings').click();
+  await page.getByRole('combobox', { name: 'Heatmap colours' }).click();
+  await page.getByRole('option', { name: /Azure/ }).click();
+  await page.getByRole('button', { name: /^Map: / }).click();
+  await page.getByRole('menuitem', { name: 'Share this map' }).click();
+  const link = await page.getByRole('textbox', { name: 'Link to the map' }).inputValue();
+  expect(link).toMatch(/#(map=[^&]+&)?share=[A-Za-z0-9_-]+$/);
+
+  // Someone else, with nothing of their own
+  const other = await (await browser.newContext()).newPage();
+  await other.goto(link);
+  const dialog = other.getByRole('dialog');
+  await expect(dialog).toContainText('Add the map “My map”?');
+  await expect(dialog).toContainText('It has 1 block.');
+  await dialog.getByRole('button', { name: 'Add map' }).click();
+  await expect(other.getByRole('button', { name: /^Map: My map 2/ })).toBeVisible();
+  await expect(other.locator('app-block-row .name')).toHaveText(['Forest']);
+  await expect(other.locator('app-map-panel mat-panel-description')).toContainText('Azure');
+  // The link is taken once: the address no longer holds it
+  expect(other.url()).not.toContain('share=');
+  await other.context().close();
+});
+
 test('blocks are remembered after a reload', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'School' }).click();

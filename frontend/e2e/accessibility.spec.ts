@@ -45,6 +45,12 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Data jobs' }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
       expect(await problems(page)).toEqual([]);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await page.getByRole('button', { name: /^Map: / }).click();
+      await page.getByRole('menuitem', { name: 'Share this map' }).click();
+      await expect(page.getByRole('textbox', { name: 'Link to the map' })).toBeVisible();
+      expect(await problems(page)).toEqual([]);
     });
   });
 }

@@ -4,13 +4,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { ShareService } from '../state/share.service';
 import { Store } from '../state/store';
 import { ConfirmDialog, ConfirmDialogData } from './confirm-dialog';
 import { NameDialog, NameDialogData } from './name-dialog';
 
 /**
- * The open map, and a menu to switch to another, start a new one, or duplicate, rename or delete
- * this one. Each map has its own blocks; the places are shared.
+ * The open map, and a menu to switch to another, start a new one, or duplicate, rename, share or
+ * delete this one. Each map has its own blocks; the places are shared.
  */
 @Component({
   selector: 'app-map-switcher',
@@ -33,6 +34,7 @@ import { NameDialog, NameDialogData } from './name-dialog';
       <button mat-menu-item (click)="newMap()"><mat-icon>add</mat-icon><span>New map</span></button>
       <button mat-menu-item (click)="duplicate()"><mat-icon>content_copy</mat-icon><span>Duplicate this map</span></button>
       <button mat-menu-item (click)="rename()"><mat-icon>edit</mat-icon><span>Rename this map</span></button>
+      <button mat-menu-item (click)="share.shareOpenMap()"><mat-icon>share</mat-icon><span>Share this map</span></button>
       <button mat-menu-item (click)="remove()" [disabled]="store.maps().length < 2"><mat-icon>delete</mat-icon><span>Delete this map</span></button>
     </mat-menu>
   `,
@@ -45,6 +47,7 @@ import { NameDialog, NameDialogData } from './name-dialog';
 })
 export class MapSwitcher {
   protected readonly store = inject(Store);
+  protected readonly share = inject(ShareService);
   private readonly dialog = inject(MatDialog);
 
   private askName(data: NameDialogData, then: (name: string) => void): void {

@@ -5,6 +5,7 @@ import {
   tidyGroups, turnAround, uniqueName, upgradeBlock, ViewState,
 } from '@boligmaskinen/engine';
 import { migrateV1, migrateV2, Migrated, SavedV1, SavedV2 } from './migrate';
+import { importShared, SharedMap } from './share';
 import { EMPTY_BASE, SyncBase } from './sync';
 
 const STORE_KEY = 'boligmaskinen.prototype.v4';
@@ -303,6 +304,17 @@ export class Store {
     this.maps.set(maps.length ? maps : [emptyMap(FIRST_MAP)]);
     this.places.set(state.places);
     this.synced.set(state.synced);
+  }
+
+  /** Add a map from a link (share.ts) and open it, with its places and the view it was shared with. */
+  addShared(shared: SharedMap): SavedMap {
+    const { map, places } = importShared(shared, this.maps(), this.places(), newId);
+    const added = tidyGroups({ ...map, blocks: map.blocks.map((b) => upgradeBlock(b).block) });
+    this.places.set(places);
+    this.maps.update((list) => [...list, added]);
+    this.activeMapId.set(added.id);
+    this.view.set({ ...DEFAULT_VIEW, ...shared.view });
+    return added;
   }
 
   // ---- view ----
