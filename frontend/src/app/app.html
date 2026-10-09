@@ -1,4 +1,4 @@
-<div class="shell" [class.mobile]="mobile()" [style.--map-inset-left]="mapInset().left + 'px'">
+<div class="shell" [class.mobile]="mobile()" [style.--map-inset-left]="mapInset().left + 'px'" [style.--map-inset-top]="mapInset().top + 'px'">
   <div class="map-area">
     <app-map-view [inset]="mapInset()" />
     @if (!mobile() && !panelOpen() && !store.placing()) {
@@ -13,14 +13,22 @@
   </div>
 
   @if (mobile()) {
-    <!-- On a phone the panel is a bottom sheet over the map, which stays usable above it -->
+    <!-- On a phone: the map panel as a card at the top, and the weighting as a bottom sheet -->
+    <section #mapCard class="card map-card phone" aria-label="The map">
+      <app-map-panel [compact]="true" />
+    </section>
     <app-bottom-sheet class="sheet" [(state)]="sheet" (settledHeight)="sheetHeight.set($event)">
       <app-panel />
     </app-bottom-sheet>
   } @else {
-    <!-- On a larger screen it floats over the map, which runs under it to the window's edges -->
-    <aside #floating class="floating" [class.open]="panelOpen()" [inert]="!panelOpen()" tabindex="-1" aria-label="Your weighting">
-      <app-panel (closePanel)="closePanel()" />
-    </aside>
+    <!-- On a larger screen two panels float over the map, which runs under them to the window's edges -->
+    <div #floating class="panels" [class.open]="panelOpen()" [inert]="!panelOpen()" tabindex="-1">
+      <section class="card map-card" aria-label="The map">
+        <app-map-panel (closePanel)="closePanel()" />
+      </section>
+      <section class="card weighting-card" aria-label="Your weighting">
+        <app-panel />
+      </section>
+    </div>
   }
 </div>
