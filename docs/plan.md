@@ -43,8 +43,8 @@ These hold for every milestone.
 - The weighting is blocks in our own language ([`block-language.md`](block-language.md)), with
   versions and migrations. Predefined blocks are code too, and a block can be turned around.
 - Several maps, each with its own blocks in groups that can be switched off. The places, with
-  travel times estimated from the distance, are shared by the maps. All of it is kept in the
-  browser.
+  travel times estimated from the distance, are shared by the maps. The maps and places are saved
+  on the server, so every browser has them (issue #34, done early, 2026-10-09).
 - Material 3 in light and dark mode, on desktops, tablets and phones.
 - One image: the Node backend serves the app, the data pack and the API, with PostGIS beside
   it. The data jobs run in the backend; one is real (checking the data pack), the others come
@@ -168,12 +168,9 @@ explanation.
 
 **Goal:** Boligmaskinen watches for you.
 
-1. **Saved weightings** on the server. There is one profile per instance until there are
-   users. The browser already keeps several maps, each with its own blocks in groups that can be
-   switched off (2026-10-07); this moves them to the server.
-2. **Alerts** on absolute points ("tell me when a home for sale gets 80 points"), by
-   e-mail (SMTP) or push (ntfy or Web Push).
-3. **Share a weighting** as a link.
+1. **Alerts** on absolute points ("tell me when a home for sale gets 80 points"), by
+   e-mail (SMTP) or push (ntfy or Web Push). The maps they watch are already saved on the server.
+2. **Share a weighting** as a link.
 
 **Done when:** a new listing above the threshold sends a notification.
 

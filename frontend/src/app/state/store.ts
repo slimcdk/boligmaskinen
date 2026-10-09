@@ -1,10 +1,11 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 import {
   activeBlocks, Block, blockFrom, copyMap, DEFAULT_CRITERIA, DEFAULT_VIEW, emptyMap, formulaParams, groupNameFor, inGroup,
-  LANGUAGE_VERSION, LIBRARY, MODES, Place, placeTemplate, placeValueName, renameValues, Role, SavedMap, setParam, templateOf,
+  LANGUAGE_VERSION, LIBRARY, MODES, newId, Place, placeTemplate, placeValueName, renameValues, Role, SavedMap, setParam, templateOf,
   tidyGroups, turnAround, uniqueName, upgradeBlock, ViewState,
 } from '@boligmaskinen/engine';
 import { migrateV1, migrateV2, Migrated, SavedV1, SavedV2 } from './migrate';
+import { EMPTY_BASE, SyncBase } from './sync';
 
 const STORE_KEY = 'boligmaskinen.prototype.v4';
 const OLDER_KEYS = { v3: 'boligmaskinen.prototype.v3', v2: 'boligmaskinen.prototype.v2', v1: 'boligmaskinen.prototype.v1' };
@@ -17,6 +18,8 @@ interface Saved {
   activeMap: string;
   places: Place[];
   view: ViewState;
+  /** What the server has of the maps and places (ProfileSync); missing before they were saved there. */
+  sync?: SyncBase;
 }
 
 /** What the prototype saved before there were maps: one list of blocks. */
@@ -29,6 +32,9 @@ interface SavedV3 {
 /**
  * The saved maps, each with its blocks of the weighting in groups, the user's places (shared by
  * every map) and the map settings. Everything about blocks works on the map that is open.
+ *
+ * It is all kept in localStorage. ProfileSync keeps the maps and places on the server too; which
+ * map is open and the map settings belong to this browser.
  */
 @Injectable({ providedIn: 'root' })
 export class Store {
@@ -40,6 +46,8 @@ export class Store {
   readonly view = signal<ViewState>({ ...DEFAULT_VIEW });
   /** True while the next map click should drop a new place. */
   readonly placing = signal(false);
+  /** What the server has of the maps and places (ProfileSync). */
+  readonly synced = signal<SyncBase>(EMPTY_BASE);
 
   /** The map that is open. */
   readonly map = computed(() => this.maps().find((m) => m.id === this.activeMapId()) ?? this.maps()[0]);
@@ -53,7 +61,7 @@ export class Store {
 
   constructor() {
     this.restore();
-    effect(() => this.persist({ maps: this.maps(), activeMap: this.map().id, places: this.places(), view: this.view() }));
+    effect(() => this.persist({ maps: this.maps(), activeMap: this.map().id, places: this.places(), view: this.view(), sync: this.synced() }));
   }
 
   // ---- maps ----
@@ -227,7 +235,7 @@ export class Store {
     const used = new Set(this.places().map((p) => p.name));
     let n = 1;
     while (used.has(`Place ${n}`)) n++;
-    const place: Place = { id: crypto.randomUUID(), name: `Place ${n}`, lng, lat };
+    const place: Place = { id: newId('place'), name: `Place ${n}`, lng, lat };
     this.places.update((list) => [...list, place]);
     this.addPlaceBlock(place);
     return place;
@@ -272,6 +280,17 @@ export class Store {
     this.updateEveryMap((list) => list.filter((b) => b.template !== `place:${id}`));
   }
 
+  /**
+   * Take the maps and places as the server and this browser have them together (ProfileSync), with
+   * what the server has of them. There is always a map.
+   */
+  replaceAll(state: { maps: SavedMap[]; places: Place[]; synced: SyncBase }): void {
+    const maps = state.maps.map((m) => tidyGroups({ ...m, blocks: m.blocks.map((b) => upgradeBlock(b).block) }));
+    this.maps.set(maps.length ? maps : [emptyMap(FIRST_MAP)]);
+    this.places.set(state.places);
+    this.synced.set(state.synced);
+  }
+
   // ---- view ----
   setView(patch: Partial<ViewState>): void {
     this.view.update((v) => ({ ...v, ...patch }));
@@ -300,6 +319,7 @@ export class Store {
     this.activeMapId.set(saved.maps.some((m) => m.id === saved.activeMap) ? saved.activeMap : saved.maps[0].id);
     this.places.set(saved.places ?? []);
     this.view.set({ ...DEFAULT_VIEW, ...(saved.view ?? {}) });
+    this.synced.set(saved.sync ?? EMPTY_BASE);
   }
 
   /** One list of blocks from before there were maps becomes the first map, in groups. */

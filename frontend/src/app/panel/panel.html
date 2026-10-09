@@ -6,7 +6,10 @@
     </div>
     <button mat-icon-button (click)="closePanel.emit()" aria-label="Hide panel"><mat-icon>chevron_left</mat-icon></button>
   </div>
-  <app-map-switcher />
+  <div class="map-row">
+    <app-map-switcher />
+    <app-sync-status />
+  </div>
 </header>
 @if (data.state() === 'loading') {
   <mat-progress-bar mode="indeterminate" aria-label="Loading data"></mat-progress-bar>

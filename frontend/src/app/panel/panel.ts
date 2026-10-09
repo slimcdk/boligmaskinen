@@ -24,6 +24,7 @@ import { ThemeToggle } from '../theme/theme-toggle';
 import { GroupSection } from './group-section';
 import { Histogram } from './histogram';
 import { MapSwitcher } from './map-switcher';
+import { SyncStatus } from './sync-status';
 
 /**
  * The side panel: the open map, its result, its blocks of the weighting in groups, the places and
@@ -34,7 +35,7 @@ import { MapSwitcher } from './map-switcher';
   imports: [
     MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatChipsModule, MatExpansionModule, MatIconModule,
     MatProgressBarModule, MatSliderModule, MatTooltipModule, MatFormFieldModule, MatSelectModule, GroupSection, Histogram, MapSwitcher,
-    ThemeToggle,
+    SyncStatus, ThemeToggle,
   ],
   templateUrl: './panel.html',
   styleUrl: './panel.scss',

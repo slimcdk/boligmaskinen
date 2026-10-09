@@ -138,8 +138,14 @@ export function evaluateBlocks(blocks: Block[], n: number, inputs: BlockInputs, 
   return { scores, histogram, values, issues, hasScore: true };
 }
 
-let counter = 0;
-export const newId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(counter++).toString(36)}`;
+/**
+ * A new id, such as `map-3f9a…`. Maps and places are saved on the server, so ids must not clash
+ * between devices: 96 random bits. (`crypto.randomUUID` needs HTTPS, and a LAN server has none.)
+ */
+export function newId(prefix: string): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return `${prefix}-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+}
 
 /** The weight slider runs from 0 (off) to this. */
 export const MAX_WEIGHT = 10;

@@ -10,6 +10,7 @@ import { JOBS } from './jobs/definitions.ts';
 import { JobRunner } from './jobs/runner.ts';
 import type { JobDefinition } from './jobs/types.ts';
 import { jobRoutes } from './routes/jobs.ts';
+import { profileRoutes } from './routes/profile.ts';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -55,6 +56,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     return reply.code(database === 'unreachable' ? 503 : 200).send({ status: database === 'unreachable' ? 'degraded' : 'ok', database });
   });
   await jobRoutes(app, runner);
+  await profileRoutes(app, db);
   app.get('/api/version', async (_request, reply) => {
     if (!options.version) return reply.code(404).send(apiError(404, 'This build does not know its version'));
     return reply.header('cache-control', 'no-store').send(options.version);
