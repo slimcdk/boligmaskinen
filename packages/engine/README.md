@@ -6,6 +6,7 @@ the same points in the browser and on the server.
 | File | What it is |
 |---|---|
 | `src/formula.ts` | The block language: tokenizer, parser and compiler, and the controls from `let` lines. See `docs/block-language.md`. |
+| `src/codegen.ts` | Blocks compiled to JavaScript: a loop over the cells per block, generated from the parsed formula, and one that puts the blocks together. They give exactly what the closures give, six times faster; the closures stay for single cells and where a Content Security Policy forbids generated code. |
 | `src/blocks.ts` | Evaluating the blocks over cells: preferences, requirements, weights, missing data. |
 | `src/library.ts` | The predefined blocks. |
 | `src/maps.ts` | Saved maps, and the groups of blocks in them that can be switched off together. |

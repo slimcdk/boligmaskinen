@@ -10,7 +10,8 @@ The same weighting in five ways:
 | Implementation | Time | Relative |
 |---|---:|---:|
 | Node 24, the prototype's block engine (formulas run as closures) | 2,284 ms | 29× |
-| Node 24, one generated loop (what compiling the formulas would give) | 100 ms | 1.3× |
+| Node 24, the engine with blocks compiled to JavaScript (#20, a loop per block) | 320 ms | 4.1× |
+| Node 24, one generated loop for all blocks | 100 ms | 1.3× |
 | Python 3.12 + NumPy 2.5, vectorised | 144 ms | 1.8× |
 | Go 1.27, loop | 109 ms | 1.4× |
 | Rust 1.97, loop (`-C opt-level=3 -C target-cpu=native`) | 78 ms | 1.0× |

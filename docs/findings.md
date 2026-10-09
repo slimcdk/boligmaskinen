@@ -58,16 +58,20 @@ found and what to do about it. Newest first. Started 2026-10-07.
     - Rust: 78 ms
   - Scripts: `docs/benchmarks/weighting/`.
   - So: Node is within 1.3× of Rust once the formulas are compiled.
-  - Next: generate code from the block language (on the server always; in the browser
-    where the host allows it). Keep the closures as a fallback, with a parity test
-    between the two.
+  - Done (2026-10-10, #20): the engine generates a loop per block and one that puts them
+    together (`packages/engine/src/codegen.ts`), with the closures as a fallback and a parity
+    test between the two. The same weighting takes 320 ms instead of 2.0 s, and 71 ms instead
+    of 506 ms over the 1.05 million land cells the map shows at 200 m. The rest of the gap to
+    one fused loop is in writing each block's values, which the side panel shows; workers
+    (#21) are the next step.
 
 - **Every block is code, and the predefined ones still score exactly like the original engine.**
   - What: a test compares them over 2,000 random cells with requirements, categories,
     municipal values and missing data, including the histogram.
   - Use: the user can read and change any block without losing the simple start.
 - **The block language is not JavaScript.**
-  - What: formulas are compiled to closures, so shared blocks cannot run arbitrary code.
+  - What: formulas are compiled to closures, and to JavaScript generated from the parsed
+    formula alone, so shared blocks cannot run arbitrary code.
   - Use: the same blocks can run on the server, for nightly alerts.
   - Next: a richer editor, with syntax highlighting and completion of value names.
 - **Missing data needs three-valued logic.**
