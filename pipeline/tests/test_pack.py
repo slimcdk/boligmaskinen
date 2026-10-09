@@ -59,10 +59,14 @@ def test_makes_a_valid_png(parts, tmp_path):
 
 def test_refuses_to_pack_without_its_parts_or_over_a_pack(parts, tmp_path):
     (tmp_path / "exists").mkdir()
-    with pytest.raises(SystemExit, match="exists already"):
+    (tmp_path / "exists" / "fonts.json").write_text("{}")
+    with pytest.raises(SystemExit, match="is not empty"):
         pack.build(**parts, out=tmp_path / "exists")
     with pytest.raises(SystemExit, match="sprites in .* lack light.json"):
         pack.build(**{**parts, "sprites": parts["styles"]}, out=tmp_path / "pack")
     with pytest.raises(SystemExit, match="There are no fonts"):
         pack.build(**{**parts, "fonts": tmp_path / "exists"}, out=tmp_path / "pack")
+    # An empty folder is fine, as the jobs make one to build in
+    (tmp_path / "empty").mkdir()
+    assert pack.build(**parts, out=tmp_path / "empty")["basemap"]["parts"] == 3
     assert not (tmp_path / "pack").exists()
