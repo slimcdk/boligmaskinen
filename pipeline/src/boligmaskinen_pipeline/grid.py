@@ -15,6 +15,7 @@ Usage:
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
     turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST)
+    no2, pm25     DCE's air quality on a 1 km grid, as GeoJSON (optional: without them the layers have no data)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -53,13 +54,17 @@ REGIONS = {
 CODES = re.compile(r"^\d{3}(,\d{3})*$")
 
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
+# Sources a build can do without: their layers have no data then
+OPTIONAL_INPUTS = ["no2", "pm25"]
+# DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
+CONCENTRATIONS = {"no2": ("NO2", 4), "pm25": ("PM2_5", 10)}
 
 ROAD_NOISE_AT_10M = {"motorway": 76.0, "trunk": 72.0, "primary": 69.0, "secondary": 65.0}
 NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
-          "density", "zone", "municipality", "mask"]
+          "density", "zone", "municipality", "no2", "pm25", "mask"]
 TILE = 256  # cells per side of a detail tile
 
 
@@ -137,13 +142,36 @@ def jsonstat_matrix(path: Path, dim: str) -> dict[str, dict[str, float]]:
     return {a: {o: values[ai * len(others) + oi] for o, oi in others.items()} for a, ai in areas.items()}
 
 
+def concentration(grid: "Grid", source: Path | None, prop: str, steps: int) -> np.ndarray:
+    """A layer of yearly means from squares of 1 km: raw 1 + value × steps, 0 where there is none."""
+    if source is None:
+        warn(f"No source for {prop}: its layer has no data")
+        return np.zeros(grid.shape, dtype=np.uint8)
+    squares = gpd.read_file(source).set_crs("EPSG:25832", allow_override=True)
+    km = 1000
+    bounds = squares.geometry.bounds
+    kx = np.floor(bounds["minx"].to_numpy() / km).astype(np.int64)
+    ky = np.floor(bounds["miny"].to_numpy() / km).astype(np.int64)
+    values = np.clip(np.round(1 + squares[prop].to_numpy(dtype=float) * steps), 1, 255)
+    x0, y0 = kx.min(), ky.min()
+    table = np.zeros((ky.max() - y0 + 1, kx.max() - x0 + 1), dtype=np.uint8)
+    table[ky - y0, kx - x0] = values.astype(np.uint8)
+    # The square of every cell's centre
+    cx = np.floor((grid.x0 + (np.arange(grid.width) + 0.5) * grid.cell) / km).astype(np.int64) - x0
+    cy = np.floor((grid.y1 - (np.arange(grid.height) + 0.5) * grid.cell) / km).astype(np.int64) - y0
+    inside_x = (cx >= 0) & (cx < table.shape[1])
+    inside_y = (cy >= 0) & (cy < table.shape[0])
+    layer = table[np.clip(cy, 0, table.shape[0] - 1)[:, None], np.clip(cx, 0, table.shape[1] - 1)[None, :]]
+    return np.where(inside_y[:, None] & inside_x[None, :], layer, 0).astype(np.uint8)
+
+
 def read_inputs(path: Path) -> dict[str, Path]:
     """The source files named in inputs.json; every one has to be there."""
     named = json.loads(path.read_text(encoding="utf-8"))
     missing = [key for key in INPUTS if key not in named]
     if missing:
         raise SystemExit(f"{path} does not name: {', '.join(missing)}")
-    files = {key: (path.parent / named[key]).resolve() for key in INPUTS}
+    files = {key: (path.parent / named[key]).resolve() for key in INPUTS + OPTIONAL_INPUTS if key in named}
     absent = [f"{key} ({file})" for key, file in files.items() if not file.exists()]
     if absent:
         raise SystemExit(f"Missing source files: {', '.join(absent)}")
@@ -327,6 +355,11 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
             "burglariesPer1000": round(burglaries[row.code] / population[row.code] * 1000, 2),
         })
     layers["municipality"] = np.where(region_land, municipality_index, 0).astype(np.uint8)
+
+    # --- Air quality (DCE): yearly means on a 1 km grid of squares in EPSG:25832 ----------------
+    for name, (prop, steps) in CONCENTRATIONS.items():
+        layers[name] = concentration(grid, inputs.get(name), prop, steps)
+    step(f"Air quality: NO₂ for {(layers['no2'] > 0).sum():,} cells, PM2.5 for {(layers['pm25'] > 0).sum():,}", 0.78)
 
     # --- Sample onto a Web Mercator display grid ------------------------------------------------
     to_merc = Transformer.from_crs("EPSG:25832", "EPSG:3857", always_xy=True)

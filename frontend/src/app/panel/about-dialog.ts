@@ -43,6 +43,13 @@ export const SOURCES: DataSource[] = [
     note: "Changed: put on the map's 100 m cells. Where it has no data, the noise is our own estimate.",
   },
   {
+    name: 'DCE, through Danmarks Miljøportal', url: 'https://arealdata.miljoeportal.dk',
+    uses: 'Nitrogen dioxide (NO₂) and fine particles (PM2.5): yearly means for 2024 on a 1 km grid, from DCE’s model of the air.',
+    licence: CC_BY,
+    credit: 'Luftkvalitet 2024: DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet',
+    note: "Changed: put on the map's 100 m cells. A model, not a measurement at the address.",
+  },
+  {
     name: 'Plandata.dk', url: 'https://www.plandata.dk',
     uses: 'Planning zones: byzone, landzone and sommerhusområde, from the zone map.',
     licence: CC_BY,
@@ -117,7 +124,7 @@ export const SOURCES: DataSource[] = [
         <p>Denmark is divided into {{ cell() }} m cells{{ detail() ? ', and into ' + detail() + ' m cells for the map zoomed in' : '' }}. Every cell gets a value for each data layer, and every block in your weighting turns those values into a score. The map shows the blocks averaged by their importance.</p>
         <p>Homes are approximated by address points from OpenStreetMap, which are imported from the national address register. Cells in industrial areas are left out.</p>
         <p>Road noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere. Other places are estimated from road type and distance.</p>
-        <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation. Tax and burglaries are per municipality.</p>
+        <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation. Tax and burglaries are per municipality, and the air per square kilometre.</p>
         <p>Travel times to your places are estimates from straight-line distance until a routing service is in place.</p>
         <p>Colours are stretched over the points currently shown, so the map always shows the differences that matter. Outside Denmark the map shows Natural Earth's world map.</p>
       </section>

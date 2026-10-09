@@ -17,6 +17,8 @@ export const SOURCE_URLS = {
   statbank: 'https://api.statbank.dk/v1/data',
   noise: 'https://files-miljoegis.mim.dk/noise2022/2022_noise_shp.zip',
   naturalEarth: 'https://naciscdn.org/naturalearth/50m',
+  /** DCE's air quality through Danmarks Miljøportal's WFS: 90,162 squares of 1 km per layer. */
+  air: 'https://arld-extgeo.miljoeportal.dk/geoserver/wfs',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -29,6 +31,7 @@ const LICENCES = {
   dst: 'CC BY 4.0, Danmarks Statistik',
   noise: 'CC BY 4.0, Miljøstyrelsen',
   naturalEarth: 'Public domain, Natural Earth',
+  air: 'CC BY 4.0, DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet (Danmarks Miljøportal)',
 };
 
 /** What the data jobs need to fetch and build. */
@@ -275,6 +278,39 @@ async function fetchNoise(w: Work): Promise<JobOutcome> {
   }
 }
 
+/** DCE's model of the air: yearly means of NO₂ and PM2.5 on a 1 km grid. */
+export const AIR_LAYERS = [
+  { name: 'no2.geojson', layer: 'luft:ID6_Luft_Koncentration_2024_NO2', property: 'NO2' },
+  { name: 'pm25.geojson', layer: 'luft:ID7_Luft_Koncentration_2024_PM2_5', property: 'PM2_5' },
+];
+
+async function fetchAir(w: Work): Promise<JobOutcome> {
+  const fetched: Archived[] = [];
+  for (const [i, { name, layer, property }] of AIR_LAYERS.entries()) {
+    const url = `${w.urls.air}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=200000`;
+    fetched.push(await w.archive.download(w.context, {
+      source: 'air', name, url, licence: LICENCES.air, progress: [i / AIR_LAYERS.length, (i + 1) / AIR_LAYERS.length],
+      // GeoServer stamps every answer with the time it was made
+      normalize: (content) => {
+        const { timeStamp: _, ...rest } = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
+        return JSON.stringify(rest);
+      },
+      check: jsonCheck((json) => {
+        const features = (json as { features?: { properties?: Record<string, unknown> }[] }).features;
+        if (!Array.isArray(features) || features.length < 1000) throw new Error(`only ${features?.length ?? 0} squares`);
+        if (typeof features[0].properties?.[property] !== 'number') throw new Error(`squares without ${property}`);
+        return `${number(features.length)} squares of ${property.replace('_', '.')}`;
+      }),
+    }));
+  }
+  for (const f of fetched) await w.context.log(`${f.summary}: ${freshness(f, w.day)}`);
+  const changed = fetched.some((f) => f.changed);
+  return {
+    changed, bytes: fetched.reduce((sum, f) => sum + f.file.bytes, 0),
+    result: changed ? fetched.map((f) => f.summary).join(', ') : unchangedSince(w, fetched.map((f) => f.file)),
+  };
+}
+
 /** Natural Earth's world map, and the layers built from it. */
 export const NATURAL_EARTH = [
   'physical/ne_50m_land', 'physical/ne_50m_lakes', 'cultural/ne_50m_admin_0_boundary_lines_land',
@@ -329,6 +365,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'noise', name: 'Road noise', source: 'Miljøstyrelsen', schedule: '0 4 1 * *', then: ['grid'], fetch: fetchNoise,
     description: 'The strategic noise map of roads, taken out of the 2 GB archive with range requests. New maps every 5 years.',
+  },
+  {
+    id: 'air', name: 'Air quality', source: 'DCE, Danmarks Miljøportal', schedule: '0 5 2 * *', then: ['grid'], fetch: fetchAir,
+    description: 'Nitrogen dioxide and fine particles: yearly means on a 1 km grid from DCE’s model.',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];

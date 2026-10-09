@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -47,6 +47,7 @@ describeWithDatabase('the source jobs', () => {
     const urls: SourceUrls = {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
+      air: `${base}/wfs-air`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -164,6 +165,23 @@ describeWithDatabase('the source jobs', () => {
     etag = '"noise-3"';
     expect(await run('noise')).toMatchObject({ changed: true });
     expect(calls()).toEqual(['remote-zip', 'remote-zip', 'remote-zip']);
+  });
+
+  it('Air quality: fetches both layers of squares, and a new time stamp alone is no change', async () => {
+    let no2 = 9.5;
+    server.on('GET /wfs-air', (_request, response) => {
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 2000 }, () => ({ properties: { NO2: no2, PM2_5: 5.1 } })) }));
+    });
+    expect(await run('air')).toMatchObject({ changed: true, result: '2,000 squares of NO2, 2,000 squares of PM2.5' });
+    expect(server.to('/wfs-air')).toHaveLength(2);
+    expect(await run('air')).toMatchObject({ changed: false });
+    no2 = 9.75;
+    expect(await run('air')).toMatchObject({ changed: true });
+    server.on('GET /wfs-air', (_request, response) => {
+      response.writeHead(200).end(JSON.stringify({ features: [] }));
+    });
+    await expect(run('air')).rejects.toThrow(/did not give what it should: only 0 squares/);
   });
 
   it('World map: builds the layers from Natural Earth when a file changed', async () => {

@@ -135,7 +135,7 @@ What was built is described in `backend/README.md` (the jobs, the raw archive, t
    - Public transport from the Rejseplanen GTFS feed.
    - When a place is added, a job computes its travel-time layer.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
-   districts. Then energy parks (solar parks, turbine size, the designated areas to come) and
+   districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks (solar parks, turbine size, the designated areas to come) and
    drinking water quality (hardness per supply area, PFAS, nitrate); see
    [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The open public data checked on
    2026-10-09, and where to start, is in [public-data.md](public-data.md). Each new source adds values to the block language, predefined blocks and a

@@ -94,7 +94,7 @@ describe('the library', () => {
     const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     const n = 2000;
     const layers = {} as Record<LayerName, Uint8Array>;
-    for (const name of ['forest', 'water', 'beach', 'noise', 'supermarket', 'school', 'daycare', 'station', 'turbine', 'density', 'zone', 'municipality', 'mask'] as LayerName[]) {
+    for (const name of ['forest', 'water', 'beach', 'noise', 'supermarket', 'school', 'daycare', 'station', 'turbine', 'density', 'zone', 'municipality', 'no2', 'pm25', 'mask'] as LayerName[]) {
       layers[name] = Uint8Array.from({ length: n }, () => Math.floor(random() * 256));
     }
     layers.zone = Uint8Array.from({ length: n }, () => Math.floor(random() * 4));
@@ -105,12 +105,12 @@ describe('the library', () => {
     const ctx = { distanceMax: 20000, municipalities };
     const byId = (id: string) => DEFAULT_CRITERIA.find((c) => c.id === id)!;
     const criteria: Criterion[] = [
-      ...['forest', 'noise', 'supermarket', 'density', 'incomeTax', 'zone', 'turbine'].map(byId),
+      ...['forest', 'noise', 'supermarket', 'density', 'incomeTax', 'zone', 'turbine', 'no2'].map(byId),
       { ...byId('school'), role: 'must', zero: 2500 },
     ];
     const layerOf = (c: Pick<Criterion, 'kind' | 'layer'>) => layers[c.kind === 'municipal' ? 'municipality' : c.layer!];
     const items: ScoringItem[] = criteria.map((c) => ({
-      id: c.id, kind: c.kind, role: c.role, weight: c.weight, full: c.full, zero: c.zero, allowed: c.allowed, field: c.field, layer: layerOf(c),
+      id: c.id, kind: c.kind, role: c.role, weight: c.weight, full: c.full, zero: c.zero, allowed: c.allowed, field: c.field, layer: layerOf(c), layerName: c.layer,
     }));
     const expected = scoreCells(items, Uint32Array.from({ length: n }, (_, i) => i), ctx);
 
