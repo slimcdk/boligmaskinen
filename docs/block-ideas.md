@@ -188,21 +188,83 @@ These exist at cell level today. At home level they can be measured at the build
 | Value | Meaning | Source |
 |---|---|---|
 | `noise_facade` | Road noise at the building rather than the 100 m cell | Miljøstyrelsen noise maps |
-| `fibre` | Fibre broadband at the address | Bredbåndskortet (Energistyrelsen) |
+| `fibre` | Fibre broadband at the address | Tjekditnet (Digitaliseringsstyrelsen); ask before showing it per address |
 | `district_school` | The district school, and its grades through `uddannelsesstatistik.dk` | GeoFA school districts |
 | `flood_risk` | Risk of flooding from cloudbursts or storm surges | Klimadatastyrelsen / DMI |
 | `contaminated` | The parcel is mapped as contaminated land (V1 or V2) | Danmarks Miljøportal |
-| `radon` | Radon risk in the area | Sundhedsstyrelsen |
+| `radon` | Radon risk in the area | Sundhedsstyrelsen; only per municipality before 2007, so coarse |
 
 ```
 // Not on contaminated land, and not at risk of flooding
 !contaminated && flood_risk < 2
 ```
 
+## Protected areas, and later listed buildings
+
+**What:** whether a place lies by or in a protected area, and later, whether the home or the
+buildings around it are listed or worth preserving. The user asked for both on 2026-10-09.
+
+Both cut two ways, so each block can be turned around:
+
+- **By a protected area:** nature that stays, and land where nothing will be built. A preference with
+  full points close to it.
+- **In a protected area:** the protection limits what may be built or changed. For someone who
+  wants to build on, that is a requirement: not inside a fredning.
+- **A listed home** (fredet), or one worth preserving (bevaringsværdig): character, but rules for
+  every change and repair. Some look for it, others avoid it.
+
+**Data:**
+
+- **Protected areas now, as cell values:**
+  - Miljøstyrelsen's fredninger, published through Danmarks Miljøportal: Arealdata, and the layer
+    `FREDEDE_OMR_BK` in Arealinformation's WMS. WFS is still to check.
+  - Natura 2000 and §3 nature from the same portal, CC0 (see `public-data.md`).
+- **Listed and preservation-worthy buildings later, per home (milestone 4):**
+  - Slots- og Kulturstyrelsen's FBB: about 7,000 listed buildings, and about 360,000 with a SAVE
+    value from 1 (the highest) to 9. It is an INSPIRE download (an Atom feed), with no conditions
+    stated.
+  - FBB closes in 2026. Listed buildings move to a new register. The SAVE values go to the
+    municipalities, and KL gathers them in a database in GeoFA.
+  - BBR also records whether a building is listed.
+
+**Values:**
+
+| Value | Meaning | Unit |
+|---|---|---|
+| `protected_area` | Distance to the nearest fredning | m |
+| `in_protected_area` | The cell (later the parcel) lies inside a fredning | |
+| `natura2000` | Distance to the nearest Natura 2000 area | m |
+| `listed` | The home's building is listed (fredet) | |
+| `save_value` | The building's SAVE value, 1 (worth most) to 9; missing where it is not assessed | |
+| `listed_nearby` | Listed buildings within 300 m: an old, kept setting | buildings |
+
+```
+// Near protected nature
+let full = slider(300, 0, 5000, 50)    // Full points at (m)
+let zero = slider(3000, 0, 20000, 50)  // No points at (m)
+ramp(protected_area, full, zero)
+```
+
+```
+// Free to build: not inside a protected area (a requirement)
+!in_protected_area
+```
+
+```
+// Character: a listed home, or one worth preserving (milestone 4)
+listed || save_value <= 4
+```
+
+A missing `save_value` is missing data, as everywhere: the last block counts for nothing there as a
+preference, and keeps the home as a requirement.
+
 ## What this needs, and when
 
+- **Before milestone 4:** the protected areas as cell values, with the other layers from Danmarks
+  Miljøportal; they need no data about homes.
 - **Milestone 4:**
-  - BBR, DAR, MAT and VUR loaded per home;
+  - BBR, DAR, MAT and VUR loaded per home, and the listed and preservation-worthy buildings (FBB,
+    later the municipalities' SAVE values in GeoFA);
   - the home values and constants above;
   - `match()` in the language;
   - the catalogue blocks for heating (both kinds), room to the neighbours, size, no stairs and the
