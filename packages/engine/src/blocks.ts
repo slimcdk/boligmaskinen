@@ -9,6 +9,7 @@
  * The final weighting is the importance-weighted average of the preferences, renormalised
  * over the blocks that have data in each cell, exactly like the original engine.
  */
+import { compileCombine } from './codegen.ts';
 import { compileCached, describeError, type FormulaParam, formulaParams } from './formula.ts';
 import { type Role } from './types.ts';
 import { LANGUAGE_VERSION, languageOf, upgradeCode } from './migrations.ts';
@@ -81,19 +82,29 @@ export function runBlock(block: Block, n: number, inputs: BlockInputs): { values
   const out = new Float32Array(n);
   const preference = block.role === 'want';
   let bad = 0;
-  let example = '';
-  for (let i = 0; i < n; i++) {
-    for (const u of used) row[u.slot] = u.values![i];
-    const value = formula.run(row);
-    if (Number.isNaN(value)) { out[i] = NaN; continue; }
-    if (!preference) { out[i] = value !== 0 ? 1 : 0; continue; }
-    if (value >= 0 && value <= 1) { out[i] = value; continue; }
-    if (!bad++) {
-      const at = used.map((u) => `${u.name} = ${round(row[u.slot])}`).join(', ');
-      example = `${Number.isFinite(value) ? round(value) : value > 0 ? 'infinity' : '-infinity'}${at ? ` where ${at}` : ''}`;
+  let first = -1;
+  const loop = formula.loop;
+  if (loop) {
+    // One loop that V8 compiles: about six times faster than calling the closures per cell
+    const columns: (Float32Array | null)[] = formula.inputs.map(() => null);
+    for (const u of used) columns[u.slot] = u.values;
+    ({ bad, first } = loop(columns, out, n, preference));
+  } else {
+    for (let i = 0; i < n; i++) {
+      for (const u of used) row[u.slot] = u.values![i];
+      const value = formula.run(row);
+      if (Number.isNaN(value)) { out[i] = NaN; continue; }
+      if (!preference) { out[i] = value !== 0 ? 1 : 0; continue; }
+      if (value >= 0 && value <= 1) { out[i] = value; continue; }
+      if (!bad++) first = i;
     }
   }
   if (bad) {
+    // The first cell that gave a score outside 0–1, as an example
+    for (const u of used) row[u.slot] = u.values![first];
+    const value = formula.run(row);
+    const at = used.map((u) => `${u.name} = ${round(row[u.slot])}`).join(', ');
+    const example = `${Number.isFinite(value) ? round(value) : value > 0 ? 'infinity' : '-infinity'}${at ? ` where ${at}` : ''}`;
     return { issue: `Gives ${example} (${bad.toLocaleString('en-US')} cell${bad === 1 ? '' : 's'}). A score has to be between 0 and 1; wrap the formula in clamp(…), or use the block as a requirement.` };
   }
   return { values: out };
@@ -117,6 +128,11 @@ export function evaluateBlocks(blocks: Block[], n: number, inputs: BlockInputs, 
   const scores = new Float32Array(n).fill(-1);
   const histogram = new Uint32Array(101);
   if (!wants.length) return { scores, histogram, values, issues, hasScore: false };
+  const combine = compileCombine(wants.length, masks.length);
+  if (combine) {
+    combine(wants.map((w) => w.values), wants.map((w) => w.weight), masks, scores, histogram, n);
+    return { scores, histogram, values, issues, hasScore: true };
+  }
   for (let i = 0; i < n; i++) {
     // A requirement fails at 0; missing data (NaN) passes
     let ok = true;

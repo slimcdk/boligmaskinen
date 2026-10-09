@@ -3,9 +3,10 @@
  *
  * Every block in the weighting is a formula over the data, for example
  * `ramp(forest, 300, 3000)` or `noise < 55 ? 1 : 0.3`. Predefined blocks are formulas too,
- * which the user can read and change. The code is parsed and compiled into plain closures.
- * It is never run as JavaScript, so it can only do arithmetic on the data, and it behaves
- * the same in the browser and on a server.
+ * which the user can read and change. The code is parsed, and compiled into closures and into a
+ * loop of JavaScript that codegen.ts generates from the parsed formula alone. What the user wrote
+ * is never run as JavaScript, so it can only do arithmetic on the data, and it behaves the same in
+ * the browser and on a server.
  *
  * Syntax: numbers, true/false, value names, + - * / % **, comparisons, && || !, a ? b : c,
  * function calls and `let name = …` lines before the result. `//` starts a comment.
@@ -21,6 +22,7 @@
  * A comment at the end of the line is the control's label, and "(m)", "(min)", "(dB)" or
  * "(%)" at its end is the unit. Changing a control rewrites the value in the code.
  */
+import { type BlockLoop, compileLoop, generatedCodeAllowed } from './codegen.ts';
 import { utility } from './engine.ts';
 
 export interface FormulaError {
@@ -58,6 +60,8 @@ export interface CompiledFormula {
   params: FormulaParam[];
   /** Booleans come out as 1 and 0. */
   run(values: ArrayLike<number>): number;
+  /** The formula as one loop over many cells (codegen.ts), made when first asked for; null where it cannot be. */
+  readonly loop: BlockLoop | null;
 }
 
 export type CompileResult = { ok: true; formula: CompiledFormula } | { ok: false; error: FormulaError };
@@ -104,7 +108,7 @@ interface Token {
   value?: number;
 }
 
-type Expr =
+export type Expr =
   | { t: 'num'; v: number; pos: number; end?: number; bool?: boolean }
   | { t: 'var'; name: string; pos: number }
   | { t: 'un'; op: string; a: Expr; pos: number }
@@ -112,7 +116,7 @@ type Expr =
   | { t: 'cond'; c: Expr; a: Expr; b: Expr; pos: number }
   | { t: 'call'; name: string; args: Expr[]; pos: number };
 
-interface Program {
+export interface Program {
   lets: { name: string; expr: Expr; pos: number }[];
   result: Expr;
 }
@@ -465,6 +469,7 @@ export function compileFormula(source: string, inputs: string[]): CompileResult 
     const result = compileExpr(program.result, scope, uses, inputs);
     const slots = new Float64Array(inputs.length + lets.length);
     const n = inputs.length;
+    let loop: BlockLoop | null | undefined;
     return {
       ok: true,
       formula: {
@@ -475,6 +480,11 @@ export function compileFormula(source: string, inputs: string[]): CompileResult 
           for (let i = 0; i < n; i++) slots[i] = values[i];
           for (let k = 0; k < lets.length; k++) slots[n + k] = lets[k](slots);
           return result(slots);
+        },
+        get loop() {
+          if (!generatedCodeAllowed()) return null;
+          if (loop === undefined) loop = compileLoop(program, inputs, CONSTANTS);
+          return loop;
         },
       },
     };
