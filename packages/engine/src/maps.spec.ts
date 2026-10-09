@@ -38,6 +38,19 @@ describe('groups of blocks', () => {
   });
 });
 
+describe('groups with the same name', () => {
+  it('are one group, the first with its settings', () => {
+    const map: SavedMap = {
+      id: 'm', name: 'Family',
+      groups: [{ id: 'g1', name: 'Forældre', enabled: false }, { id: 'g2', name: 'Nature', enabled: true }, { id: 'g3', name: 'forældre', enabled: true }],
+      blocks: [block('a', { group: 'g1' }), block('b', { group: 'g2' }), block('c', { group: 'g3' })],
+    };
+    const tidy = tidyGroups(map);
+    expect(tidy.groups).toEqual([{ id: 'g1', name: 'Forældre', enabled: false }, { id: 'g2', name: 'Nature', enabled: true }]);
+    expect(tidy.blocks.map((b) => b.group)).toEqual(['g1', 'g2', 'g1']);
+  });
+});
+
 describe('saved maps', () => {
   it('get a name that is not taken', () => {
     expect(uniqueName('Map', ['My map'])).toBe('Map');

@@ -61,12 +61,23 @@ export function inGroup(map: SavedMap, block: Block, groupName: string): { map: 
 
 /**
  * The map with its groups made whole: every block is in a group that exists (OWN_GROUP when it
- * was in none), and a group without blocks is gone. Groups keep their order.
+ * was in none), groups with the same name are one (the first, with its settings), and a group
+ * without blocks is gone. Groups keep their order.
  */
 export function tidyGroups(map: SavedMap): SavedMap {
-  let current = map;
+  const first = new Map<string, string>();
+  const sameAs = new Map<string, string>();
+  for (const group of map.groups) {
+    const name = group.name.toLowerCase();
+    const id = first.get(name);
+    if (id) sameAs.set(group.id, id);
+    else first.set(name, group.id);
+  }
+  let current = sameAs.size
+    ? { ...map, blocks: map.blocks.map((b) => (b.group && sameAs.has(b.group) ? { ...b, group: sameAs.get(b.group) } : b)) }
+    : map;
   const known = new Set(map.groups.map((g) => g.id));
-  const blocks = map.blocks.map((block) => {
+  const blocks = current.blocks.map((block) => {
     if (block.group && known.has(block.group)) return block;
     const placed = inGroup(current, block, OWN_GROUP);
     current = placed.map;
