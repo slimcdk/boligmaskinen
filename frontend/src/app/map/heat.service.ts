@@ -57,7 +57,7 @@ export class HeatService {
   /** Increments every time the canvas has new pixels. */
   readonly frame = signal(0);
   readonly stats = signal<HeatStats | null>(null);
-  /** Short summary of each block's result, e.g. "median 0.62" or "84 % pass". */
+  /** Each block's result in words, e.g. "Median score 0.62" or "84 % of the cells pass". */
   readonly preview = signal<Map<string, string>>(new Map());
   /** Blocks that cannot run, with the reason. */
   readonly issues = signal<Map<string, string>>(new Map());
@@ -258,7 +258,7 @@ export class HeatService {
     this.frame.update((f) => f + 1);
   }
 
-  /** "median 0.62" for preferences and "84 % pass" for requirements, from an even sample. */
+  /** "Median score 0.62" for preferences and "84 % of the cells pass" for requirements, from an even sample. */
   private previews(values: Map<string, Float32Array>): Map<string, string> {
     const out = new Map<string, string>();
     for (const block of this.store.blocks()) {
@@ -267,13 +267,13 @@ export class HeatService {
       const stride = Math.max(1, Math.floor(v.length / 4000));
       const sample: number[] = [];
       for (let i = 0; i < v.length; i += stride) if (!Number.isNaN(v[i])) sample.push(v[i]);
-      if (!sample.length) { out.set(block.id, 'no data'); continue; }
+      if (!sample.length) { out.set(block.id, 'No data where the map looks'); continue; }
       if (block.role === 'must') {
-        out.set(block.id, `${Math.round((sample.filter((x) => x > 0).length / sample.length) * 100)} % pass`);
+        out.set(block.id, `${Math.round((sample.filter((x) => x > 0).length / sample.length) * 100)} % of the cells pass`);
         continue;
       }
       sample.sort((a, b) => a - b);
-      out.set(block.id, `median ${sample[Math.floor(sample.length / 2)].toFixed(2)}`);
+      out.set(block.id, `Median score ${sample[Math.floor(sample.length / 2)].toFixed(2)}`);
     }
     return out;
   }

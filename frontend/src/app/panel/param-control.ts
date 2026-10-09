@@ -51,12 +51,13 @@ const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions
   `,
   styles: [`
     :host { display: flex; flex-direction: column; }
-    .label { display: flex; justify-content: space-between; gap: 8px; font: var(--mat-sys-body-small); color: var(--mat-sys-on-surface-variant); }
-    .label strong { color: var(--mat-sys-on-surface); font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .choice { align-items: center; }
+    /* The label and its value on one line, the value in the type the weight has */
+    .label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font: var(--mat-sys-body-small); color: var(--mat-sys-on-surface-variant); }
+    .label strong { color: var(--mat-sys-on-surface); font: var(--mat-sys-label-large); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .choice { align-items: center; min-height: 40px; }
     .toggles mat-icon { width: 18px; height: 18px; font-size: 18px; }
-    mat-slider { width: 100%; margin: 0; }
-    mat-checkbox { margin-left: -8px; }
+    /* The slider right under its label, its track as wide as the label's line */
+    mat-slider { display: block; width: 100%; margin: -8px 0 -4px; }
   `],
 })
 export class ParamControl {

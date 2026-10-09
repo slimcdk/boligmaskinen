@@ -1,22 +1,23 @@
+// A grid of three columns: the expand button, the name, and the weight or switch. The settings fold out
+// under the name, in its column, so everything lines up with the name whatever the button's size.
 :host {
-  display: block;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 4px;
+  padding: 6px 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .line {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 0;
+  display: contents;
 }
 
 .expand {
-  flex: none;
   margin-left: -8px;
 }
 
 .text {
-  flex: 1;
   min-width: 0;
 }
 
@@ -91,18 +92,35 @@
   }
 }
 
+// The controls sit close together: a label with its value, and the slider right under it
 .details {
+  grid-column: 2 / -1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0 0 12px 36px;
+  gap: 4px;
+  padding: 4px 0;
 }
 
-.role {
-  align-self: flex-start;
+// Checkboxes that follow each other share a row; the checkbox's own padding lines its box up with the name
+.flags {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  margin-left: -8px;
+}
+
+// What the block gives, then its actions; the last icon button's own padding lines its icon up with the
+// end of the sliders
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 4px -4px 0 0;
 }
 
 .note {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
@@ -110,11 +128,4 @@
   &.error {
     color: var(--mat-sys-error);
   }
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 4px;
 }
