@@ -67,6 +67,8 @@ const GRID_SOURCES: Record<string, [job: string, name: string]> = {
   tax: ['dst', 'pskat.json'],
   burglaries: ['dst', 'straf.json'],
   population: ['dst', 'folk.json'],
+  no2: ['air', 'no2.geojson'],
+  pm25: ['air', 'pm25.geojson'],
 };
 
 interface GridMeta {

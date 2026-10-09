@@ -132,7 +132,17 @@ def sources(tmp_path_factory) -> Path:
     (root / "folk.json").write_text(json.dumps(jsonstat({"OMRÅDE": areas, "KØN": ["TOT"], "ALDER": ["IALT"], "CIVILSTAND": ["TOT"], "Tid": ["2026K3"]},
                                                         [6_000_000, 378_270, 100_000])), encoding="utf-8")
 
+    # --- DCE's air quality: 1 km squares over the two municipalities, NO₂ rising to the east ---
+    squares = []
+    for x in range(570_000, 580_000, 1000):
+        for y in range(6_215_000, 6_235_000, 1000):
+            squares.append({"NO2": 5 + (x - 570_000) / 1000, "PM2_5": 5.5, "geometry": box(x, y, x + 1000, y + 1000)})
+    air = gpd.GeoDataFrame(squares, geometry="geometry", crs="EPSG:25832")
+    air[["NO2", "geometry"]].to_file(root / "no2.geojson", driver="GeoJSON")
+    air[["PM2_5", "geometry"]].to_file(root / "pm25.geojson", driver="GeoJSON")
+
     inputs = {
+        "no2": "no2.geojson", "pm25": "pm25.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json",

@@ -28,7 +28,8 @@ function scaleOf(c: Criterion): Scale {
   switch (c.kind) {
     case 'noise': return { min: 35, max: 80, step: 1, unit: 'dB' };
     case 'count': return { min: 0, max: 255, step: 5, unit: 'addresses' };
-    case 'municipal': return { min: c.min ?? 0, max: c.max ?? 10, step: c.step ?? 0.1, unit: c.unit ?? '' };
+    case 'municipal':
+    case 'concentration': return { min: c.min ?? 0, max: c.max ?? 10, step: c.step ?? 0.1, unit: c.unit ?? '' };
     default: return { min: 0, max: 20000, step: 50, unit: 'm' };
   }
 }

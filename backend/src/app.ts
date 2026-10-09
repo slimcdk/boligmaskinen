@@ -65,10 +65,18 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       dataPackDir: dataPackDir ?? join(options.staticDir, 'data-pack'), log: app.log, pollSeconds: options.jobPollSeconds,
     })
     : null;
-  // A new install: the jobs fetch everything, and the builds follow
-  if (runner && dataDir && dataPackDir && !options.jobs && !(await stat(join(dataPackDir, 'data', 'meta.json')).then(() => true, () => false))) {
-    app.log.info('There is no data pack yet, so the data jobs fetch every source now');
-    await runner.startAll(Object.keys(FETCH_JOBS), 'There is no data pack yet, so every source is fetched now');
+  // A new install fetches everything, and the builds follow. Where the jobs fetch already, a source
+  // that came with a new version is fetched at once, rather than on its schedule
+  if (runner && db && dataDir && dataPackDir && !options.jobs) {
+    const hasPack = await stat(join(dataPackDir, 'data', 'meta.json')).then(() => true, () => false);
+    const fetched = new Set((await db.query<{ source: string }>('select distinct source from source_file')).rows.map((r) => r.source));
+    if (!hasPack) {
+      app.log.info('There is no data pack yet, so the data jobs fetch every source now');
+      await runner.startAll(Object.keys(FETCH_JOBS), 'There is no data pack yet, so every source is fetched now');
+    } else if (fetched.size) {
+      const fresh = Object.keys(FETCH_JOBS).filter((id) => !fetched.has(id));
+      if (fresh.length) await runner.startAll(fresh, 'A source that has not been fetched yet, so it is fetched now');
+    }
   }
   app.addHook('onClose', async () => {
     await runner?.stop();

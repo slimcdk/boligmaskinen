@@ -102,6 +102,18 @@ def test_takes_noise_from_the_noise_map_where_it_has_some(aarhus: Built):
     assert estimate < 100 and estimate >= grid.NOISE_FLOOR
 
 
+def test_puts_the_air_quality_of_each_square_on_its_cells(aarhus: Built, sources, tmp_path):
+    # NO₂ is 5 + the kilometres from the west edge, in steps of 1/4 µg/m³; PM2.5 is 5.5 in steps of 1/10
+    assert aarhus.at("no2", 574_500, 6_219_500) == 1 + 9 * 4
+    assert aarhus.at("no2", 570_500, 6_219_500) == 1 + 5 * 4
+    assert aarhus.at("pm25", 576_500, 6_222_500) == 1 + 55
+    # Without the source, the layers have no data and the build goes on
+    named = {key: str(sources.parent / path) for key, path in json.loads(sources.read_text()).items() if key not in ("no2", "pm25")}
+    (tmp_path / "inputs.json").write_text(json.dumps(named))
+    grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
+    assert not np.frombuffer(gzip.decompress((tmp_path / "out" / "no2.u8.gz").read_bytes()), dtype=np.uint8).any()
+
+
 def test_builds_with_another_cell_size(sources, tmp_path):
     grid.build(grid.read_inputs(sources), tmp_path / "out", "aarhus", cell=200)
     built = Built(tmp_path / "out")

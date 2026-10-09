@@ -33,6 +33,10 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
     response.writeHead(200).end(JSON.stringify({ dataset: { dimension: { Tid: { category: { index: { 2026: 0 } } } }, value: [1], table } }));
   });
   server.file('/noise/2022_noise_shp.zip', { content: 'the noise archive', etag: '"noise"' });
+  server.on('GET /air', (_request, response) => {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 1200 }, () => ({ properties: { NO2: 9.5, PM2_5: 5.1 } })) }));
+  });
   for (const path of NATURAL_EARTH) server.file(`/ne/${path}.zip`, { content: zip(path) });
   server.on('GET /protomaps/builds.json', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify([{ key: '20261008.pmtiles' }, { key: sources.planetBuild }]));
@@ -48,6 +52,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
     urls: {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
+      air: `${base}/air`,
     },
     protomaps: { builds: `${base}/protomaps/builds.json`, tiles: `${base}/tiles`, assets: `${base}/assets` },
   };

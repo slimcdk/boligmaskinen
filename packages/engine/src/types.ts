@@ -2,10 +2,13 @@
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
-  | 'station' | 'turbine' | 'density' | 'zone' | 'municipality' | 'mask';
+  | 'station' | 'turbine' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
-export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes';
+export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'concentration';
+
+/** Raw steps per µg/m³ of a concentration layer: raw 0 is no data, raw r is (r - 1) / scale µg/m³. */
+export const CONCENTRATION_SCALE: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10 };
 
 /** Numbers Danmarks Statistik gives per municipality. */
 export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population';
@@ -146,6 +149,16 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'school', group: 'Everyday life', name: 'School', opposite: 'Away from schools', note: 'Nearest folkeskole, friskole or private school.', kind: 'distance', layer: 'school', role: 'want', weight: 2, full: 1000, zero: 5000 },
   { id: 'daycare', group: 'Everyday life', name: 'Daycare', opposite: 'Away from daycare', note: 'Nearest daycare unit.', kind: 'distance', layer: 'daycare', role: 'want', weight: 2, full: 500, zero: 4000 },
   { id: 'station', group: 'Everyday life', name: 'Train or light rail', opposite: 'Away from railways', note: 'Nearest station.', kind: 'distance', layer: 'station', role: 'want', weight: 1, full: 1000, zero: 10000 },
+  {
+    // Denmark ranges from about 3 to 13 µg/m³ (median 4.2); WHO's guideline is 10
+    id: 'no2', group: 'Nature', name: 'Clean air', opposite: 'Polluted air', note: 'Nitrogen dioxide (NO₂), yearly mean 2024 on a 1 km grid, from DCE.',
+    kind: 'concentration', layer: 'no2', unit: 'µg/m³', min: 0, max: 15, step: 0.1, role: 'want', weight: 2, full: 3.5, zero: 7,
+  },
+  {
+    // Denmark ranges from about 5.5 to 7.7 µg/m³; WHO's guideline is 5
+    id: 'pm25', group: 'Nature', name: 'Few fine particles', opposite: 'Many fine particles', note: 'Fine particles (PM2.5), yearly mean 2024 on a 1 km grid, from DCE.',
+    kind: 'concentration', layer: 'pm25', unit: 'µg/m³', min: 0, max: 10, step: 0.1, role: 'want', weight: 1, full: 6, zero: 7.5,
+  },
   { id: 'turbine', group: 'Peace and quiet', name: 'Away from wind turbines', opposite: 'Close to wind turbines', note: 'Nearest turbine in operation.', kind: 'distance', layer: 'turbine', role: 'want', weight: 1, full: 2000, zero: 500 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },

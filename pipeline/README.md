@@ -86,5 +86,6 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 | Daycare | STIL Dagtilbudsregisteret | Active units |
 | Wind turbines | Energistyrelsen, stamdataregister | Turbines in operation |
 | Income tax, burglaries | Danmarks Statistik (PSKAT, STRAF22, FOLK1A) | Per municipality |
+| Air quality: NO₂ and PM2.5 | DCE's model for 2024, through Danmarks Miljøportal | Yearly means on a 1 km grid; the sea has no data |
 | Land and sea | OpenStreetMap municipalities and the national boundary | Municipalities follow the coastline; the national boundary includes the territorial sea |
 | World map | Natural Earth 1:50m | Public domain; land, lakes, borders and names outside Denmark |
