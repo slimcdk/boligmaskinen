@@ -30,11 +30,16 @@ export interface HeatRequest {
   scheme: Scheme;
 }
 
+/** The limit and the colour scale of the region's map, which its detail is drawn with too. */
+export type HeatScale = Pick<HeatStats, 'limit' | 'lo' | 'hi'>;
+
 /** What the page asks the heat worker (heat.worker.ts). */
 export type HeatMessage =
   | { type: 'grid'; grid: Grid }
-  | { type: 'render'; id: number; request: HeatRequest; buffer: ArrayBuffer }
-  | { type: 'explain'; id: number; cell: number; request: Pick<HeatRequest, 'blocks' | 'places'> };
+  /** The grid's own cells around the view (detail.ts), or none. */
+  | { type: 'detail'; grid: Grid | null }
+  | { type: 'render'; id: number; request: HeatRequest; buffer: ArrayBuffer; detail: ArrayBuffer | null }
+  | { type: 'explain'; id: number; cell: number; detail: boolean; request: Pick<HeatRequest, 'blocks' | 'places'> };
 
 export interface HeatResult {
   stats: HeatStats;
@@ -139,8 +144,12 @@ export class HeatEngine {
     };
   }
 
-  /** Draws the heatmap into `pixels` (RGBA, one 32-bit number per pixel), and says what it shows. */
-  render(request: HeatRequest, pixels: Uint32Array): HeatResult {
+  /**
+   * Draws the heatmap into `pixels` (RGBA, one 32-bit number per pixel), and says what it shows. The
+   * detail of a view is drawn with the limit and colour scale of the region's map (`scale`), so the
+   * two look the same.
+   */
+  render(request: HeatRequest, pixels: Uint32Array, scale?: HeatScale): HeatResult {
     const grid = this.grid;
     const { width, height } = grid;
     const n = width * height;
@@ -165,7 +174,7 @@ export class HeatEngine {
       return { stats: { hasPreferences, considered: 0, shown: 0, limit: 0, median: 0, lo: 0, hi: 100, histogram }, previews, issues };
     }
 
-    const limit = lowerLimit(histogram, view);
+    const limit = scale ? scale.limit : lowerLimit(histogram, view);
     let shown = 0;
     for (let s = limit; s <= 100; s++) shown += histogram[s];
     const radius = view.smooth ? Math.max(view.smooth, Math.round(SMOOTHING_METRES[view.smooth] / grid.meta.cellMetres)) : 0;
@@ -208,9 +217,9 @@ export class HeatEngine {
       weighted[Math.round(value[i])] += cover[i];
     }
     // Stretch the colours over the 2nd to 98th percentile of what is shown
-    let lo = percentile(weighted, 0.02);
-    let hi = percentile(weighted, 0.98);
-    if (hi - lo < 6) {
+    let lo = scale ? scale.lo : percentile(weighted, 0.02);
+    let hi = scale ? scale.hi : percentile(weighted, 0.98);
+    if (!scale && hi - lo < 6) {
       const mid = (hi + lo) / 2;
       lo = Math.max(0, mid - 3);
       hi = Math.min(100, mid + 3);

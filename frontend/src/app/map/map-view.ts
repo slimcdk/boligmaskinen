@@ -117,13 +117,27 @@ export class MapView implements AfterViewInit, OnDestroy {
   constructor() {
     effect(() => {
       this.heat.frame();
-      this.refreshOverlay();
+      this.refreshOverlay('heat');
+    });
+    effect(() => {
+      this.heat.detailFrame();
+      this.refreshOverlay('heat-detail');
+    });
+    effect(() => {
+      // Zoomed in, the grid's own cells cover the view, and the region's coarser grid steps aside
+      const detail = this.heat.detail();
+      if (!this.overlayReady || !this.map) return;
+      if (detail) (this.map.getSource('heat-detail') as CanvasSource).setCoordinates(detail.corners);
+      this.map.setLayoutProperty('heat-detail', 'visibility', detail ? 'visible' : 'none');
+      this.map.setLayoutProperty('heat', 'visibility', detail ? 'none' : 'visible');
     });
     effect(() => {
       const view = this.store.view();
       if (!this.overlayReady || !this.map) return;
-      this.map.setPaintProperty('heat', 'raster-opacity', view.opacity);
-      this.map.setPaintProperty('heat', 'raster-resampling', view.smooth > 0 ? 'linear' : 'nearest');
+      for (const layer of ['heat', 'heat-detail']) {
+        this.map.setPaintProperty(layer, 'raster-opacity', view.opacity);
+        this.map.setPaintProperty(layer, 'raster-resampling', view.smooth > 0 ? 'linear' : 'nearest');
+      }
     });
     effect(() => this.syncMarkers(this.store.places()));
     effect(() => {
@@ -229,17 +243,27 @@ export class MapView implements AfterViewInit, OnDestroy {
         coordinates: [[b.west, b.north], [b.east, b.north], [b.east, b.south], [b.west, b.south]],
       });
       const view = this.store.view();
-      map.addLayer({
-        id: 'heat', type: 'raster', source: 'heat',
-        paint: { 'raster-opacity': view.opacity, 'raster-resampling': view.smooth > 0 ? 'linear' : 'nearest', 'raster-fade-duration': 0 },
-      }, 'roads_tunnels_other_casing');
+      const paint = { 'raster-opacity': view.opacity, 'raster-resampling': view.smooth > 0 ? 'linear' : 'nearest', 'raster-fade-duration': 0 } as const;
+      map.addLayer({ id: 'heat', type: 'raster', source: 'heat', paint }, 'roads_tunnels_other_casing');
+      // The grid's own cells around the view, when zoomed in (HeatService.setView)
+      map.addSource('heat-detail', {
+        type: 'canvas', canvas: this.heat.detailCanvas, animate: false,
+        coordinates: [[b.west, b.north], [b.east, b.north], [b.east, b.south], [b.west, b.south]],
+      });
+      map.addLayer({ id: 'heat-detail', type: 'raster', source: 'heat-detail', layout: { visibility: 'none' }, paint }, 'roads_tunnels_other_casing');
+      const look = () => {
+        const bounds = map.getBounds();
+        this.heat.setView({ west: bounds.getWest(), south: bounds.getSouth(), east: bounds.getEast(), north: bounds.getNorth() }, map.getZoom());
+      };
+      map.on('moveend', look);
+      look();
       map.addSource('municipalities', { type: 'geojson', data: `${this.data.base}data/municipalities.json` });
       map.addLayer({
         id: 'municipalities', type: 'line', source: 'municipalities',
         paint: { 'line-color': MAP_COLOURS[scheme].municipalities, 'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.8, 12, 2], 'line-opacity': 0.55, 'line-dasharray': [3, 2] },
       }, 'address_label');
       this.overlayReady = true;
-      this.refreshOverlay();
+      this.refreshOverlay('heat');
       // The theme may have changed while the map was loading
       void this.restyle(this.theme.scheme());
     });
@@ -293,9 +317,9 @@ export class MapView implements AfterViewInit, OnDestroy {
     this.styledScheme = scheme;
   }
 
-  private refreshOverlay(): void {
+  private refreshOverlay(id: 'heat' | 'heat-detail'): void {
     if (!this.overlayReady || !this.map) return;
-    const source = this.map.getSource('heat') as CanvasSource | undefined;
+    const source = this.map.getSource(id) as CanvasSource | undefined;
     if (!source) return;
     source.play();
     source.pause();
@@ -303,7 +327,7 @@ export class MapView implements AfterViewInit, OnDestroy {
   }
 
   private async showBreakdown(lngLat: LngLat): Promise<void> {
-    const breakdown = await this.heat.explain(this.heat.cellAt(lngLat.lng, lngLat.lat));
+    const breakdown = await this.heat.explainAt(lngLat.lng, lngLat.lat);
     if (!breakdown || !this.map) return;
     this.popup?.remove();
     this.popup = new Popup({ maxWidth: '340px' }).setLngLat(lngLat).setHTML(this.popupHtml(breakdown)).addTo(this.map);

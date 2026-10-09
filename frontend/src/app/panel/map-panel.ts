@@ -46,6 +46,11 @@ export class MapPanel {
   /** The size of a data cell, as the panel describes it. */
   protected readonly cell = computed(() => this.data.grid()?.meta.cellMetres ?? 100);
   protected readonly region = computed(() => this.data.grid()?.meta.region?.name ?? '');
+  /** "200 m cells", and with detail tiles "200 m cells, 100 m up close". */
+  protected readonly cells = computed(() => {
+    const tiles = this.data.grid()?.meta.tiles;
+    return `${this.cell()} m cells${tiles && tiles.cellMetres < this.cell() ? `, ${tiles.cellMetres} m up close` : ''}`;
+  });
 
   /** There are preferences, but none of them counts: their groups are off, or their weight is 0. */
   protected readonly allOff = computed(() =>

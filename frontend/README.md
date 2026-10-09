@@ -20,6 +20,10 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   **A requirement** removes the cells where it is false.
 - The blocks are averaged by importance into 0–100 points. The weighting and the heatmap
   are always the result, never blocks.
+- **100 m up close.** The national pack shows 200 m cells; from zoom 10 the map loads the pack's
+  detail tiles around the view (`map/detail.ts`) and draws the grid's own 100 m cells there, with
+  the limit and the colour scale of the whole map, so the two look the same. A click explains the
+  spot from the cells the map shows.
 - **Off the main thread.** The weighting, the smoothing and the colours are computed in a Web
   Worker, which holds the data layers. The page sends it the blocks and draws the pixels it sends
   back, so the panel answers while a slider moves. When something changes during a drawing, only

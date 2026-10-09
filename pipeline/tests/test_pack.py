@@ -12,7 +12,7 @@ from boligmaskinen_pipeline import grid, pack
 def parts(sources, tmp_path_factory) -> dict[str, Path]:
     """What the pack step takes: a grid build, a basemap, fonts, sprites, styles and world files."""
     root = tmp_path_factory.mktemp("parts")
-    grid.build(grid.read_inputs(sources), root / "grid", "aarhus")
+    grid.build(grid.read_inputs(sources), root / "grid", "aarhus", display=200)
     (root / "basemap.pmtiles").write_bytes(os.urandom(2 * pack.CHUNK + 12_345))
     for font in ["noto-regular", "noto-medium"]:
         (root / "fonts" / font).mkdir(parents=True)
@@ -48,6 +48,9 @@ def test_packs_everything_the_map_loads(parts, tmp_path):
     assert sorted(path.name for path in (out / "world").iterdir()) == sorted(pack.WORLD)
     assert (out / "style-layers-dark.json").read_text() == "[]"
     assert (out / "data" / "municipalities.json").is_file()
+    # The detail tiles come along, each in a container of its own
+    assert meta["tiles"]["available"] == ["0-0"]
+    assert pack.read_container((out / "tiles" / "0-0.png").read_bytes()) == gzip.decompress((parts["grid"] / "tiles" / "0-0.u8.gz").read_bytes())
 
 
 def test_makes_a_valid_png(parts, tmp_path):

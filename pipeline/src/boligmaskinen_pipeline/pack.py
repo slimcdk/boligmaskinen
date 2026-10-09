@@ -1,7 +1,7 @@
 """Pack the grid, basemap, fonts, sprites, styles and world map into the data pack the map loads.
 
 The binary files go into standard web types, which every host serves and compresses well:
-- binary payloads (basemap parts, data layers) become "byte container" PNGs: an 8-bit
+- binary payloads (basemap parts, data layers, detail tiles) become "byte container" PNGs: an 8-bit
   grayscale image whose rows hold the bytes, unfiltered, with the payload length in a tEXt
   chunk. The frontend inflates IDAT and strips the filter byte of each row to get the exact
   bytes back (frontend/src/app/data/byte-container.ts).
@@ -79,7 +79,8 @@ def require(folder: Path, names: list[str], what: str) -> None:
 def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, world: Path, out: Path, pack_id: str | None = None) -> dict:
     """Write the data pack to `out`, which must be empty or not exist yet; returns its meta.json."""
     meta = json.loads((grid / "meta.json").read_text(encoding="utf-8"))
-    require(grid, [*meta["files"].values(), "municipalities.json"], "grid files")
+    tiles = meta.get("tiles", {}).get("available", [])
+    require(grid, [*meta["files"].values(), "municipalities.json", *(f"tiles/{key}.u8.gz" for key in tiles)], "grid files")
     require(sprites, SPRITES, "sprites")
     require(styles, STYLES, "styles")
     require(world, WORLD, "world files")
@@ -102,6 +103,11 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
         target = f"{name}.png"
         (out / "data" / target).write_bytes(png_container(payload))
         meta["files"][name] = target
+    # The detail tiles, each with every layer, one after the other
+    if tiles:
+        (out / "tiles").mkdir()
+        for key in tiles:
+            (out / "tiles" / f"{key}.png").write_bytes(png_container(gzip.decompress((grid / "tiles" / f"{key}.u8.gz").read_bytes())))
     meta["basemap"] = {"parts": len(parts), "chunkSize": CHUNK, "size": len(archive)}
     if pack_id:
         meta["pack"] = pack_id
@@ -120,7 +126,7 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
     for name in WORLD:
         shutil.copy(world / name, out / "world" / name)
     total = sum(path.stat().st_size for path in out.rglob("*") if path.is_file())
-    log(f"Packed {len(meta['files'])} layers, {len(parts)} basemap parts and {len(glyphs)} glyph ranges: {total / 1e6:.1f} MB")
+    log(f"Packed {len(meta['files'])} layers, {len(tiles)} detail tiles, {len(parts)} basemap parts and {len(glyphs)} glyph ranges: {total / 1e6:.1f} MB")
     progress(1)
     return meta
 

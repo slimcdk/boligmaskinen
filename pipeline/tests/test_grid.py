@@ -132,3 +132,25 @@ def test_says_what_is_missing(sources, tmp_path):
         grid.build(grid.read_inputs(sources), tmp_path / "out", "Aarhus")
     with pytest.raises(SystemExit, match="Municipality 999 is not in the OSM extract"):
         grid.build(grid.read_inputs(sources), tmp_path / "out", "999")
+
+
+def test_cuts_the_grid_into_detail_tiles_when_the_display_grid_is_coarser(sources, tmp_path):
+    meta = grid.build(grid.read_inputs(sources), tmp_path / "out", "aarhus", cell=100, display=200)
+    tiles = meta["tiles"]
+    assert (tiles["cellMetres"], tiles["size"], tiles["layers"]) == (100, grid.TILE, grid.LAYERS)
+    # The 10 km region is about 100 cells across at 100 m: one tile
+    assert (tiles["columns"], tiles["rows"], tiles["available"]) == (1, 1, ["0-0"])
+    data = np.frombuffer(gzip.decompress((tmp_path / "out" / "tiles" / "0-0.u8.gz").read_bytes()), dtype=np.uint8)
+    assert data.size == len(grid.LAYERS) * grid.TILE ** 2
+    layer = {name: data[k * grid.TILE ** 2:(k + 1) * grid.TILE ** 2].reshape(grid.TILE, grid.TILE) for k, name in enumerate(grid.LAYERS)}
+    # A tile cell is a grid cell: the tile's pixel (row r, column c) maps like the display grid's, at half its size
+    built = Built(tmp_path / "out")
+    mx, my = TO_MERCATOR.transform(574_000, 6_219_000)
+    col = math.floor((mx - tiles["origin"]["x"]) / tiles["pixel"])
+    row = math.floor((tiles["origin"]["y"] - my) / tiles["pixel"])
+    assert layer["zone"][row, col] == 1 == built.at("zone", 574_000, 6_219_000)
+    # The homes are the grid's own, not widened to the 200 m display cells
+    assert (layer["mask"] & 2).astype(bool).sum() == 12
+    assert (built.layers["mask"] & 2).astype(bool).sum() > 3
+    # Without a coarser display grid there are no tiles
+    assert "tiles" not in grid.build(grid.read_inputs(sources), tmp_path / "same", "aarhus", cell=100)

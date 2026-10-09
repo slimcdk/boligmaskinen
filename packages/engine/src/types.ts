@@ -84,9 +84,29 @@ export interface GridMeta {
   gridMetres?: number;
   distanceMax: number;
   files: Record<string, string>;
+  /** The grid's own cells for the map zoomed in, where the display grid is coarser (pipeline grid step). */
+  tiles?: DetailTiles;
   municipalities: Municipality[];
   counts: Record<string, number>;
   basemap: { parts: number; chunkSize: number; size: number };
+}
+
+/**
+ * Tiles of size × size cells at the grid's cell size, aligned with the display grid. Each tile holds
+ * every layer, one after the other in the order of `layers`; only the tiles with land are there.
+ */
+export interface DetailTiles {
+  cellMetres: number;
+  size: number;
+  columns: number;
+  rows: number;
+  /** The top left corner, in Web Mercator metres (EPSG:3857). */
+  origin: { x: number; y: number };
+  /** Web Mercator metres per cell. */
+  pixel: number;
+  layers: LayerName[];
+  /** "column-row" of every tile there is. */
+  available: string[];
 }
 
 export interface Grid {

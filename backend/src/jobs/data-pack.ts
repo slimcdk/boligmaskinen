@@ -10,6 +10,7 @@ interface Meta {
   cellMetres?: number;
   files?: Record<string, string>;
   basemap?: { parts?: number };
+  tiles?: { available?: string[] };
 }
 
 /** "18 kB", "7.5 MB", "83 MB". */
@@ -51,6 +52,7 @@ export async function checkDataPack(context: JobContext): Promise<JobOutcome> {
   const expected = [
     ...Object.values(meta.files ?? {}).map((file) => `data/${file}`),
     ...Array.from({ length: meta.basemap?.parts ?? 0 }, (_, i) => `basemap/part-${i}.png`),
+    ...(meta.tiles?.available ?? []).map((key) => `tiles/${key}.png`),
     'data/municipalities.json', 'fonts.json', 'style-layers.json', 'style-layers-dark.json',
     'sprites/light.json', 'sprites/light.png', 'sprites/dark.json', 'sprites/dark.png',
     'world/land.json', 'world/lakes.json', 'world/boundaries.json', 'world/countries.json', 'world/places.json',

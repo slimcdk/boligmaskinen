@@ -63,6 +63,18 @@ describe('the heat engine', () => {
     expect([pixels[1], pixels[3]]).toEqual([0, 0]);
   });
 
+  it('draws the detail of a view with the limit and colour scale it is given', () => {
+    const engine = new HeatEngine(grid());
+    const own = new Uint32Array(8);
+    const given = new Uint32Array(8);
+    const blocks = [block('ramp(forest, 300, 3000)')];
+    const result = engine.render(request(blocks, { show: 'abs', abs: 40 }), own);
+    // With the region's scale, a limit above every cell leaves it all out
+    engine.render(request(blocks, { show: 'abs', abs: 40 }), given, { ...result.stats, limit: 101 });
+    expect(own.some((p) => p !== 0)).toBe(true);
+    expect(given.every((p) => p === 0)).toBe(true);
+  });
+
   it('names the blocks that cannot run', () => {
     const engine = new HeatEngine(grid());
     const result = engine.render(request([block('forest / 100', { id: 'big' }), block('ramp(nothing, 1, 2)', { id: 'unknown' })]), new Uint32Array(8));

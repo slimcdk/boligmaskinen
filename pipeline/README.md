@@ -7,7 +7,7 @@ run them: the jobs fetch the sources, and each step is one command,
 | Step | Reads | Writes |
 |---|---|---|
 | `osm` | The Geofabrik extract of Denmark | `layers.gpkg` with a layer per theme (forests, water, roads, municipalities …) and `addresses.npy` |
-| `grid` | `inputs.json`, naming the OSM extract and every other source | A gzipped 8-bit raster per layer, `meta.json`, the municipal outlines and the outline the basemap has to cover |
+| `grid` | `inputs.json`, naming the OSM extract and every other source | A gzipped 8-bit raster per layer, `meta.json`, the municipal outlines, the outline the basemap has to cover, and detail tiles where the display grid is coarser than the grid |
 | `world` | Natural Earth's five 1:50m zips | The world map outside Denmark: land, lakes, borders and names |
 | `pack` | The grid, the basemap, fonts, sprites, styles and the world map | The data pack |
 | `remote-zip` | A ZIP file on a web server | The members asked for, fetched with HTTP range requests |
@@ -18,7 +18,13 @@ draws directly: 200 m for all of Denmark and 100 m for a smaller region, and nev
 the grid. `--region` takes `denmark`, `oestjylland`, `aarhus` or municipality codes such as
 `751,706`.
 
-All of Denmark takes about 2.5 minutes and 3.7 GB of memory. `--region aarhus` builds only
+**Detail tiles.** Where the display grid is coarser than the grid (all of Denmark: 200 m against
+100 m), the grid step also cuts the region into tiles of 256 × 256 cells at the grid's own cell
+size. They are aligned with the display grid, and each holds every layer, one after the other.
+Only the tiles with land are written: 121 for Denmark, 15 MB. The map loads the ones around the
+view from zoom 10, so zooming into a town shows 100 m cells (`meta.json` → `tiles`).
+
+All of Denmark takes a little over a minute and 3.8 GB of memory. `--region aarhus` builds only
 Aarhus Kommune in 15 seconds; it is the frontend's test data pack (see below).
 `docs/data-sources.md` in the repository root describes every source and how it is fetched.
 
