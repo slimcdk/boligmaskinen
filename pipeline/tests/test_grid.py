@@ -1,0 +1,134 @@
+import gzip
+import json
+import math
+from pathlib import Path
+
+import numpy as np
+import pytest
+from pyproj import Transformer
+
+from boligmaskinen_pipeline import grid
+
+TO_MERCATOR = Transformer.from_crs("EPSG:25832", "EPSG:3857", always_xy=True)
+LONLAT_TO_MERCATOR = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+
+
+class Built:
+    """A grid build, read back as the frontend reads it."""
+
+    def __init__(self, out: Path):
+        self.meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
+        width, height = self.meta["width"], self.meta["height"]
+        self.layers = {name: np.frombuffer(gzip.decompress((out / file).read_bytes()), dtype=np.uint8).reshape(height, width)
+                       for name, file in self.meta["files"].items()}
+        bounds = self.meta["bounds"]
+        self.west, self.north = LONLAT_TO_MERCATOR.transform(bounds["west"], bounds["north"])
+        self.east, self.south = LONLAT_TO_MERCATOR.transform(bounds["east"], bounds["south"])
+
+    def at(self, layer: str, x: float, y: float) -> int:
+        """The value of a layer at a point in EPSG:25832."""
+        mx, my = TO_MERCATOR.transform(x, y)
+        col = math.floor((mx - self.west) / (self.east - self.west) * self.meta["width"])
+        row = math.floor((self.north - my) / (self.north - self.south) * self.meta["height"])
+        assert 0 <= col < self.meta["width"] and 0 <= row < self.meta["height"], f"({x}, {y}) is outside the display grid"
+        return int(self.layers[layer][row, col])
+
+
+def decode_distance(value: int) -> float:
+    return (value / 255) ** 2 * grid.DIST_MAX
+
+
+@pytest.fixture(scope="module")
+def aarhus(sources, tmp_path_factory) -> Built:
+    out = tmp_path_factory.mktemp("grid") / "aarhus"
+    grid.build(grid.read_inputs(sources), out, "aarhus")
+    return Built(out)
+
+
+def test_writes_every_layer_on_the_display_grid(aarhus: Built):
+    meta = aarhus.meta
+    assert meta["region"] == {"id": "aarhus", "name": "Aarhus Kommune"}
+    assert (meta["cellMetres"], meta["gridMetres"]) == (100, 100)
+    assert list(meta["files"]) == grid.LAYERS
+    assert all(layer.shape == (meta["height"], meta["width"]) for layer in aarhus.layers.values())
+    # The 10 km square of the region, about 100 m on the ground per cell
+    assert 98 <= meta["width"] <= 106 and 98 <= meta["height"] <= 106
+
+
+def test_counts_what_each_source_has(aarhus: Built):
+    counts = aarhus.meta["counts"]
+    assert {key: counts[key] for key in ["addresses", "supermarkets", "stations", "schools", "daycare", "turbines"]} == {
+        "addresses": 40, "supermarkets": 2, "stations": 1, "schools": 2, "daycare": 2, "turbines": 1,
+    }
+    assert counts["regionLandCells"] > 9_000  # 100 km² of land less the lake
+    assert counts["homeCells"] >= 9  # the 300 m block of homes, not the addresses in the industrial area
+
+
+def test_measures_distances_from_every_cell(aarhus: Built):
+    assert aarhus.at("forest", 572_500, 6_217_500) == 0
+    assert decode_distance(aarhus.at("forest", 572_500, 6_220_500)) == pytest.approx(2_500, abs=150)
+    # The small wood is less than 5 ha, so it does not count
+    assert decode_distance(aarhus.at("forest", 571_050, 6_216_050)) > 1_000
+    # Lakes and the sea east of the land count as water
+    assert aarhus.at("water", 576_300, 6_220_300) == 0
+    assert decode_distance(aarhus.at("water", 579_950, 6_216_500)) < 150
+    # The display grid samples the 100 m grid, so a cell is within a diagonal of the school
+    assert decode_distance(aarhus.at("school", 573_900, 6_219_100)) < 150
+    # The closed school does not count
+    assert decode_distance(aarhus.at("school", 575_500, 6_216_500)) > 2_000
+
+
+def test_knows_the_zones_and_the_municipality(aarhus: Built):
+    assert aarhus.at("zone", 574_000, 6_219_000) == 1  # byzone
+    assert aarhus.at("zone", 579_500, 6_215_500) == 3  # sommerhusområde
+    assert aarhus.at("zone", 571_500, 6_223_000) == 2  # landzone
+    assert aarhus.at("municipality", 575_000, 6_220_000) == 1
+    assert aarhus.meta["municipalities"] == [{
+        "index": 1, "code": "751", "name": "Aarhus", "incomeTax": 24.52, "landTax": 6.0, "population": 378_270,
+        "burglariesPer1000": round(1300 / 378_270 * 1000, 2),
+    }]
+
+
+def test_marks_land_and_homes(aarhus: Built):
+    assert aarhus.at("mask", 574_000, 6_219_000) == 3  # land with homes
+    assert aarhus.at("mask", 571_500, 6_223_000) == 1  # land without
+    assert aarhus.at("mask", 578_500, 6_218_500) == 1  # addresses in an industrial area are not homes
+    assert aarhus.at("mask", 576_300, 6_220_300) == 0  # the lake
+
+
+def test_takes_noise_from_the_noise_map_where_it_has_some(aarhus: Built):
+    assert aarhus.at("noise", 575_000, 6_222_000) == 167  # the 65–69 dB band, marked with 100
+    estimate = aarhus.at("noise", 575_000, 6_216_000)
+    assert estimate < 100 and estimate >= grid.NOISE_FLOOR
+
+
+def test_builds_with_another_cell_size(sources, tmp_path):
+    grid.build(grid.read_inputs(sources), tmp_path / "out", "aarhus", cell=200)
+    built = Built(tmp_path / "out")
+    assert (built.meta["cellMetres"], built.meta["gridMetres"]) == (200, 200)
+    assert 49 <= built.meta["width"] <= 53
+    assert built.at("zone", 574_000, 6_219_000) == 1
+    assert built.at("forest", 572_500, 6_217_500) == 0
+    assert built.at("mask", 574_000, 6_219_000) == 3
+
+
+def test_builds_a_region_of_listed_municipalities(sources, tmp_path):
+    grid.build(grid.read_inputs(sources), tmp_path / "out", "751,730")
+    built = Built(tmp_path / "out")
+    assert built.meta["region"] == {"id": "751,730", "name": "Aarhus, Randers"}
+    assert built.at("municipality", 575_000, 6_230_000) == 2
+    assert [m["code"] for m in built.meta["municipalities"]] == ["751", "730"]
+
+
+def test_says_what_is_missing(sources, tmp_path):
+    named = {key: str(sources.parent / path) for key, path in json.loads(sources.read_text()).items()}
+    (tmp_path / "inputs.json").write_text(json.dumps({key: path for key, path in named.items() if key != "noise"}))
+    with pytest.raises(SystemExit, match="does not name: noise"):
+        grid.read_inputs(tmp_path / "inputs.json")
+    (tmp_path / "inputs.json").write_text(json.dumps({**named, "zones": str(tmp_path / "nowhere.geojson")}))
+    with pytest.raises(SystemExit, match=r"Missing source files: zones \("):
+        grid.read_inputs(tmp_path / "inputs.json")
+    with pytest.raises(SystemExit, match="The region has to be one of"):
+        grid.build(grid.read_inputs(sources), tmp_path / "out", "Aarhus")
+    with pytest.raises(SystemExit, match="Municipality 999 is not in the OSM extract"):
+        grid.build(grid.read_inputs(sources), tmp_path / "out", "999")

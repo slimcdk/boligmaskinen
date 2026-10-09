@@ -1,9 +1,10 @@
-# Only the sources of the frontend, the backend and the engine go into the image build
+# Only the sources of the frontend, the backend, the engine and the pipeline go into the image build
 *
 !Dockerfile
 !frontend
 !backend
 !packages
+!pipeline
 **/node_modules
 **/*.spec.ts
 frontend/dist
@@ -14,3 +15,7 @@ frontend/e2e
 frontend/playwright-report
 frontend/test-results
 backend/test
+pipeline/.venv
+pipeline/tests
+pipeline/scripts
+**/__pycache__

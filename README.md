@@ -6,15 +6,15 @@ numbers become sliders.
 
 **Status:** prototype. It covers all of Denmark with 13 layers of open data, keeps several maps of
 blocks, and runs its data jobs in the backend. Still to come: the jobs that build the data
-([milestone 2](docs/plan.md#milestone-2-the-data-pipeline-as-jobs); until then the pilot pipeline
-builds the data pack) and data about homes ([milestone 4](docs/plan.md#milestone-4-homes)).
+([milestone 2](docs/plan.md#milestone-2-the-data-pipeline-as-jobs); until then the pipeline's
+steps are run by hand) and data about homes ([milestone 4](docs/plan.md#milestone-4-homes)).
 
 | Folder | What it is |
 |---|---|
 | [`frontend/`](frontend/README.md) | Angular 22 + Angular Material app: the map, several saved maps, the blocks in groups and their code, the data jobs, light and dark mode, on phones too. Vitest and Playwright tests. |
 | [`backend/`](backend/README.md) | Node 24 + Fastify server that serves the frontend, the data pack and the API. |
 | [`packages/engine/`](packages/engine/README.md) | The scoring engine and the block language, shared by the frontend and the backend. |
-| [`pilot/`](pilot/README.md) | Python pipeline that fetches the open data for all of Denmark and builds the grid and the data pack. |
+| [`pipeline/`](pipeline/README.md) | The Python steps that build the grid and the data pack from the open data, for all of Denmark or a region. The app image runs them. |
 | [`docs/`](docs) | [The development plan](docs/plan.md), [the block language](docs/block-language.md), [block ideas for home data](docs/block-ideas.md), [data sources and how they are fetched](docs/data-sources.md), [public data to add](docs/public-data.md), [Plandata's themes](docs/plandata.md), [findings](docs/findings.md), [benchmarks](docs/benchmarks/weighting/README.md). |
 | [`.devcontainer/`](.devcontainer) | The development environment: Node 24, uv, go-pmtiles, Playwright's Chromium and psql, next to a PostGIS database. |
 
@@ -31,7 +31,7 @@ npm test             # Vitest
 npm run e2e          # Playwright, with the test data pack in e2e/data-pack
 ```
 
-Without the dev container, Node 24 is needed (`frontend/.nvmrc`), and uv for the pilot.
+Without the dev container, Node 24 is needed (`frontend/.nvmrc`), and uv for the pipeline.
 
 ## Running it
 

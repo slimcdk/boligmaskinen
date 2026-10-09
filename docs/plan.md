@@ -83,9 +83,13 @@ The backend owns the database and the jobs:
 
 **Goal:** the app fetches and builds its own data on schedule. Nothing is built by hand.
 
-1. **Where the pipeline runs.** Keep the Python steps (geopandas, rasterio, scipy) and
-   run them from jobs, with Python in the app image, about 400 MB more. Port a step to
-   Node only where it pays off. This is decided in the first step.
+1. **Where the pipeline runs (decided 2026-10-09).** The Python steps stay in Python, in
+   [`pipeline/`](../pipeline/README.md), and the jobs run them as commands. The jobs themselves,
+   and the fetching, are Node.
+   - The app image has Python and the steps' packages. It is based on Debian now, because
+     geopandas, rasterio and scipy come as wheels for glibc.
+   - The image is about 1.2 GB unpacked; Python and its packages are about 0.5 GB of it.
+   - A step moves to Node only where that pays off.
 2. **Raw archive.** Every fetch is stored unchanged under `/data/raw` with its date, URL,
    size, hash and licence, and a `source_run` row. Change detection (ETag,
    Last-Modified, hash) means unchanged sources are not processed again.

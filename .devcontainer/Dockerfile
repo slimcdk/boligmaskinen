@@ -1,9 +1,9 @@
 FROM mcr.microsoft.com/devcontainers/typescript-node:24-trixie
 
-# uv runs the pilot pipeline and installs the Python version it asks for
+# uv runs the data pipeline (pipeline/) and installs the Python version it asks for
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /uvx /usr/local/bin/
 
-# go-pmtiles cuts the basemap (pilot/pipeline/basemap.sh), psql talks to the database, and
+# go-pmtiles cuts the basemap (pipeline/scripts/basemap.sh), psql talks to the database, and
 # Playwright's Chromium needs its system libraries (the browser itself comes with post-create.sh)
 ARG PMTILES_VERSION=1.31.2
 RUN set -eux; \

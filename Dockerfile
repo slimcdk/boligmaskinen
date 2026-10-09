@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # The app image: the Node backend, which serves the built frontend, its data pack and the API from
-# one port. The data pack is not part of the image; mount it at /data/data-pack (see README.md).
+# one port, and the data pipeline its jobs run. The data pack is not part of the image; it lives
+# in /data/data-pack (see README.md).
 #
 # CI builds this image once for every commit on master and tags it sha-<commit>. A release does
 # not rebuild it: the release workflow gives the same image its version with crane, which only
@@ -18,13 +19,51 @@ ARG REVISION=""
 ARG SOURCE=""
 RUN REVISION="$REVISION" SOURCE="$SOURCE" npm run build
 
-FROM node:24-alpine AS backend
+# Debian, not Alpine: the pipeline's Python packages (geopandas, rasterio, scipy, osmium) come as
+# wheels built for glibc. Python runs the pipeline's steps, and wget answers the healthcheck.
+FROM node:24-trixie-slim AS base
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 ca-certificates wget \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base AS backend
 WORKDIR /src/backend
 COPY packages/engine/ /src/packages/engine/
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
-FROM node:24-alpine
+# The data pipeline (pipeline/), installed with its locked dependencies in a virtual environment
+# on the image's own Python, so it runs as it is in the final stage
+FROM base AS pipeline
+COPY --from=ghcr.io/astral-sh/uv:0.11.6 /uv /usr/local/bin/uv
+ENV UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=/usr/bin/python3 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+WORKDIR /app/pipeline
+COPY pipeline/pyproject.toml pipeline/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+COPY pipeline/README.md ./
+COPY pipeline/src src
+# The packages' own test suites are 90 MB that never run here
+RUN uv sync --frozen --no-dev --no-editable \
+    && find .venv -depth -type d -name tests -path '*/site-packages/*' -exec rm -rf {} +
+
+# go-pmtiles cuts the region's basemap out of Protomaps' planet build
+FROM base AS pmtiles
+ARG TARGETARCH
+ARG PMTILES_VERSION=1.31.2
+RUN set -eux; \
+    case "$TARGETARCH" in \
+      amd64) arch=x86_64; sum=3ed7dbf4ec2e6dfe5e25b6f70d1ffc932729f93c86db353bf514dd71010a312f ;; \
+      arm64) arch=arm64; sum=f8bd47e7ea866863489cad588fbaf2f31f42e5821f7a03f009b3769f05801cb1 ;; \
+      *) echo "There is no go-pmtiles build for $TARGETARCH" >&2; exit 1 ;; \
+    esac; \
+    wget -qO /tmp/pmtiles.tgz "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_${arch}.tar.gz"; \
+    echo "$sum  /tmp/pmtiles.tgz" | sha256sum -c -; \
+    tar -xzf /tmp/pmtiles.tgz -C /usr/local/bin pmtiles
+
+FROM base
 ARG REVISION=""
 ARG SOURCE=""
 ARG CREATED=""
@@ -39,6 +78,8 @@ ENV NODE_ENV=production \
     APP_SOURCE="$SOURCE" \
     APP_CREATED="$CREATED"
 WORKDIR /app
+COPY --from=pmtiles /usr/local/bin/pmtiles /usr/local/bin/pmtiles
+COPY --from=pipeline /app/pipeline/.venv pipeline/.venv
 # node_modules/@boligmaskinen/engine links to ../packages/engine, which Node runs as TypeScript
 COPY --from=backend /src/backend/node_modules backend/node_modules
 COPY packages/engine/package.json packages/engine/

@@ -4,8 +4,8 @@ Status as of 2026-10-07. This covers what the pilot uses today, what is gated be
 application or a licence, and the practical side of fetching each source: endpoints,
 sizes, cadence, licences and the traps found along the way.
 
-The pilot covers all of Denmark. `pilot/pipeline/` fetches and processes everything;
-`pilot/README.md` lists the commands.
+The data covers all of Denmark. `pipeline/` processes it, and `pipeline/README.md` lists
+its steps.
 
 ## Principles
 
