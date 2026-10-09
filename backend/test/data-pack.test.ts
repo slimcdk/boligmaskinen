@@ -35,6 +35,10 @@ function context(): { context: JobContext; lines: LogLine[] } {
       progress: async () => undefined,
       signal: new AbortController().signal,
       dataPackDir: dir,
+      db: undefined as never,
+      runId: '1',
+      trigger: 'manual',
+      busy: async () => [],
     },
   };
 }

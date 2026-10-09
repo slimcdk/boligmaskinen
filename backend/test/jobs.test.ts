@@ -27,6 +27,22 @@ const TEST_JOBS: JobDefinition[] = [
   },
   { id: 'broken', name: 'Broken', kind: 'fetch', source: 'Test', description: 'Always fails.', schedule: '0 6 * * *', enabledByDefault: true, run: async () => { throw new Error('The source answered 404'); } },
   { id: 'locked', name: 'Locked', kind: 'fetch', source: 'Test', description: 'Needs a key.', schedule: '0 7 * * *', enabledByDefault: false, blocked: 'Needs an API key' },
+  {
+    id: 'unchanged', name: 'Unchanged', kind: 'fetch', source: 'Test', description: 'Finds nothing new.', schedule: '0 8 * * *', enabledByDefault: true, then: ['follow'],
+    run: async () => ({ changed: false, result: 'Unchanged since yesterday' }),
+  },
+  {
+    id: 'feeder', name: 'Feeder', kind: 'fetch', source: 'Test', description: 'Fetches for a while, then starts Gate.', schedule: '0 9 * * *', enabledByDefault: true, then: ['gate'],
+    run: async () => { await wait(800); return { result: 'new data' }; },
+  },
+  {
+    id: 'gate', name: 'Gate', kind: 'build', source: 'Test', description: 'Builds, and says which jobs are busy.', schedule: '0 10 * * *', enabledByDefault: true,
+    run: async (context) => {
+      await context.log(`Busy: ${(await context.busy(['feeder', 'gate'])).join(', ') || 'none'}`);
+      await wait(1_500);
+      return { result: 'built' };
+    },
+  },
 ];
 
 describeWithDatabase('the jobs API', () => {
@@ -69,6 +85,7 @@ describeWithDatabase('the jobs API', () => {
     const { jobs } = await list();
     expect(jobs.map((j) => [j.id, j.enabled, j.blocked ?? null])).toEqual([
       ['quick', true, null], ['follow', true, null], ['slow', true, null], ['broken', true, null], ['locked', false, 'Needs an API key'],
+      ['unchanged', true, null], ['feeder', true, null], ['gate', true, null],
     ]);
     expect(jobs[0]).toEqual({
       id: 'quick', name: 'Quick', kind: 'fetch', source: 'Test', description: 'Finishes at once.', schedule: '0 3 * * *', enabled: true, then: ['follow'],
@@ -76,7 +93,7 @@ describeWithDatabase('the jobs API', () => {
     });
     expect(jobs[4].nextRun).toBeUndefined();
     const schedules = await app.db!.query<{ name: string; timezone: string }>('select name, timezone from pgboss.schedule order by name');
-    expect(schedules.rows).toEqual(['broken', 'follow', 'quick', 'slow'].map((name) => ({ name, timezone: 'UTC' })));
+    expect(schedules.rows).toEqual(['broken', 'feeder', 'follow', 'gate', 'quick', 'slow', 'unchanged'].map((name) => ({ name, timezone: 'UTC' })));
   });
 
   it('runs a job now, logs it, and then starts the job after it', async () => {
@@ -92,6 +109,29 @@ describeWithDatabase('the jobs API', () => {
     const follow = (await list()).runs.find((r) => r.jobId === 'follow')!;
     expect(follow.trigger).toBe('after');
     expect((await until(follow.id, ['succeeded'])).result).toBe('built');
+  });
+
+  it('does not start the jobs after one that found nothing new', async () => {
+    const before = (await list()).runs.filter((r) => r.jobId === 'follow').length;
+    const run = (await start('unchanged')).json().run as JobRun;
+    expect(await until(run.id, ['succeeded', 'failed'])).toMatchObject({ status: 'succeeded', result: 'Unchanged since yesterday' });
+    await wait(1_000);
+    expect((await list()).runs.filter((r) => r.jobId === 'follow')).toHaveLength(before);
+  });
+
+  it('lets a job started by the one before it wait for its own run, so nothing new is missed', async () => {
+    const feeder = (await start('feeder')).json().run as JobRun;
+    await until(feeder.id, ['running']);
+    const gate = (await start('gate')).json().run as JobRun;
+    await until(gate.id, ['running']);
+    await until(feeder.id, ['succeeded']);
+    // Gate was busy when Feeder finished, so a second run waits for the first
+    await wait(300);
+    const after = (await list()).runs.find((r) => r.jobId === 'gate' && r.trigger === 'after')!;
+    expect(after.status).toBe('queued');
+    expect((await start('gate')).json().message).toBe('Gate is already waiting to run');
+    expect(await until(gate.id, ['succeeded'])).toMatchObject({ log: expect.arrayContaining([expect.objectContaining({ text: 'Busy: feeder' })]) });
+    expect(await until(after.id, ['succeeded'], 20_000)).toMatchObject({ log: expect.arrayContaining([expect.objectContaining({ text: 'Busy: none' })]) });
   });
 
   it('records why a job failed', async () => {

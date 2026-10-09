@@ -6,9 +6,10 @@ import type pg from 'pg';
 import type { Config, LogLevel } from './config.ts';
 import { databaseHealth, openDatabase } from './db/database.ts';
 import { apiError, registerErrorHandler } from './errors.ts';
-import { JOBS } from './jobs/definitions.ts';
+import { defineJobs } from './jobs/definitions.ts';
 import { JobRunner } from './jobs/runner.ts';
 import type { JobDefinition } from './jobs/types.ts';
+import { Archive } from './pipeline/archive.ts';
 import { jobRoutes } from './routes/jobs.ts';
 import { profileRoutes } from './routes/profile.ts';
 
@@ -19,7 +20,7 @@ declare module 'fastify' {
   }
 }
 
-export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'> & Partial<Pick<Config, 'timeZone'>> & {
+export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'> & Partial<Pick<Config, 'timeZone' | 'dataDir' | 'pipelinePython'>> & {
   /** False for no logs, as in the tests. */
   logLevel?: LogLevel | false;
   /** The data jobs; the tests bring their own. */
@@ -39,9 +40,15 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
 
   const db = options.databaseUrl ? await openDatabase(options.databaseUrl, app.log) : null;
   app.decorate('db', db);
+  const dataDir = options.dataDir ?? null;
+  const definitions = options.jobs ?? defineJobs({
+    dataDir, python: options.pipelinePython ?? 'python3', revision: options.version?.revision || options.version?.version || 'dev', timeZone: options.timeZone,
+  });
+  // What downloads left behind when the app stopped during one; no job runs yet
+  if (db && dataDir) await new Archive(db, dataDir).cleanTmp();
   const runner = db && options.databaseUrl
     ? await JobRunner.start({
-      db, databaseUrl: options.databaseUrl, definitions: options.jobs ?? JOBS, timeZone: options.timeZone ?? 'Europe/Copenhagen',
+      db, databaseUrl: options.databaseUrl, definitions, timeZone: options.timeZone ?? 'Europe/Copenhagen',
       // Without a data pack folder of its own, the app serves the one in the frontend's build
       dataPackDir: options.dataPackDir ?? join(options.staticDir, 'data-pack'), log: app.log, pollSeconds: options.jobPollSeconds,
     })
