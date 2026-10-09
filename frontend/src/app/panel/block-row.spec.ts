@@ -78,7 +78,7 @@ describe('BlockRow', () => {
     const { fixture, element } = render('noise');
     element.querySelector<HTMLButtonElement>('button.expand')!.click();
     fixture.detectChanges();
-    const button = [...element.querySelectorAll<HTMLButtonElement>('.actions button')].find((b) => b.textContent!.includes('Turn around'))!;
+    const button = element.querySelector<HTMLButtonElement>('button[aria-label="Turn around"]')!;
     button.click();
     fixture.componentRef.setInput('block', store.blocks()[0]);
     fixture.detectChanges();
@@ -100,12 +100,25 @@ describe('BlockRow', () => {
     expect(element.querySelector('.line')!.classList).toContain('off');
   });
 
-  it('folds out the controls and the role', () => {
+  it('folds out the controls, what the block gives, and its actions; the role is in its menu', () => {
     const { fixture, element } = render('forest');
     element.querySelector<HTMLButtonElement>('button.expand')!.click();
     fixture.detectChanges();
     expect(element.querySelectorAll('app-param-control')).toHaveLength(2);
-    [...element.querySelectorAll<HTMLButtonElement>('.role button')].find((b) => b.textContent!.includes('Requirement'))!.click();
+    expect([...element.querySelectorAll('.foot button')].map((b) => b.getAttribute('aria-label'))).toEqual(['Turn around', 'Code', 'More for Forest']);
+    element.querySelector<HTMLButtonElement>('button[aria-label="More for Forest"]')!.click();
+    fixture.detectChanges();
+    const item = [...document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-item')].find((i) => i.textContent!.includes('Use as a requirement'))!;
+    item.click();
     expect(store.blocks()[0].role).toBe('must');
+  });
+
+  it('puts checkboxes that follow each other in one row', () => {
+    const { fixture, element } = render('zone');
+    element.querySelector<HTMLButtonElement>('button.expand')!.click();
+    fixture.detectChanges();
+    const rows = element.querySelectorAll('.flags');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].querySelectorAll('mat-checkbox')).toHaveLength(3);
   });
 });

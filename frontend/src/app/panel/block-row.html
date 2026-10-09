@@ -28,30 +28,42 @@
 
 @if (open()) {
   <div class="details">
-    @for (p of params(); track p.name) {
-      <app-param-control [param]="p" [block]="block().id" />
-    }
-    <mat-button-toggle-group class="role" hideSingleSelectionIndicator [value]="block().role" (change)="setRole($event.value)" aria-label="Use the block as">
-      <mat-button-toggle value="want">Preference</mat-button-toggle>
-      <mat-button-toggle value="must">Requirement</mat-button-toggle>
-    </mat-button-toggle-group>
-    @if (problem(); as p) {
-      <p class="note error">{{ p }}</p>
-    } @else if (preview()) {
-      <p class="note">{{ block().role === 'must' ? 'Passes' : 'Score' }}: {{ preview() }}</p>
-    }
-    <div class="actions">
-      @if (canTurnAround()) {
-        <button mat-button (click)="turnAround()" matTooltip="Full points at the other end"><mat-icon>swap_horiz</mat-icon>Turn around</button>
+    @for (row of paramRows(); track $index) {
+      @if (row[0].kind === 'flag') {
+        <div class="flags">
+          @for (p of row; track p.name) {
+            <app-param-control [param]="p" [block]="block().id" />
+          }
+        </div>
+      } @else {
+        <app-param-control [param]="row[0]" [block]="block().id" />
       }
-      <button mat-button (click)="editCode()"><mat-icon>code</mat-icon>Code</button>
-      <button mat-icon-button [matMenuTriggerFor]="more" [attr.aria-label]="'More for ' + block().name"><mat-icon>more_vert</mat-icon></button>
+    }
+    <div class="foot">
+      @if (problem(); as p) {
+        <p class="note error">{{ p }}</p>
+      } @else {
+        <p class="note">{{ preview() }}</p>
+      }
+      @if (canTurnAround()) {
+        <button mat-icon-button (click)="turnAround()" matTooltip="Turn around: full points at the other end" aria-label="Turn around">
+          <mat-icon>swap_horiz</mat-icon>
+        </button>
+      }
+      <button mat-icon-button (click)="editCode()" matTooltip="See and change the code" aria-label="Code"><mat-icon>code</mat-icon></button>
+      <button mat-icon-button [matMenuTriggerFor]="more" matTooltip="More" [attr.aria-label]="'More for ' + block().name"><mat-icon>more_vert</mat-icon></button>
     </div>
   </div>
 }
 
 <mat-menu #more="matMenu">
+  @if (block().role === 'must') {
+    <button mat-menu-item (click)="setRole('want')"><mat-icon>tune</mat-icon><span>Use as a preference</span></button>
+  } @else {
+    <button mat-menu-item (click)="setRole('must')"><mat-icon>filter_alt</mat-icon><span>Use as a requirement</span></button>
+  }
   <button mat-menu-item [matMenuTriggerFor]="groups"><mat-icon>drive_file_move</mat-icon><span>Move to group</span></button>
+  <mat-divider />
   <button mat-menu-item (click)="remove()"><mat-icon>delete</mat-icon><span>Remove</span></button>
 </mat-menu>
 <mat-menu #groups="matMenu">

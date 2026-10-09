@@ -1,6 +1,5 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,7 +9,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
-import { Block, blockSummary, formulaParams, MAX_WEIGHT, Role, turnAround } from '@boligmaskinen/engine';
+import { Block, blockSummary, FormulaParam, formulaParams, MAX_WEIGHT, Role, turnAround } from '@boligmaskinen/engine';
 import { CodeDialog, CodeDialogData } from './code-dialog';
 import { NameDialog, NameDialogData } from './name-dialog';
 import { ParamControl } from './param-control';
@@ -19,7 +18,7 @@ import { ParamControl } from './param-control';
 @Component({
   selector: 'app-block-row',
   imports: [
-    MatButtonModule, MatButtonToggleModule, MatDividerModule, MatIconModule, MatMenuModule, MatSlideToggleModule, MatSliderModule,
+    MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, MatSlideToggleModule, MatSliderModule,
     MatTooltipModule, ParamControl,
   ],
   templateUrl: './block-row.html',
@@ -36,6 +35,16 @@ export class BlockRow {
   protected readonly MAX_WEIGHT = MAX_WEIGHT;
 
   protected readonly params = computed(() => formulaParams(this.block().code));
+  /** The controls in rows: one per slider or choice, and the checkboxes that follow each other together. */
+  protected readonly paramRows = computed(() => {
+    const rows: FormulaParam[][] = [];
+    for (const param of this.params()) {
+      const last = rows.at(-1);
+      if (param.kind === 'flag' && last?.[0].kind === 'flag') last.push(param);
+      else rows.push([param]);
+    }
+    return rows;
+  });
   protected readonly summary = computed(() => blockSummary(this.block(), this.params()));
   protected readonly problem = computed(() => this.heat.issues().get(this.block().id) ?? null);
   protected readonly preview = computed(() => this.heat.preview().get(this.block().id) ?? '');

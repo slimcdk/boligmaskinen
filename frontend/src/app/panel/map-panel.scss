@@ -51,8 +51,10 @@
   margin: 0;
 }
 
+// As wide as the fields, borders included
 .full {
   display: flex;
+  box-sizing: border-box;
   width: 100%;
 
   mat-button-toggle {
@@ -70,9 +72,12 @@ mat-slider {
   p { margin: 0; font: var(--mat-sys-body-medium); color: var(--mat-sys-on-surface-variant); }
 }
 
-// The settings fold out under the result, on the card's own surface
-.settings-panel {
+// The settings fold out under the result, flat on the card's own surface: not a card in a card.
+// Material's own panel style is as specific as a class, so this one names the panel's class too.
+.mat-expansion-panel.settings-panel {
   --mat-expansion-container-background-color: transparent;
+  --mat-expansion-container-shape: 0;
+  background: transparent;
   box-shadow: none;
 
   ::ng-deep .mat-expansion-panel-header {
