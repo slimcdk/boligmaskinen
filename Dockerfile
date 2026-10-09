@@ -80,6 +80,8 @@ ENV NODE_ENV=production \
     APP_SOURCE="$SOURCE" \
     APP_CREATED="$CREATED"
 WORKDIR /app
+# npm and corepack only install packages, which the stages above did: out of the running app
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 COPY --from=pmtiles /usr/local/bin/pmtiles /usr/local/bin/pmtiles
 COPY --from=pipeline /app/pipeline/.venv pipeline/.venv
 # node_modules/@boligmaskinen/engine links to ../packages/engine, which Node runs as TypeScript

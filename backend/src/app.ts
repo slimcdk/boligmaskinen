@@ -16,6 +16,7 @@ import { FETCH_JOBS, type SourceUrls } from './pipeline/sources.ts';
 import { dataPackRoutes } from './routes/data-pack.ts';
 import { jobRoutes } from './routes/jobs.ts';
 import { profileRoutes } from './routes/profile.ts';
+import { securityHeaders } from './security.ts';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -44,6 +45,7 @@ const HASHED = /-[A-Z0-9]{8}\.(js|css)$/;
 export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger: options.logLevel === false ? false : { level: options.logLevel ?? 'info' } });
   registerErrorHandler(app);
+  securityHeaders(app);
   await app.register(compress);
 
   const db = options.databaseUrl ? await openDatabase(options.databaseUrl, app.log) : null;
