@@ -1,0 +1,39 @@
+# Updates of the dependencies, as pull requests that CI tests like any other. Minor and patch
+# updates come together, one pull request per ecosystem and week.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/frontend", "/backend", "/packages/engine"]
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*", "@schematics/angular"]
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: uv
+    directory: /pipeline
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directories: ["/", "/.devcontainer"]
+    schedule:
+      interval: weekly
+      day: monday

@@ -160,6 +160,26 @@ jobs:
           mkdir -p data
           cp -r frontend/e2e/data-pack data/data-pack
           docker compose up -d --wait --wait-timeout 180
+      # Known vulnerabilities with a fix: the high ones are reported, a critical one stops the build
+      - name: Look for known vulnerabilities in the image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boligmaskinen:ci
+          version: v0.74.0
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: '0'
+      - name: Stop on a critical vulnerability with a fix
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boligmaskinen:ci
+          version: v0.74.0
+          skip-setup-trivy: true
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: '1'
       - name: Check the pipeline in the image
         run: |
           docker run --rm --entrypoint /app/pipeline/.venv/bin/python boligmaskinen:ci -I -c \

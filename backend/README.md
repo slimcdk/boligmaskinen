@@ -161,6 +161,22 @@ need the database say so.
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`. The logs are JSON lines. |
 | `APP_VERSION`, `APP_REVISION`, `APP_SOURCE`, `APP_CREATED` | empty | The release tag, commit, repository URL and build time. CI sets the last three when it builds the image, and a release sets `APP_VERSION` on the same image. |
 
+## Security headers
+
+Every answer has them (`src/security.ts`):
+
+- **Content-Security-Policy.** Scripts, data and workers only from this server. Styles may be
+  inline, because Angular Material sets them at run time, and fonts come from Google Fonts until
+  they are served from here (#48). No frames, no plugins, no forms elsewhere.
+- **Only the heat worker's script may compile code** (`'unsafe-eval'`), which the compiled blocks
+  need (`packages/engine/src/codegen.ts`). A worker runs under its own script's policy, so the page
+  itself does not get it. Without it the blocks run as closures, six times slower.
+- `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options: DENY`,
+  `Cross-Origin-Opener-Policy: same-origin`, and a `Permissions-Policy` that turns off the camera,
+  the microphone, geolocation and payments.
+- **No HSTS:** an instance on a LAN is usually plain HTTP, and one behind a proxy with TLS gets it
+  from the proxy.
+
 API errors all have the same shape, `{"statusCode": 404, "error": "Not Found", "message": "…"}`. The
 message is meant for the person using the app; a server error only says that it happened, and the
 log has the details. A wrong setting stops the backend at start with a list of what to fix.

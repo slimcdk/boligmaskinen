@@ -60,8 +60,13 @@ docker compose up -d                 # http://localhost:8080
 GitHub Actions (`.github/workflows/`):
 
 - **Every push and pull request:** engine tests, frontend unit tests and build, backend tests against
-  PostGIS, the end-to-end tests in Chrome with the test data pack, and the image started with
-  `compose.yaml` and checked.
+  PostGIS, pipeline tests, the end-to-end tests in Chrome with the test data pack, and the image
+  started with `compose.yaml` and checked.
+- **The image is scanned** with Trivy for known vulnerabilities that have a fix. The high ones are
+  reported in the job's log; a critical one stops the build. (go-pmtiles 1.31.2, the newest, is
+  built with an older Go, which accounts for most of the high ones.)
+- **Dependabot** proposes updates weekly: npm, the pipeline's uv lock, the GitHub Actions and the
+  Docker base images (`.github/dependabot.yml`). CI tests them like any other pull request.
 - **Every commit on master that passes:** the image is built once and pushed as
   `ghcr.io/slimcdk/boligmaskinen:sha-<commit>`, also tagged `master`.
 - **A published release** (tag e.g. `v0.1.0`) builds nothing. It gives the image of the
