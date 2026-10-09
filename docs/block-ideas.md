@@ -258,10 +258,78 @@ listed || save_value <= 4
 A missing `save_value` is missing data, as everywhere: the last block counts for nothing there as a
 preference, and keeps the home as a requirement.
 
+## What the plans say will change
+
+**What:** what the municipalities plan around a place, from Plandata.dk; every theme is in
+[`plandata.md`](plandata.md). Most sources say what is there. The plans also say what is coming, and
+only they do: a local plan proposed next door, a road planned through the fields, business turning
+into housing, a forest to be planted.
+
+Cell values to start with, each from the adopted (`_vedtaget`) or proposed (`_forslag`) layers:
+
+| Value | Meaning |
+|---|---|
+| `planned_use` | The use the municipal plan's frame sets: housing, business, centre, recreation, technical, … |
+| `proposed_plan_500m` | A proposed local plan within 500 m |
+| `planned_road` | Distance to a planned road or railway |
+| `in_noise_area` | The plan marks the area as noise-loaded |
+| `in_consequence_zone` | A consequence zone around a business or plant |
+| `forest_planned` | Forest planting is wanted here |
+| `coastal_zone` | Inside the coastal zone |
+| `groundwater_near_surface` | The plan marks groundwater near the surface |
+
+```
+// Quiet surroundings that stay quiet: no planned road nearby, and not in a noise-loaded area
+let zero = slider(500, 0, 5000, 50)    // No points at (m)
+let full = slider(2000, 0, 10000, 50)  // Full points at (m)
+!in_noise_area ? ramp(planned_road, zero, full) : 0
+```
+
+```
+// Nothing big coming next door (a requirement)
+!proposed_plan_500m && !in_consequence_zone
+```
+
+## Airports and airfields
+
+**What:** distance to airports and airfields, which the user asked for on 2026-10-09. Planes are loud
+under the flight paths, and small airfields bring weekend noise too. The other way round, a short trip
+to an airport is worth something. "Turn around" gives both.
+
+**Data:**
+
+- **OpenStreetMap,** in use already: `aeroway=aerodrome` covers airports, airfields, glider fields and
+  military air stations, with `aerodrome:type` to tell them apart.
+- **Naviair's AIP** (AD 1.1) is the official list of Danish aerodromes.
+- **Noise:**
+  - Miljøstyrelsen's noise mapping of airports (EU noise directive);
+  - Plandata's noise-loaded areas, which include airports and air stations;
+  - Forsvaret's noise zones around Aalborg, Karup and Skrydstrup, for which no national download
+    was found.
+
+**Values:**
+
+| Value | Meaning | Unit |
+|---|---|---|
+| `airport` | Distance to the nearest airport with scheduled flights | m |
+| `airfield` | Distance to the nearest airfield of any kind | m |
+| `air_station` | Distance to the nearest military air station | m |
+| `aircraft_noise` | Aircraft noise, where it is mapped | dB |
+
+```
+// Away from airports and airfields
+let kind = choice(1, airport, airfield, air_station)  // From
+let zero = slider(2000, 0, 20000, 100)                // No points at (m)
+let full = slider(8000, 0, 30000, 100)                // Full points at (m)
+ramp(kind, zero, full)
+```
+
 ## What this needs, and when
 
-- **Before milestone 4:** the protected areas as cell values, with the other layers from Danmarks
-  Miljøportal; they need no data about homes.
+- **Before milestone 4:** these need no data about homes:
+  - the protected areas as cell values, with the other layers from Danmarks Miljøportal;
+  - the plans' cell values from Plandata;
+  - the distances to airports and airfields from OSM.
 - **Milestone 4:**
   - BBR, DAR, MAT and VUR loaded per home, and the listed and preservation-worthy buildings (FBB,
     later the municipalities' SAVE values in GeoFA);
