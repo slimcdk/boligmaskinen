@@ -1,33 +1,63 @@
 // The chips go under the title when the dialog is narrow
-.bar {
+// The headline and its supporting text, as an M3 dialog has them, with room around them
+.head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px 24px 20px;
 
-  // Material's title has an empty ::before for its baseline, which a flex gap would push the title away from
+  // Material's title has an empty ::before for its baseline, which would push the headline down
   &::before {
     display: none;
   }
 
-  .title {
-    flex: 1 1 240px;
-  }
-
   h2 {
     margin: 0;
-    font: var(--mat-sys-title-large);
+    font: var(--mat-sys-headline-small);
+    color: var(--mat-sys-on-surface);
   }
 
   p {
-    margin: 2px 0 0;
-    font: var(--mat-sys-body-small);
+    margin: 0;
+    font: var(--mat-sys-body-medium);
     color: var(--mat-sys-on-surface-variant);
   }
+}
+
+// The tabs end the dialog's head, with a line under them across the dialog; the first label's text
+// lines up with the headline
+.views {
+  margin: 8px -24px 0;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.filters {
+  display: block;
+  margin-bottom: 8px;
 
   .warn {
     --mat-chip-label-text-color: var(--mat-sys-error);
+    --mat-chip-selected-label-text-color: var(--mat-sys-error);
   }
+}
+
+.hint {
+  margin: 0 0 8px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+tr.none td {
+  padding: 24px 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// The content fills the dialog's height, and scrolls
+.body {
+  flex: 1 1 auto;
+  max-height: none;
 }
 
 .problem {
@@ -42,25 +72,8 @@
   font: var(--mat-sys-body-medium);
 }
 
-// Everything starts at the dialog's content edge: the title, both tables, "Recent runs" and the
-// log. So the tables' outer cells have no padding of their own, and the runs panel is not a card.
-.history.mat-expansion-panel {
-  margin-top: 24px;
-  border-top: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 0;
-  box-shadow: none;
-  --mat-expansion-container-background-color: transparent;
-  --mat-expansion-container-shape: 0;
-
-  mat-expansion-panel-header {
-    padding: 0;
-  }
-
-  ::ng-deep .mat-expansion-panel-body {
-    padding: 0 0 8px;
-  }
-}
-
+// Everything starts at the content's edge: the filters, both tables and the log. So the tables' outer
+// cells have no padding of their own.
 table {
   width: 100%;
   background: transparent;

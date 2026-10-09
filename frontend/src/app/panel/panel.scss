@@ -3,8 +3,6 @@
   flex-direction: column;
   height: 100%;
   background: var(--mat-sys-surface-container-low);
-  // The panel is narrower than 380px on a phone; the footer adapts to the panel, not the screen
-  container-type: inline-size;
 }
 
 .head {
@@ -225,9 +223,9 @@ mat-slider {
   }
 }
 
-// On a phone the version leaves room for the rest: the GitHub mark stays, and the link's label still
-// names the version
-@container (width < 380px) {
+// On a phone, where the panel lies over the map, the version leaves room for the rest: the GitHub mark
+// stays, and the link's label still names the version
+@media (max-width: 700px) {
   .foot .version .text {
     display: none;
   }

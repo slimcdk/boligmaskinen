@@ -31,7 +31,7 @@ describe('JobsDialog without a backend', () => {
 
   it('says that the runs are a simulated preview', async () => {
     const { element } = await render();
-    expect(element.querySelector('.bar p')!.textContent).toBe('Preview without a backend: the runs are simulated');
+    expect(element.querySelector('.head p')!.textContent).toBe('Preview without a backend: the runs are simulated');
   });
 
   it('lists the tasks with their schedule and last run', async () => {
@@ -60,9 +60,29 @@ describe('JobsDialog without a backend', () => {
     expect(TestBed.inject(JobsService).latest().get('plandata')?.status).toBe('succeeded');
   });
 
+  it('shows only the tasks a filter picks, and all of them again without one', async () => {
+    const { fixture, element } = await render();
+    const rows = () => [...element.querySelectorAll('table.tasks tr.mat-mdc-row:not(.none)')];
+    const all = rows().length;
+    const chip = [...element.querySelectorAll<HTMLElement>('mat-chip-option')].find((c) => c.textContent!.includes('Waiting for access'))!;
+    const count = Number(/· (\d+)/.exec(chip.textContent!)![1]);
+    expect(count).toBeGreaterThan(0);
+    chip.querySelector<HTMLElement>('.mat-mdc-chip-action')!.click();
+    fixture.detectChanges();
+    expect(rows()).toHaveLength(count);
+    expect(rows().every((row) => row.querySelector('.blocked mat-icon')!.textContent === 'lock')).toBe(true);
+    chip.querySelector<HTMLElement>('.mat-mdc-chip-action')!.click();
+    fixture.detectChanges();
+    expect(rows()).toHaveLength(all);
+    // A filter with nothing to show cannot be picked
+    const failing = [...element.querySelectorAll<HTMLElement>('mat-chip-option')].find((c) => c.textContent!.includes('Failing'))!;
+    expect(failing.textContent).toContain('Failing · 0');
+    expect(failing.querySelector('.mat-mdc-chip-action')!.getAttribute('aria-disabled')).toBe('true');
+  });
+
   it('opens the log of a run', async () => {
     const { fixture, element } = await render();
-    element.querySelector<HTMLElement>('.history mat-expansion-panel-header')!.click();
+    [...element.querySelectorAll<HTMLElement>('.head [mat-tab-link]')].find((tab) => tab.textContent!.includes('Recent runs'))!.click();
     fixture.detectChanges();
     const failed = [...element.querySelectorAll<HTMLElement>('table.runs tr.mat-mdc-row')].find((r) => r.textContent!.includes('Failed'))!;
     failed.click();
@@ -109,8 +129,8 @@ describe('JobsDialog with a backend', () => {
 
   it('shows the server’s jobs, and which are not built yet', async () => {
     const { element } = await render();
-    expect(element.querySelector('.bar p')!.textContent).toBe('Fetching and building the data on this server');
-    expect([...element.querySelectorAll('mat-chip')].map((c) => c.textContent!.trim())).toContain('1 not built yet');
+    expect(element.querySelector('.head p')!.textContent).toBe('Fetching and building the data on this server');
+    expect([...element.querySelectorAll('mat-chip-option')].map((c) => c.textContent!.trim())).toContain('Not built yet · 1');
     const osm = [...element.querySelectorAll('table.tasks tr.mat-mdc-row')].find((r) => r.textContent!.includes('OpenStreetMap'))!;
     expect(osm.querySelector('.blocked')!.textContent).toContain('construction');
     expect(osm.textContent).toContain('Not built yet');

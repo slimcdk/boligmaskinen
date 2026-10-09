@@ -17,7 +17,7 @@ import { PALETTES, rampGradient } from '../map/colours';
 import { HeatService } from '../map/heat.service';
 import { ThemeService } from '../theme/theme.service';
 import { Store } from '../state/store';
-import { PLACE_COLOURS, SUGGESTED, ViewState } from '@boligmaskinen/engine';
+import { DEFAULT_VIEW, PLACE_COLOURS, SUGGESTED, ViewState } from '@boligmaskinen/engine';
 import { AboutDialog } from './about-dialog';
 import { CatalogData, CatalogDialog, CatalogResult } from './catalog-dialog';
 import { ThemeToggle } from '../theme/theme-toggle';
@@ -87,7 +87,7 @@ export class Panel {
 
   protected readonly mapSummary = computed(() => {
     const v = this.view();
-    const colours = v.palette === 'orange' && v.bands === 'smooth' ? '' : ` · ${this.palette().name}${v.bands === 'steps' ? ' in steps' : ''}`;
+    const colours = v.palette === DEFAULT_VIEW.palette && v.bands === 'smooth' ? '' : ` · ${this.palette().name}${v.bands === 'steps' ? ' in steps' : ''}`;
     return `${v.cells === 'homes' ? 'Where homes are' : 'All land'} · ${['no smoothing', 'light smoothing', 'strong smoothing'][v.smooth]}${colours}`;
   });
 
@@ -124,7 +124,8 @@ export class Panel {
   /** The jobs list loads only when someone opens it. */
   protected async openJobs(): Promise<void> {
     const { JobsDialog } = await import('../admin/jobs-dialog');
-    this.dialog.open(JobsDialog, { width: '1180px', maxWidth: '96vw', autoFocus: 'dialog' });
+    // A steady height, so switching between the tasks and the runs does not move the dialog
+    this.dialog.open(JobsDialog, { width: '1180px', maxWidth: '96vw', height: 'min(880px, 92vh)', autoFocus: 'dialog' });
   }
 
   protected openAbout(): void {

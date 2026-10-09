@@ -190,7 +190,8 @@ explanation.
 - **Backups.** A nightly PostGIS dump job, and restoring is documented.
 - **Running it.** Self-hosting guide, upgrade notes, and a changelog per release.
 - **Licences.** OSM-derived data is under ODbL, so check the share-alike duty for what we
-  publish. Show attribution for every source in the app.
+  publish (see "Licences and credits" in `data-sources.md`). Every source is credited in "About the
+  data" already.
 
 **Done when:** a fresh install from the guide works on another machine, and a release has
 notes.

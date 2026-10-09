@@ -1,6 +1,6 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 import {
-  activeBlocks, Block, blockFrom, copyMap, DEFAULT_CRITERIA, DEFAULT_VIEW, emptyMap, formulaParams, groupNameFor, inGroup,
+  activeBlocks, Block, blockFrom, BlockTemplate, copyMap, DEFAULT_CRITERIA, DEFAULT_VIEW, emptyMap, formulaParams, groupNameFor, inGroup,
   LANGUAGE_VERSION, LIBRARY, MODES, newId, Place, placeTemplate, placeValueName, renameValues, Role, SavedMap, setParam, templateOf,
   tidyGroups, turnAround, uniqueName, upgradeBlock, ViewState,
 } from '@boligmaskinen/engine';
@@ -135,7 +135,16 @@ export class Store {
     if (!template) return;
     const once = DEFAULT_CRITERIA.some((c) => c.id === templateId);
     if (once && this.templatesInUse().has(templateId)) return;
-    this.addBlock(blockFrom(template), groupNameFor(template));
+    this.addPredefined(template);
+  }
+
+  /**
+   * Add a block from a template to the group its kind is in on the open map, which the user may have
+   * renamed; otherwise to the group of its kind's name.
+   */
+  private addPredefined(template: BlockTemplate): void {
+    const kin = this.blocks().find((b) => templateOf(b, this.places())?.group === template.group);
+    this.addBlock({ ...blockFrom(template), group: kin?.group }, groupNameFor(template));
   }
 
   /** Keep exactly these catalogue blocks (the catalogue dialog's checkboxes); other blocks stay. */
@@ -208,9 +217,15 @@ export class Store {
     this.updateMap((m) => ({ ...m, groups: m.groups.map((g) => (g.id === id ? { ...g, collapsed } : g)) }));
   }
 
+  /** Rename a group. Given the name of another group, it joins that one: two groups never share a name. */
   renameGroup(id: string, name: string): void {
-    if (!name.trim()) return;
-    this.updateMap((m) => ({ ...m, groups: m.groups.map((g) => (g.id === id ? { ...g, name: name.trim() } : g)) }));
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    this.updateMap((m) => {
+      const other = m.groups.find((g) => g.id !== id && g.name.toLowerCase() === trimmed.toLowerCase());
+      if (other) return { ...m, blocks: m.blocks.map((b) => (b.group === id ? { ...b, group: other.id } : b)) };
+      return { ...m, groups: m.groups.map((g) => (g.id === id ? { ...g, name: trimmed } : g)) };
+    });
   }
 
   /** Move a block to another group on the open map. */
@@ -242,8 +257,7 @@ export class Store {
   }
 
   private addPlaceBlock(place: Place): void {
-    const template = placeTemplate(place);
-    this.addBlock(blockFrom(template), groupNameFor(template));
+    this.addPredefined(placeTemplate(place));
   }
 
   /**

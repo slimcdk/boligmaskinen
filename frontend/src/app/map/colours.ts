@@ -22,16 +22,12 @@ const tonal = (tones: { 25: string; 40: string; 60: string; 80: string; 90: stri
 });
 
 /**
- * The heatmap's colour scales, made from the tones of Angular Material's M3 palettes, so the map
- * matches the app's theme. Each tonal scale is one hue in steps of lightness, which every kind of
- * colour vision can read: more points are darker on the light map and brighter on the dark map.
- * Orange is the theme's tertiary colour and Azure its primary.
+ * The heatmap's colour scales, the default first: red for few points to green for many, made from the
+ * tones of Angular Material's M3 palettes like the rest. The others are one hue each in steps of
+ * lightness, which every kind of colour vision can read: more points are darker on the light map and
+ * brighter on the dark map. Orange is the theme's tertiary colour and Azure its primary.
  */
 export const PALETTES: Palette[] = [
-  { id: 'orange', name: 'Orange', sequential: true, stops: tonal(M3_TONES.orange) },
-  { id: 'azure', name: 'Azure', sequential: true, stops: tonal(M3_TONES.azure) },
-  { id: 'violet', name: 'Violet', sequential: true, stops: tonal(M3_TONES.violet) },
-  { id: 'rose', name: 'Rose', sequential: true, stops: tonal(M3_TONES.rose) },
   {
     id: 'red-green', name: 'Red to green', note: 'Hard to read with red-green colour blindness', sequential: false,
     stops: {
@@ -39,6 +35,10 @@ export const PALETTES: Palette[] = [
       dark: [M3_TONES.red[60], M3_TONES.orange[60], M3_TONES.yellow[80], M3_TONES.green[60], M3_TONES.green[60]],
     },
   },
+  { id: 'orange', name: 'Orange', sequential: true, stops: tonal(M3_TONES.orange) },
+  { id: 'azure', name: 'Azure', sequential: true, stops: tonal(M3_TONES.azure) },
+  { id: 'violet', name: 'Violet', sequential: true, stops: tonal(M3_TONES.violet) },
+  { id: 'rose', name: 'Rose', sequential: true, stops: tonal(M3_TONES.rose) },
 ];
 
 /** How many steps "Steps" divides the scale into. */
@@ -83,7 +83,7 @@ export function rampOf(palette: HeatPalette, scheme: Scheme, bands: ViewState['b
   return ramp;
 }
 
-/** The scale as a CSS gradient, for the legend and the colour choices; steps have hard edges. */
+/** The scale as a CSS gradient, for the colour choices; steps have hard edges. */
 export function rampGradient(palette: HeatPalette, scheme: Scheme, bands: ViewState['bands'] = 'smooth'): string {
   const rgb = ([r, g, b]: Rgb) => `rgb(${r} ${g} ${b})`;
   if (bands === 'steps') {

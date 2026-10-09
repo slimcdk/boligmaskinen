@@ -114,3 +114,34 @@
   box-shadow: var(--mat-sys-level2);
   z-index: 3;
 }
+
+// OpenStreetMap's credit, in the corner where MapLibre's would be, until the map is used
+.credit {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+  text-decoration: none;
+  box-shadow: var(--mat-sys-level1);
+  transition: opacity 400ms ease-out;
+
+  &:hover {
+    color: var(--mat-sys-on-surface);
+  }
+
+  &.gone {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .credit {
+    transition: none;
+  }
+}

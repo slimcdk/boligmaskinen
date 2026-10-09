@@ -153,6 +153,27 @@ describe('Store', () => {
     expect(store.freeGroupName('Weekends')).toBe('Weekends 2');
   });
 
+  it('joins a group renamed to the name of another, so no two share a name', () => {
+    store.addTemplate('forest');
+    store.addTemplate('noise');
+    const [nature, quiet] = store.groups();
+    store.renameGroup(quiet.id, ' nature ');
+    expect(store.groups()).toMatchObject([{ id: nature.id, name: 'Nature' }]);
+    expect(store.blocks().map((b) => b.group)).toEqual([nature.id, nature.id]);
+  });
+
+  it('puts a new block where its kind already is, also in a group the user renamed', () => {
+    store.addPlace(10, 56);
+    const places = store.groups()[0];
+    store.renameGroup(places.id, 'Family');
+    store.addPlace(11, 56);
+    expect(store.groups().map((g) => g.name)).toEqual(['Family']);
+    store.addTemplate('forest');
+    store.renameGroup(store.groups()[1].id, 'Outdoors');
+    store.addTemplate('beach');
+    expect(store.groups().map((g) => g.name)).toEqual(['Family', 'Outdoors']);
+  });
+
   it('switches a requirement off, and on again when it becomes a preference', () => {
     store.addTemplate('zone');
     const id = store.blocks()[0].id;

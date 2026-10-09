@@ -133,7 +133,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   },
 ];
 
-export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85, palette: 'orange', bands: 'smooth' };
+export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85, palette: 'red-green', bands: 'smooth' };
 
 export const PLACE_COLOURS = ['#1f6feb', '#8a3ffc', '#007d79', '#d12771', '#b28600'];
 
