@@ -126,10 +126,12 @@ export const SOURCES: DataSource[] = [
         <h3 id="about-sources">Sources</h3>
         <p>Every source the map uses: what it gives, its licence, and how it asks to be credited.</p>
         <div class="sources">
-          @for (s of sources; track s.name) {
+          @for (s of sources; track s.name; let last = $last) {
             <section class="source" [attr.aria-label]="s.name">
-              <h4><a [href]="s.url" target="_blank" rel="noopener">{{ s.name }}</a></h4>
-              <p class="uses">{{ s.uses }}</p>
+              <div class="what">
+                <h4><a [href]="s.url" target="_blank" rel="noopener">{{ s.name }}</a></h4>
+                <p class="uses">{{ s.uses }}</p>
+              </div>
               <dl>
                 <dt>Licence</dt>
                 <dd>
@@ -155,6 +157,9 @@ export const SOURCES: DataSource[] = [
                 }
               </dl>
             </section>
+            @if (!last) {
+              <mat-divider />
+            }
           }
         </div>
       </section>
@@ -173,13 +178,15 @@ export const SOURCES: DataSource[] = [
     p { margin: 0 0 8px; font: var(--mat-sys-body-medium); color: var(--mat-sys-on-surface-variant); }
     .how { max-width: 72ch; }
     a { color: var(--mat-sys-primary); }
-    /* A section per source, side by side where there is room: spacing groups them, not cards */
-    .sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 24px 32px; margin-top: 16px; }
+    /* A row per source across the dialog, with a divider between: what it is on the left, its terms on the right */
+    .sources { margin-top: 8px; }
+    .source { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 8px 32px; padding: 16px 0; }
+    @media (max-width: 720px) { .source { grid-template-columns: minmax(0, 1fr); } }
     h4 { margin: 0 0 4px; font: var(--mat-sys-title-small); }
     h4 a { text-decoration: none; }
     h4 a:hover { text-decoration: underline; }
-    .uses { margin-bottom: 8px; }
-    dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font: var(--mat-sys-body-small); }
+    .uses { margin: 0; }
+    dl { display: grid; grid-template-columns: max-content 1fr; align-content: start; gap: 4px 12px; margin: 0; font: var(--mat-sys-body-small); }
     dt { color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-label-medium); }
     dd { margin: 0; color: var(--mat-sys-on-surface); overflow-wrap: anywhere; }
     .meta { margin: 0; font: var(--mat-sys-body-small); }
