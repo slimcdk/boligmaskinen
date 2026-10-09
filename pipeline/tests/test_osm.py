@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import osmium
 import pyogrio
@@ -63,6 +65,7 @@ def test_extracts_a_layer_per_theme(extract):
     assert (municipality["name"][0], municipality["ref"][0]) == ("Aarhus Kommune", "751")
     assert pyogrio.read_dataframe(out / "layers.gpkg", layer="road")["road_class"].tolist() == ["motorway"]
     assert not (out / "features.osm.pbf").exists()
+    assert json.loads((out / "counts.json").read_text()) == counts
 
 
 def test_extracts_the_addresses_in_denmark(extract):

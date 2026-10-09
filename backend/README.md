@@ -32,12 +32,46 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
   the choice is kept in `job_setting`.
 - **Runs** are kept in `job_run` with their status, progress, result, size and log. A run that was
   going on when the app stopped is marked as failed at the next start.
-- **After a job succeeds**, the jobs in its `then` start.
+- **After a job succeeds**, the jobs in its `then` start, unless it found nothing new
+  (`changed: false`). A job started that way may wait for its own run that is still going on, so
+  a change made meanwhile is not missed.
 - **A job is a function** that gets a context: `log(text)`, `progress(fraction)`, a `signal` that
-  aborts when the run is cancelled, and the data pack folder. It returns `{ result, bytes }`.
-- **For now one job does real work:** "Check the data pack" reads the data pack and checks that every
-  file it names is there. The fetch and build jobs are listed as not built yet, and come with
-  milestone 2; the jobs that need access say what they wait for.
+  aborts when the run is cancelled, the database, the run's id and trigger, and `busy(jobIds)`,
+  which says which of those jobs wait or run now. It returns `{ result, bytes, changed }`.
+- **"Check the data pack"** reads the data pack and checks that every file it names is there.
+- **A job per source** (`src/pipeline/sources.ts`) fetches it into the raw archive: OpenStreetMap,
+  Plandata's zones, STIL's schools and daycare, Energistyrelsen's wind turbines, Danmarks
+  Statistik's tables, Miljøstyrelsen's road noise and Natural Earth. The OSM job also takes the
+  layers and addresses out of the extract, and the world job builds the world map, with the
+  pipeline's steps. Building the grid and the data pack comes next; the jobs that need access say
+  what they wait for.
+
+## The raw archive
+
+Every file the jobs fetch is kept unchanged under `DATA_DIR/raw/<source>/<date>-run<id>/`, with a
+row in `source_file`: where it came from, its licence, size, sha256, the server's ETag and
+Last-Modified, and the run (`src/pipeline/archive.ts`).
+
+- **The next fetch asks first.** It sends `If-None-Match` and `If-Modified-Since`, so an
+  unchanged source answers 304 and nothing is fetched. For the 2 GB noise archive a `HEAD` decides.
+- **Content decides, not bytes.** A file with the content of the newest one is not kept again. A
+  source can leave out of the comparison what changes with every answer, such as the time stamp
+  GeoServer puts in its GeoJSON.
+- **A wrong answer is not kept.** Each source checks what it got (JSON with features, a CSV with the
+  export's columns, a ZIP file), and a failed check fails the job and keeps the old file.
+- **Files that belong together** (a shapefile) are kept together in one folder.
+- **The newest three** files of each name are kept; older ones are deleted, and their rows stay.
+- **What is built from a source** (the OSM layers, the world map) is built in a new folder beside
+  the old one and switched in with a symbolic link, `work/<what>/current`
+  (`src/pipeline/versions.ts`). A `made-from.json` says from which files and which version of the
+  app, so it is built again only when one of them changed.
+
+## The pipeline's steps
+
+The jobs run the Python steps in `../pipeline` (`python -I -m boligmaskinen_pipeline <step>`) from
+`src/pipeline/python.ts`. Their output goes to the job's log, `@progress` lines move the progress
+bar, and a step that fails fails the job with its last error line. One step runs at a time, because
+they need a lot of memory: the OSM step about 2.2 GB, the grid of all of Denmark about 3.7 GB.
 
 ## Saved maps and places
 
@@ -96,6 +130,8 @@ need the database say so.
 | `PORT`, `HOST` | `8080`, `0.0.0.0` | Where the server listens. |
 | `STATIC_DIR` | `../frontend/dist/frontend/browser` | The built frontend. |
 | `DATA_PACK_DIR` | none | The data pack. Without it, the frontend's build has to contain one (`public/data-pack`). The image uses `/data/data-pack`. |
+| `DATA_DIR` | none | Where the data jobs keep the raw archive (`raw/`), what they build (`work/`) and their temporary files (`tmp/`). It has to be an absolute path. Without it the jobs that fetch and build say so and do not run. The image uses `/data`. |
+| `PIPELINE_PYTHON` | `../pipeline/.venv/bin/python` | The Python that has the pipeline installed (`uv sync` in `../pipeline`). The image has it at `/app/pipeline/.venv/bin/python`. |
 | `DATABASE_URL` | none | PostgreSQL with PostGIS, e.g. `postgres://user:password@db:5432/boligmaskinen`. |
 | `JOB_TIME_ZONE` | `Europe/Copenhagen` | The time zone of the job schedules. |
 | `LOG_LEVEL` | `info` | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`. The logs are JSON lines. |

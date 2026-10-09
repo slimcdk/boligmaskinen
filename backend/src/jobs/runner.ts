@@ -126,14 +126,19 @@ export class JobRunner {
     return (await this.options.db.query<RunRow>('select * from job_run where id = $1', [runId])).rows[0];
   }
 
-  /** Start a job now. A job that is blocked, switched off or already running is refused. */
+  /**
+   * Start a job now. A job that is blocked, switched off or already running is refused, except
+   * that a job started by the one before it may wait for its own run to finish: what changed
+   * meanwhile is then not missed.
+   */
   async runNow(jobId: string, trigger: Trigger = 'manual'): Promise<JobRun> {
     const definition = this.definition(jobId);
     if (definition.blocked || !definition.run) throw new HttpError(409, definition.blocked ?? `${definition.name} cannot run yet`);
     const job = (await this.jobs()).find((j) => j.id === jobId)!;
     if (!job.enabled) throw new HttpError(409, `${job.name} is switched off`);
-    const busy = await this.options.db.query(`select 1 from job_run where job_id = $1 and status in ('queued', 'running') limit 1`, [jobId]);
-    if (busy.rowCount) throw new HttpError(409, `${job.name} is already running`);
+    const busy = await this.options.db.query<{ status: RunStatus }>(`select status from job_run where job_id = $1 and status in ('queued', 'running')`, [jobId]);
+    if (busy.rows.some((r) => r.status === 'queued')) throw new HttpError(409, `${job.name} is already waiting to run`);
+    if (busy.rowCount && trigger !== 'after') throw new HttpError(409, `${job.name} is already running`);
 
     const { rows: [row] } = await this.options.db.query<RunRow>(
       `insert into job_run (job_id, trigger, status, log) values ($1, $2, 'queued', $3::jsonb) returning *`,
@@ -210,9 +215,19 @@ export class JobRunner {
       },
       signal: controller.signal,
       dataPackDir: this.options.dataPackDir,
+      db,
+      runId: id,
+      trigger: data.trigger ?? 'schedule',
+      busy: async (jobIds) => {
+        const { rows } = await db.query<{ job_id: string }>(
+          `select distinct job_id from job_run where job_id = any($1) and status in ('queued', 'running') and id <> $2`, [jobIds, id],
+        );
+        return jobIds.filter((jobId) => rows.some((r) => r.job_id === jobId));
+      },
     };
+    let outcome: JobOutcome;
     try {
-      const outcome = (await definition.run!(context)) ?? {};
+      outcome = (await definition.run!(context)) ?? {};
       if (controller.signal.aborted) throw new Error('Cancelled');
       await this.finish(id, 'succeeded', undefined, outcome);
     } catch (error) {
@@ -222,6 +237,8 @@ export class JobRunner {
     } finally {
       this.active.delete(id);
     }
+    // Nothing new, so nothing after it has anything to do
+    if (outcome.changed === false) return;
     for (const next of definition.then ?? []) {
       try {
         await this.runNow(next, 'after');

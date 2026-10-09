@@ -1,3 +1,4 @@
+import { isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type BuildInfo, versionFromEnv } from './version.ts';
 
@@ -12,6 +13,10 @@ export interface Config {
   staticDir: string;
   /** The data pack; null when the frontend's build holds one. */
   dataPackDir: string | null;
+  /** Where the data jobs keep the raw archive, their work and the data packs; null when they cannot run. */
+  dataDir: string | null;
+  /** The Python that has the data pipeline installed (pipeline/.venv/bin/python). */
+  pipelinePython: string;
   /** PostgreSQL with PostGIS. Without it the app runs, but the parts that need the database say so. */
   databaseUrl: string | null;
   /** The time zone the job schedules are in. */
@@ -56,12 +61,17 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   const logLevel = (env['LOG_LEVEL'] || 'info') as LogLevel;
   if (!LOG_LEVELS.includes(logLevel)) problems.push(`LOG_LEVEL has to be one of ${LOG_LEVELS.join(', ')}, not "${logLevel}"`);
 
+  const dataDir = env['DATA_DIR'] || null;
+  if (dataDir && !isAbsolute(dataDir)) problems.push(`DATA_DIR has to be an absolute path, not "${dataDir}"`);
+
   if (problems.length) throw new ConfigError(problems);
   return {
     port,
     host: env['HOST'] || '0.0.0.0',
     staticDir: env['STATIC_DIR'] || fileURLToPath(new URL('../../frontend/dist/frontend/browser', import.meta.url)),
     dataPackDir: env['DATA_PACK_DIR'] || null,
+    dataDir,
+    pipelinePython: env['PIPELINE_PYTHON'] || fileURLToPath(new URL('../../pipeline/.venv/bin/python', import.meta.url)),
     databaseUrl,
     timeZone,
     logLevel,

@@ -1,3 +1,5 @@
+import type pg from 'pg';
+
 /**
  * The jobs that fetch and build the data, and their runs: the shapes the jobs API serves. The
  * frontend has the same shapes in frontend/src/app/admin/jobs.ts.
@@ -57,11 +59,23 @@ export interface JobContext {
   signal: AbortSignal;
   /** Where the app's data lives. */
   dataPackDir: string | null;
+  /** The database, for what the job keeps, such as the raw archive. */
+  db: pg.Pool;
+  /** The run, for what the job records about it. */
+  runId: string;
+  trigger: Trigger;
+  /** Which of these jobs are waiting or running now, other than this run. */
+  busy(jobIds: string[]): Promise<string[]>;
 }
 
 export interface JobOutcome {
   result?: string;
   bytes?: number;
+  /**
+   * False when the job found nothing new, such as a source that has not changed: then the jobs in
+   * its `then` do not start.
+   */
+  changed?: boolean;
 }
 
 /** A job as the backend defines it: what the API shows, and the work it does. */

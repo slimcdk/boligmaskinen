@@ -9,7 +9,7 @@ test('runs a real job from the jobs dialog, and shows its log', async ({ page })
   await page.getByRole('button', { name: 'Data jobs' }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog.locator('.head p')).toHaveText('Fetching and building the data on this server');
-  await expect(dialog.getByRole('row').filter({ hasText: 'OpenStreetMap' })).toContainText('Not built yet');
+  await expect(dialog.getByRole('row').filter({ hasText: 'Addresses and buildings' })).toContainText('Needs a Datafordeleren API key');
 
   const row = dialog.getByRole('row').filter({ hasText: 'Check the data pack' });
   await row.getByRole('button', { name: 'Run Check the data pack now' }).click();

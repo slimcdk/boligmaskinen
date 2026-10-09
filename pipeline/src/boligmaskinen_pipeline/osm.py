@@ -6,10 +6,11 @@ around Denmark, and a NumPy file with the address points.
 Usage:
     python -m boligmaskinen_pipeline osm <denmark-latest.osm.pbf> <out_dir>
 
-<out_dir> gets layers.gpkg and addresses.npy.
+<out_dir> gets layers.gpkg, addresses.npy and counts.json, the number of rows per layer.
 """
 
 import argparse
+import json
 import time
 from pathlib import Path
 
@@ -153,6 +154,7 @@ def extract(pbf: Path, out_dir: Path) -> dict[str, int]:
     started = time.time()
     counts["addresses"] = extract_addresses(pbf, out_dir / "addresses.npy")
     log(f"Addresses: {counts['addresses']:,} in {time.time() - started:.0f} s")
+    (out_dir / "counts.json").write_text(json.dumps(counts), encoding="utf-8")
     progress(1)
     return counts
 

@@ -11,8 +11,9 @@ its steps.
 
 - **Only sources we may use.** Each source is open, licensed, or the user brings their own
   key or access. Nothing is scraped from sites whose terms forbid it.
-- **Keep the raw download.** Every fetch should land unchanged in a raw archive with the
-  date, URL, size and hash, and a `source_run` log row in the database. Processing always
+- **Keep the raw download.** Every fetch lands unchanged in a raw archive with the
+  date, URL, size, hash and licence, and a `source_file` row in the database (see
+  `backend/README.md`). Processing always
   starts from the archive. A source that disappears or changes format then does not
   break what we already have, and we can re-run old versions.
 - **Prefer bulk files over APIs** where both exist. They are faster, easier to cache and
