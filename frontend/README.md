@@ -84,17 +84,22 @@ browser.
 - **Ids are random** (`newId` in the engine), so maps from two devices never share one.
   `crypto.randomUUID` is not used, since it needs HTTPS and a home server on the LAN has none.
 
-## The panel: floating, or a bottom sheet on phones
+## The panels: two floating, or a card and a bottom sheet on phones
 
-- **On a larger screen the panel floats over the map**, as Home Assistant's map does: 12 px from the
-  window's edges, with M3's large corners and elevation, and only as tall as its content. The map runs
-  under it to the edges, and keeps its view in the part beside the panel (MapLibre's padding), so
-  opening or closing the panel moves the map with it. "What matters to you" opens it again, and
-  Escape inside it closes it.
-- **On a phone (up to 700 px) the panel is an M3 bottom sheet** (`src/app/sheet/bottom-sheet.ts`). It
-  starts down, with only its head over the map, and its handle raises it to half the screen or near
-  the top: drag it to any height and it settles at the nearest, or tap it (or Enter or Space) to go
-  up and down. The map stays usable above it and keeps its view above it.
+- **On a larger screen two panels float over the map**, as Home Assistant's map does: 12 px from the
+  window's edges, with M3's large corners and elevation, each only as tall as its content.
+  - **The map panel** (`src/app/panel/map-panel.ts`) is on top: the app's name, which cells to show and
+    from how many points, the histogram, and the map settings. Its settings may take most of the window.
+  - **The weighting panel** (`src/app/panel/panel.ts`) is below it: the open map, the blocks in groups,
+    the places and the footer. It takes the rest of the window and scrolls inside.
+  - The map runs under them to the edges and keeps its view beside them (MapLibre's padding), moving
+    as they open and close. The chevron hides both, "What matters to you" brings them back, and Escape
+    inside them hides them.
+- **On a phone (up to 700 px)** the map panel is a card at the top, without the app's name, and the
+  weighting is an M3 bottom sheet (`src/app/sheet/bottom-sheet.ts`). The sheet starts down, with the
+  open map and "What matters to you" over the map, and its handle raises it to half the screen or near
+  the top: drag it to any height and it settles at the nearest, or tap it (or Enter or Space) to go up
+  and down. The map stays usable between them and keeps its view between them.
 - **Dropping a place on a phone:** the sheet goes down while the map is tapped, and comes back up with
   the new place's block. The hint at the top can cancel.
 - The legend is gone from the map; the panel's footer and the data jobs adapt to a narrow screen.
@@ -228,7 +233,8 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 | `src/app/data/` | Loading the data pack (byte containers, chunked PMTiles source). |
 | `src/app/state/` | The maps with their blocks and groups, the places and the map settings as signals, persisted in localStorage. `migrate.ts` carries over the earlier prototypes' choices. |
 | `src/app/map/` | MapLibre map, heatmap rendering (`heat.service.ts`) and the points breakdown. |
-| `src/app/panel/` | The Material side panel: the map switcher, the result, the catalogue dialog, the groups with their block rows and controls, the code editor dialog, places. |
+| `src/app/panel/` | The two panels: the map panel (the result and the map settings) and the weighting panel (the map switcher, the groups with their block rows and controls, the places, the footer), and their dialogs. |
+| `src/app/sheet/` | The bottom sheet the weighting panel is in on a phone. |
 | `src/app/admin/` | The data-jobs dialog, its API client, the job model it shares with the backend, and the simulated preview. |
 | `src/app/theme/` | Light and dark mode: the viewer's choice and the footer button. |
 | `e2e/` | Playwright end-to-end tests, and `e2e/data-pack/`, the test data pack. |

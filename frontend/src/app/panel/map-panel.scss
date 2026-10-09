@@ -1,0 +1,121 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 8px 10px 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  .title { flex: 1; min-width: 0; }
+  h1 { margin: 0; font: var(--mat-sys-title-large); }
+  p { margin: 2px 0 0; font: var(--mat-sys-body-small); color: var(--mat-sys-on-surface-variant); }
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  // The range slider's inputs reach a few pixels past the track
+  overflow-x: hidden;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error {
+  color: var(--mat-sys-error);
+  margin: 0;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hint,
+.label {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hint {
+  margin: 0;
+}
+
+.full {
+  display: flex;
+  width: 100%;
+
+  mat-button-toggle {
+    flex: 1;
+  }
+}
+
+mat-slider {
+  width: 100%;
+  margin: 0;
+}
+
+.empty {
+  h2 { margin: 0 0 4px; font: var(--mat-sys-title-medium); }
+  p { margin: 0; font: var(--mat-sys-body-medium); color: var(--mat-sys-on-surface-variant); }
+}
+
+// The settings fold out under the result, on the card's own surface
+.settings-panel {
+  --mat-expansion-container-background-color: transparent;
+  box-shadow: none;
+
+  ::ng-deep .mat-expansion-panel-header {
+    padding: 0;
+  }
+
+  // The settings in short, on one line
+  ::ng-deep .mat-expansion-panel-header-description {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  ::ng-deep .mat-expansion-panel-body {
+    padding: 0 0 8px;
+  }
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.palette {
+  width: 100%;
+}
+
+// A colour choice: its scale as a swatch, then its name (also in the select's options, outside the panel)
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.swatch {
+  flex: none;
+  width: 56px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.note {
+  color: var(--mat-sys-on-surface-variant);
+}

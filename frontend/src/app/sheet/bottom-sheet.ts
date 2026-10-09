@@ -3,8 +3,8 @@ import { Component, DestroyRef, computed, effect, inject, model, output, signal,
 /** How far up the sheet is: just its head, half the screen, or nearly all of it. */
 export type SheetState = 'peek' | 'half' | 'full';
 
-/** The height of the sheet when it is down: its handle and the panel's head. */
-export const PEEK_HEIGHT = 144;
+/** The height of the sheet when it is down: its handle, the open map's name, and "What matters to you" with Add. */
+export const PEEK_HEIGHT = 152;
 /** The map left above the sheet when it is all the way up. */
 const TOP_GAP = 56;
 /** A pointer that moves less than this has tapped the handle rather than dragged it. */

@@ -18,7 +18,7 @@ async function expand(page: Page, name: string): Promise<Locator> {
 }
 
 /** The result in words, which the histogram carries for screen readers. */
-const result = (page: Page) => page.locator('app-panel app-histogram canvas');
+const result = (page: Page) => page.locator('app-map-panel app-histogram canvas');
 
 /** The number of cells that meet the requirements, from the result in words. */
 async function cellsShown(page: Page): Promise<number> {
@@ -30,7 +30,7 @@ test('shows the map of the region and asks what matters', async ({ page }) => {
   await open(page);
   await expect(page.getByRole('heading', { name: 'Where would you like to live?' })).toBeVisible();
   // The test data pack covers Aarhus Kommune
-  await expect(page.locator('app-panel .head p')).toContainText('Aarhus Kommune');
+  await expect(page.locator('app-map-panel .head p')).toContainText('Aarhus Kommune');
   await expect(page.locator('.problem')).toHaveCount(0);
 });
 
@@ -74,7 +74,7 @@ test('the heatmap\'s colours can be chosen, smooth or in steps', async ({ page }
   await open(page);
   await page.locator('mat-chip', { hasText: 'Forest' }).click();
   await page.getByText('Map settings').click();
-  const swatch = page.locator('app-panel mat-select-trigger .swatch');
+  const swatch = page.locator('app-map-panel mat-select-trigger .swatch');
   await page.getByRole('combobox', { name: 'Heatmap colours' }).click();
   await page.getByRole('option', { name: /Azure/ }).click();
   const gradient = () => swatch.evaluate((el) => getComputedStyle(el).backgroundImage);
@@ -83,7 +83,7 @@ test('the heatmap\'s colours can be chosen, smooth or in steps', async ({ page }
   await page.getByRole('radio', { name: 'Steps' }).click();
   // Five steps with hard edges: every fifth
   await expect.poll(gradient).toMatch(/ 20%.* 40%.* 60%.* 80%/);
-  await expect(page.locator('app-panel mat-panel-description')).toContainText('Azure in steps');
+  await expect(page.locator('app-map-panel mat-panel-description')).toContainText('Azure in steps');
 });
 
 test('the code editor checks the code and applies it', async ({ page }) => {
@@ -217,6 +217,28 @@ async function zoom(page: Page): Promise<number> {
   return Number(/map=([\d.]+)\//.exec(hash)?.[1] ?? NaN);
 }
 
+test('two panels float over the map: the map above, the weighting below, and both hide together', async ({ page }) => {
+  await open(page);
+  const mapCard = page.getByRole('region', { name: 'The map' });
+  const weighting = page.getByRole('region', { name: 'Your weighting' });
+  const [top, below] = [(await mapCard.boundingBox())!, (await weighting.boundingBox())!];
+  expect(top.x).toBe(12);
+  expect(below.x).toBe(12);
+  expect(below.y).toBeGreaterThanOrEqual(top.y + top.height + 12);
+  await expect(mapCard.getByRole('radio', { name: 'Min. points' })).toHaveCount(0);
+  await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await expect(mapCard.getByRole('radio', { name: 'Min. points' })).toBeVisible();
+  await expect(weighting.getByRole('button', { name: /^Map: / })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Hide panel' }).click();
+  await expect(mapCard).toBeHidden();
+  await expect(weighting).toBeHidden();
+  const show = page.getByRole('button', { name: 'What matters to you' });
+  await expect(show).toBeFocused();
+  await show.click();
+  await expect(weighting).toBeVisible();
+});
+
 test('OpenStreetMap is credited on the map until the map is used, or for five seconds', async ({ page }) => {
   await open(page);
   // It may be gone already when the map loaded a while ago; either way it goes, and stays in the DOM
@@ -231,8 +253,10 @@ test('OpenStreetMap is credited on the map until the map is used, or for five se
 test('the whole world is open to explore', async ({ page }) => {
   await open(page);
   await expect.poll(() => zoom(page)).toBeGreaterThan(5);
-  for (let i = 0; i < 12; i++) {
-    await page.locator('.maplibregl-ctrl-zoom-out').click();
+  // Out until the button gives up, which it does when the world fills the window
+  const zoomOut = page.locator('.maplibregl-ctrl-zoom-out');
+  for (let i = 0; i < 12 && await zoomOut.isEnabled(); i++) {
+    await zoomOut.click();
     await page.waitForTimeout(300);
   }
   await expect.poll(() => zoom(page)).toBeLessThan(1.5);
