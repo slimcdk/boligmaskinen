@@ -104,6 +104,7 @@ The public sources beyond the ones above, from Danmarks Miljøportal, Klimadatas
 | Power lines | Energinet: overhead lines of 132–400 kV and their attention zones | WFS (INSPIRE) | No licence stated. Distance to a power line |
 | Livestock | Landbrugsstyrelsen's CHR (herds with animal units, 2000–2024) and Plandata's large livestock farms | WFS (geodata.fvm.dk) and Plandata | CHR states no licence; Plandata is CC BY 4.0. Smell: animal units within 1 km |
 | Rail and airport noise | Miljøstyrelsen's noise mapping 2022 for railways and airports (Lden, Lnight) | The same MiljøGIS download as road noise | As for road noise. Lets the noise block cover trains and planes too |
+| Listed and preservation-worthy buildings | Slots- og Kulturstyrelsen, FBB (Fredede og Bevaringsværdige Bygninger): about 7,000 listed buildings, about 360,000 with a SAVE value (1–9) | An INSPIRE download ([Atom feed](https://www.kulturarv.dk/fbb/inspire/feed-fbb.xml)); no conditions stated | FBB closes in 2026: listed buildings move to a new register, and the SAVE values to the municipalities, which KL gathers in GeoFA. For the blocks on protected areas and listed buildings in `block-ideas.md` (milestone 4) |
 
 ### Looked at and set aside (2026-10-09)
 
