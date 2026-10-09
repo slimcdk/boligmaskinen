@@ -2,9 +2,9 @@
 #
 #   docker compose up -d       then open http://localhost:8080
 #
-# The app keeps its data in ./data; put the data pack in ./data/data-pack (see README.md).
-# Set POSTGRES_PASSWORD in an .env file next to this one before the first start. The database is
-# only reachable from the app, not from outside.
+# The app keeps its data in ./data: the jobs fetch the sources there and build the data pack at
+# the first start (see README.md). Set POSTGRES_PASSWORD in an .env file next to this one before
+# the first start. The database is only reachable from the app, not from outside.
 name: boligmaskinen
 
 services:
@@ -15,6 +15,9 @@ services:
       - "${BOLIGMASKINEN_PORT:-8080}:8080"
     environment:
       DATABASE_URL: postgres://boligmaskinen:${POSTGRES_PASSWORD:-boligmaskinen}@db:5432/boligmaskinen
+      # The area the data covers and its cell size (see backend/README.md)
+      REGION: ${REGION:-denmark}
+      GRID_CELL_METRES: ${GRID_CELL_METRES:-100}
     volumes:
       - ./data:/data
     depends_on:

@@ -17,6 +17,7 @@
     "@boligmaskinen/engine": "file:../packages/engine",
     "@fastify/compress": "^9.2.0",
     "@fastify/static": "^10.1.5",
+    "@protomaps/basemaps": "^5.7.2",
     "cron-parser": "^5.10.1",
     "fastify": "^5.12.5",
     "pg": "^8.23.1",

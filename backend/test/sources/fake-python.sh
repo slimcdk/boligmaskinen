@@ -24,6 +24,10 @@ case "$step" in
     echo "Started"
     exec sleep 30
     ;;
+  hungry)
+    # As the kernel's OOM killer would end it
+    kill -9 $$
+    ;;
   record)
     echo "start $(date +%s%N)" >> "$1"
     sleep 0.3
@@ -46,6 +50,28 @@ case "$step" in
     out="$1"
     mkdir -p "$out"
     for name in land lakes boundaries countries places; do echo '{"type":"FeatureCollection","features":[]}' > "$out/$name.json"; done
+    ;;
+  grid)
+    # grid <inputs.json> <out> --region R --cell C: the counts come from ../counts.json when it is there
+    inputs="$1"; out="$2"; region="$4"; cell="$6"
+    counts="$(cat "$TMPDIR/../counts.json" 2>/dev/null || echo '{"addresses": 2615075, "homeCells": 459924, "schools": 1963}')"
+    printf '{"region":{"id":"%s","name":"%s"},"width":2,"height":2,"cellMetres":%s,"gridMetres":%s,"files":{"forest":"forest.u8.gz"},"counts":%s}' \
+      "$region" "$region" "$cell" "$cell" "$counts" > "$out/meta.json"
+    printf 'grid of %s' "$(cat "$inputs" | tr -d '\n ')" | gzip > "$out/forest.u8.gz"
+    echo '{"type":"FeatureCollection","features":[]}' > "$out/municipalities.json"
+    printf '{"type":"FeatureCollection","features":[],"region":"%s"}' "$region" > "$out/basemap-region.geojson"
+    echo "Built the grid of $region"
+    ;;
+  pack)
+    # pack --grid G --basemap B --fonts F --sprites S --styles T --world W --out O --id ID
+    while [ $# -gt 1 ]; do eval "arg_$(echo "$1" | tr -d '-')=\"\$2\""; shift 2; done
+    mkdir -p "$arg_out/data" "$arg_out/basemap"
+    sed "s/^{/{\"pack\":\"$arg_id\",\"basemap\":{\"parts\":1},/" "$arg_grid/meta.json" > "$arg_out/data/meta.json"
+    cp "$arg_grid/forest.u8.gz" "$arg_grid/municipalities.json" "$arg_out/data/"
+    cp "$arg_basemap" "$arg_out/basemap/part-0.png"
+    mkdir -p "$arg_out/world" && cp -r "$arg_sprites" "$arg_out/" && cp "$arg_world"/*.json "$arg_out/world/"
+    cp "$arg_styles"/*.json "$arg_out/"
+    echo '{}' > "$arg_out/fonts.json"
     ;;
   *)
     echo "No such step: $step" >&2

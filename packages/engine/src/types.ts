@@ -71,12 +71,17 @@ export interface Municipality {
 
 export interface GridMeta {
   built: string;
+  /** The pack's id when the app's data jobs built it: its files are also at data-packs/<pack>/, for good. */
+  pack?: string;
   /** The area the data covers, e.g. all of Denmark. */
   region?: { id: string; name: string };
   width: number;
   height: number;
   bounds: { west: number; south: number; east: number; north: number };
+  /** The display grid's cell size. */
   cellMetres: number;
+  /** The cell size the data was built on, when it differs from the display grid's. */
+  gridMetres?: number;
   distanceMax: number;
   files: Record<string, string>;
   municipalities: Municipality[];

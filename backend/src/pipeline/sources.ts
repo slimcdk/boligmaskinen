@@ -80,7 +80,7 @@ export function versionId(context: JobContext): string {
   return `${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '')}-run${context.runId}`;
 }
 
-async function readJson<T>(path: string): Promise<T | null> {
+export async function readJson<T>(path: string): Promise<T | null> {
   try {
     return JSON.parse(await readFile(path, 'utf8')) as T;
   } catch {
@@ -98,7 +98,7 @@ async function madeFrom(dir: string | null): Promise<MadeFrom | null> {
   return dir ? readJson<MadeFrom>(join(dir, 'made-from.json')) : null;
 }
 
-function sameInputs(a: MadeFrom | null, b: MadeFrom): boolean {
+export function sameInputs(a: MadeFrom | null, b: MadeFrom): boolean {
   return !!a && a.revision === b.revision && JSON.stringify(a.inputs) === JSON.stringify(b.inputs);
 }
 
@@ -332,6 +332,9 @@ const SOURCES: SourceJob[] = [
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];
+
+/** The fetch jobs' names, by their ids. */
+export const FETCH_JOBS: Record<string, string> = Object.fromEntries(SOURCES.map((s) => [s.id, s.name]));
 
 /** A job per source. Each fetches into the raw archive and starts the build when something changed. */
 export function sourceJobs(options: PipelineOptions): JobDefinition[] {

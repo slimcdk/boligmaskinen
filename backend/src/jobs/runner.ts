@@ -131,7 +131,7 @@ export class JobRunner {
    * that a job started by the one before it may wait for its own run to finish: what changed
    * meanwhile is then not missed.
    */
-  async runNow(jobId: string, trigger: Trigger = 'manual'): Promise<JobRun> {
+  async runNow(jobId: string, trigger: Trigger = 'manual', note?: string): Promise<JobRun> {
     const definition = this.definition(jobId);
     if (definition.blocked || !definition.run) throw new HttpError(409, definition.blocked ?? `${definition.name} cannot run yet`);
     const job = (await this.jobs()).find((j) => j.id === jobId)!;
@@ -142,7 +142,7 @@ export class JobRunner {
 
     const { rows: [row] } = await this.options.db.query<RunRow>(
       `insert into job_run (job_id, trigger, status, log) values ($1, $2, 'queued', $3::jsonb) returning *`,
-      [jobId, trigger, line(trigger === 'after' ? 'Queued after the job before it' : 'Queued')],
+      [jobId, trigger, line(note ?? (trigger === 'after' ? 'Queued after the job before it' : 'Queued'))],
     );
     const queueJobId = await this.boss.send(jobId, { runId: String(row.id), trigger } satisfies QueuedData);
     if (!queueJobId) {
@@ -151,6 +151,17 @@ export class JobRunner {
     }
     await this.options.db.query('update job_run set queue_job_id = $2 where id = $1', [row.id, queueJobId]);
     return toRun({ ...row, queue_job_id: queueJobId });
+  }
+
+  /** Start these jobs now, as their schedules would, skipping those that cannot run. */
+  async startAll(jobIds: string[], note: string): Promise<void> {
+    for (const jobId of jobIds) {
+      try {
+        await this.runNow(jobId, 'schedule', note);
+      } catch (error) {
+        this.options.log.info(`${jobId} did not start: ${(error as Error).message}`);
+      }
+    }
   }
 
   /** Stop a run: a waiting one at once, a running one at its next check. */

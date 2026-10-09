@@ -5,7 +5,7 @@ import {
 } from 'maplibre-gl';
 import { PMTiles, Protocol } from 'pmtiles';
 import { ChunkedPmtilesSource } from '../data/byte-container';
-import { DATA_BASE, PilotData } from '../data/pilot-data';
+import { PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
 import { PLACE_COLOURS } from '@boligmaskinen/engine';
 import { Scheme, ThemeService } from '../theme/theme.service';
@@ -21,8 +21,8 @@ const DETAIL_ZOOM = 5;
  * Natural Earth land, lakes, borders and names, so the map can be panned and zoomed anywhere.
  * They sit under the detailed basemap, which draws over them where it has data.
  */
-function worldSources(): Record<string, SourceSpecification> {
-  const source = (name: string): SourceSpecification => ({ type: 'geojson', data: `${DATA_BASE}world/${name}.json` });
+function worldSources(base: string): Record<string, SourceSpecification> {
+  const source = (name: string): SourceSpecification => ({ type: 'geojson', data: `${base}world/${name}.json` });
   return { 'world-land': source('land'), 'world-lakes': source('lakes'), 'world-boundaries': source('boundaries'), 'world-countries': source('countries'), 'world-places': source('places') };
 }
 
@@ -155,7 +155,7 @@ export class MapView implements AfterViewInit, OnDestroy {
     const [layers, glyphs, worker] = await Promise.all([
       // A data pack without the dark flavour still gets a map, in the light flavour's colours
       this.layersFor(scheme).catch(() => this.layersFor('light')),
-      fetch(`${DATA_BASE}fonts.json`).then((r) => r.json() as Promise<Record<string, string>>),
+      fetch(`${this.data.base}fonts.json`).then((r) => r.json() as Promise<Record<string, string>>),
       protocolsRegistered ? null : workerUrl(),
     ]);
     if (this.map) return;
@@ -164,7 +164,7 @@ export class MapView implements AfterViewInit, OnDestroy {
       // The worker ships next to the app bundle (see the assets in angular.json)
       if (worker) setWorkerUrl(worker);
       const protocol = new Protocol();
-      const parts = Array.from({ length: grid.meta.basemap.parts }, (_, i) => `${DATA_BASE}basemap/part-${i}.png`);
+      const parts = Array.from({ length: grid.meta.basemap.parts }, (_, i) => `${this.data.base}basemap/part-${i}.png`);
       protocol.add(new PMTiles(new ChunkedPmtilesSource('basemap', parts, grid.meta.basemap.chunkSize)));
       addProtocol('pmtiles', protocol.tile);
       addProtocol('glyphs', async (params) => {
@@ -182,14 +182,14 @@ export class MapView implements AfterViewInit, OnDestroy {
       style: {
         version: 8,
         glyphs: 'glyphs://{fontstack}/{range}',
-        sprite: `${DATA_BASE}${BASEMAP_FILES[scheme].sprite}`,
+        sprite: `${this.data.base}${BASEMAP_FILES[scheme].sprite}`,
         sources: {
           protomaps: {
             type: 'vector',
             url: 'pmtiles://basemap',
             minzoom: DETAIL_ZOOM,
           },
-          ...worldSources(),
+          ...worldSources(this.data.base),
         },
         layers: withWorld(layers, MAP_COLOURS[scheme]),
       },
@@ -233,7 +233,7 @@ export class MapView implements AfterViewInit, OnDestroy {
         id: 'heat', type: 'raster', source: 'heat',
         paint: { 'raster-opacity': view.opacity, 'raster-resampling': view.smooth > 0 ? 'linear' : 'nearest', 'raster-fade-duration': 0 },
       }, 'roads_tunnels_other_casing');
-      map.addSource('municipalities', { type: 'geojson', data: `${DATA_BASE}data/municipalities.json` });
+      map.addSource('municipalities', { type: 'geojson', data: `${this.data.base}data/municipalities.json` });
       map.addLayer({
         id: 'municipalities', type: 'line', source: 'municipalities',
         paint: { 'line-color': MAP_COLOURS[scheme].municipalities, 'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.8, 12, 2], 'line-opacity': 0.55, 'line-dasharray': [3, 2] },
@@ -258,7 +258,7 @@ export class MapView implements AfterViewInit, OnDestroy {
   private layersFor(scheme: Scheme): Promise<LayerSpecification[]> {
     let layers = this.basemapLayers.get(scheme);
     if (!layers) {
-      layers = fetch(`${DATA_BASE}${BASEMAP_FILES[scheme].layers}`).then((response) => {
+      layers = fetch(`${this.data.base}${BASEMAP_FILES[scheme].layers}`).then((response) => {
         if (!response.ok) throw new Error(`The basemap style is missing (HTTP ${response.status})`);
         return response.json() as Promise<LayerSpecification[]>;
       });
@@ -289,7 +289,7 @@ export class MapView implements AfterViewInit, OnDestroy {
       for (const [property, value] of Object.entries(layer.paint)) map.setPaintProperty(layer.id, property as PaintProperty, value);
     }
     map.setPaintProperty('municipalities', 'line-color', colours.municipalities);
-    map.setSprite(`${DATA_BASE}${BASEMAP_FILES[scheme].sprite}`);
+    map.setSprite(`${this.data.base}${BASEMAP_FILES[scheme].sprite}`);
     this.styledScheme = scheme;
   }
 

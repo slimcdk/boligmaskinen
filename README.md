@@ -4,10 +4,10 @@ A self-hosted, map-first home search for Denmark. A full-screen map shows how we
 fits what you care about. You say what that is with blocks: small formulas over open data, whose
 numbers become sliders.
 
-**Status:** prototype. It covers all of Denmark with 13 layers of open data, keeps several maps of
-blocks, and runs its data jobs in the backend. Still to come: the jobs that build the data
-([milestone 2](docs/plan.md#milestone-2-the-data-pipeline-as-jobs); until then the pipeline's
-steps are run by hand) and data about homes ([milestone 4](docs/plan.md#milestone-4-homes)).
+**Status:** prototype. It covers all of Denmark with 13 layers of open data and keeps several maps
+of blocks. Its data jobs fetch the sources and build the data themselves, every night. Still to
+come: the map at full detail ([milestone 3](docs/plan.md#milestone-3-the-map-at-full-detail-and-speed))
+and data about homes ([milestone 4](docs/plan.md#milestone-4-homes)).
 
 | Folder | What it is |
 |---|---|
@@ -36,17 +36,24 @@ Without the dev container, Node 24 is needed (`frontend/.nvmrc`), and uv for the
 ## Running it
 
 One image runs the whole app: the backend serves the frontend, the data pack and the API on
-port 8080. PostGIS runs next to it. `compose.yaml` starts both:
+port 8080, and runs the data jobs. PostGIS runs next to it. `compose.yaml` starts both:
 
 ```sh
 echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" > .env
-mkdir -p data && cp -r /path/to/data-pack data/data-pack
 docker compose up -d                 # http://localhost:8080
 ```
 
-The data pack is not in the image; the app reads it from `./data/data-pack`. `BOLIGMASKINEN_TAG`
-picks the image: `master` (the default) is the newest build, and a release has its version, such
-as `v0.1.0`.
+- **The data builds itself.** A new install has no data. At its first start the jobs fetch every
+  source, and the grid, the basemap and the data pack follow; for all of Denmark that takes about
+  ten minutes. The data jobs (the gear in the panel) show how far they are.
+- **What it needs:**
+  - about 1 GB of downloads the first time;
+  - 3 GB of disk in `./data`;
+  - about 4 GB of memory while the grid is built (see #69).
+- **Settings:** `REGION` and `GRID_CELL_METRES` choose the area and the cell size (see
+  `backend/README.md`).
+- **The image:** `BOLIGMASKINEN_TAG` picks it. `master` (the default) is the newest build, and a
+  release has its version, such as `v0.1.0`.
 
 ## CI and releases
 

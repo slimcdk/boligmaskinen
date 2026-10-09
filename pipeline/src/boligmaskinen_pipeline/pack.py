@@ -77,7 +77,7 @@ def require(folder: Path, names: list[str], what: str) -> None:
 
 
 def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, world: Path, out: Path, pack_id: str | None = None) -> dict:
-    """Write the data pack to `out`, which must not exist yet; returns its meta.json."""
+    """Write the data pack to `out`, which must be empty or not exist yet; returns its meta.json."""
     meta = json.loads((grid / "meta.json").read_text(encoding="utf-8"))
     require(grid, [*meta["files"].values(), "municipalities.json"], "grid files")
     require(sprites, SPRITES, "sprites")
@@ -86,8 +86,8 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
     glyphs = sorted(fonts.glob("*/*.pbf"))
     if not glyphs:
         raise SystemExit(f"There are no fonts in {fonts}")
-    if out.exists():
-        raise SystemExit(f"{out} exists already")
+    if out.exists() and any(out.iterdir()):
+        raise SystemExit(f"{out} is not empty")
     (out / "data").mkdir(parents=True)
     (out / "basemap").mkdir()
 

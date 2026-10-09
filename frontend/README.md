@@ -175,8 +175,10 @@ browser.
 
 `public/data-pack/` is generated and git-ignored. It holds the byte-container PNGs
 for the basemap and the 13 feature layers, plus glyphs, sprites and the basemap styles.
-Build it with the pipeline's steps (`../pipeline/README.md`), whose `pack` step writes it,
-or copy the one a running app has built.
+Copy the one a running app has built (`DATA_DIR/data-pack`), or build it with the pipeline's
+steps (`../pipeline/README.md`). A pack the jobs built names itself in `meta.json` (`pack`), and
+the app reads its files from `data-packs/<pack>/`; with the backend running, `proxy.conf.json`
+sends those to it. Without a backend, remove `pack` from the copy's `meta.json`.
 
 `e2e/data-pack/` is a small data pack for Aarhus Kommune, which is committed. The
 end-to-end tests use it, and `npm start -- --configuration e2e` serves the app with it.

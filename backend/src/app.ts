@@ -1,6 +1,7 @@
 import compress from '@fastify/compress';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type pg from 'pg';
 import type { Config, LogLevel } from './config.ts';
@@ -10,6 +11,9 @@ import { defineJobs } from './jobs/definitions.ts';
 import { JobRunner } from './jobs/runner.ts';
 import type { JobDefinition } from './jobs/types.ts';
 import { Archive } from './pipeline/archive.ts';
+import { PROTOMAPS_URLS } from './pipeline/builds.ts';
+import { FETCH_JOBS, type SourceUrls } from './pipeline/sources.ts';
+import { dataPackRoutes } from './routes/data-pack.ts';
 import { jobRoutes } from './routes/jobs.ts';
 import { profileRoutes } from './routes/profile.ts';
 
@@ -20,13 +24,17 @@ declare module 'fastify' {
   }
 }
 
-export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'> & Partial<Pick<Config, 'timeZone' | 'dataDir' | 'pipelinePython'>> & {
+export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'>
+  & Partial<Pick<Config, 'timeZone' | 'dataDir' | 'pipelinePython' | 'pmtiles' | 'grid'>> & {
   /** False for no logs, as in the tests. */
   logLevel?: LogLevel | false;
   /** The data jobs; the tests bring their own. */
   jobs?: JobDefinition[];
   /** How often an idle job worker asks for work. */
   jobPollSeconds?: number;
+  /** Where the jobs fetch from; the tests point them at a server of their own. */
+  sourceUrls?: Partial<SourceUrls>;
+  protomapsUrls?: Partial<typeof PROTOMAPS_URLS>;
 };
 
 /** Angular's bundles have a hash in their name (main-V4FIJJ6A.js), so they never change. */
@@ -41,18 +49,27 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   const db = options.databaseUrl ? await openDatabase(options.databaseUrl, app.log) : null;
   app.decorate('db', db);
   const dataDir = options.dataDir ?? null;
+  // The data jobs switch the pack in through DATA_DIR/data-pack; without either, the frontend's build has one
+  const dataPackDir = options.dataPackDir ?? (dataDir ? join(dataDir, 'data-pack') : null);
   const definitions = options.jobs ?? defineJobs({
-    dataDir, python: options.pipelinePython ?? 'python3', revision: options.version?.revision || options.version?.version || 'dev', timeZone: options.timeZone,
+    dataDir, dataPackDir, python: options.pipelinePython ?? 'python3', pmtiles: options.pmtiles ?? 'pmtiles',
+    grid: options.grid ?? { cellMetres: 100, region: 'denmark' },
+    revision: options.version?.revision || options.version?.version || 'dev', timeZone: options.timeZone,
+    urls: options.sourceUrls, protomaps: options.protomapsUrls,
   });
   // What downloads left behind when the app stopped during one; no job runs yet
   if (db && dataDir) await new Archive(db, dataDir).cleanTmp();
   const runner = db && options.databaseUrl
     ? await JobRunner.start({
       db, databaseUrl: options.databaseUrl, definitions, timeZone: options.timeZone ?? 'Europe/Copenhagen',
-      // Without a data pack folder of its own, the app serves the one in the frontend's build
-      dataPackDir: options.dataPackDir ?? join(options.staticDir, 'data-pack'), log: app.log, pollSeconds: options.jobPollSeconds,
+      dataPackDir: dataPackDir ?? join(options.staticDir, 'data-pack'), log: app.log, pollSeconds: options.jobPollSeconds,
     })
     : null;
+  // A new install: the jobs fetch everything, and the builds follow
+  if (runner && dataDir && dataPackDir && !options.jobs && !(await stat(join(dataPackDir, 'data', 'meta.json')).then(() => true, () => false))) {
+    app.log.info('There is no data pack yet, so the data jobs fetch every source now');
+    await runner.startAll(Object.keys(FETCH_JOBS), 'There is no data pack yet, so every source is fetched now');
+  }
   app.addHook('onClose', async () => {
     await runner?.stop();
     await db?.end();
@@ -76,14 +93,12 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       else if (path.endsWith('index.html')) reply.header('cache-control', 'no-cache');
     },
   });
-  if (options.dataPackDir) {
-    await app.register(fastifyStatic, { root: options.dataPackDir, prefix: '/data-pack/', decorateReply: false });
-  }
+  if (dataPackDir) await dataPackRoutes(app, dataPackDir, dataDir ? join(dataDir, 'packs') : null);
 
   // The frontend is a single page, so its own paths get index.html; the API and data do not
   app.setNotFoundHandler((request, reply) => {
     const path = request.url.split('?')[0];
-    if (request.method !== 'GET' || path.startsWith('/api/') || path.startsWith('/data-pack/')) {
+    if (request.method !== 'GET' || path.startsWith('/api/') || path.startsWith('/data-pack/') || path.startsWith('/data-packs/')) {
       return reply.code(404).send(apiError(404, `Not found: ${path}`));
     }
     return reply.sendFile('index.html');

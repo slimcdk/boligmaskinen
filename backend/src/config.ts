@@ -17,6 +17,10 @@ export interface Config {
   dataDir: string | null;
   /** The Python that has the data pipeline installed (pipeline/.venv/bin/python). */
   pipelinePython: string;
+  /** go-pmtiles, which cuts the region's basemap out of Protomaps' planet build. */
+  pmtiles: string;
+  /** The grid the data is built on: its cell size, and the municipalities it covers. */
+  grid: GridSettings;
   /** PostgreSQL with PostGIS. Without it the app runs, but the parts that need the database say so. */
   databaseUrl: string | null;
   /** The time zone the job schedules are in. */
@@ -25,6 +29,16 @@ export interface Config {
   /** Which version is running; null lets the frontend fall back to its build-info.json. */
   version: BuildInfo | null;
 }
+
+export interface GridSettings {
+  /** GRID_CELL_METRES: 100 by default. */
+  cellMetres: number;
+  /** REGION: denmark, oestjylland, aarhus, or municipality codes such as 751,706. */
+  region: string;
+}
+
+/** The regions the pipeline's grid step knows by name (pipeline/src/boligmaskinen_pipeline/grid.py). */
+export const REGIONS: Record<string, string> = { denmark: 'all of Denmark', oestjylland: 'East Jutland', aarhus: 'Aarhus Kommune' };
 
 /** Every wrong setting at once, so they can all be fixed in one go. */
 export class ConfigError extends Error {
@@ -64,6 +78,15 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   const dataDir = env['DATA_DIR'] || null;
   if (dataDir && !isAbsolute(dataDir)) problems.push(`DATA_DIR has to be an absolute path, not "${dataDir}"`);
 
+  const cellMetres = Number(env['GRID_CELL_METRES'] || 100);
+  if (!Number.isInteger(cellMetres) || cellMetres < 10 || cellMetres > 1000) {
+    problems.push(`GRID_CELL_METRES has to be a whole number of metres from 10 to 1000, not "${env['GRID_CELL_METRES']}"`);
+  }
+  const region = env['REGION'] || 'denmark';
+  if (!(region in REGIONS) && !/^\d{3}(,\d{3})*$/.test(region)) {
+    problems.push(`REGION has to be ${Object.keys(REGIONS).join(', ')} or municipality codes such as 751,706, not "${region}"`);
+  }
+
   if (problems.length) throw new ConfigError(problems);
   return {
     port,
@@ -72,6 +95,8 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     dataPackDir: env['DATA_PACK_DIR'] || null,
     dataDir,
     pipelinePython: env['PIPELINE_PYTHON'] || fileURLToPath(new URL('../../pipeline/.venv/bin/python', import.meta.url)),
+    pmtiles: env['PMTILES'] || 'pmtiles',
+    grid: { cellMetres, region },
     databaseUrl,
     timeZone,
     logLevel,
