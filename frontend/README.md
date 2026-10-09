@@ -20,6 +20,10 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   **A requirement** removes the cells where it is false.
 - The blocks are averaged by importance into 0–100 points. The weighting and the heatmap
   are always the result, never blocks.
+- **Off the main thread.** The weighting, the smoothing and the colours are computed in a Web
+  Worker, which holds the data layers. The page sends it the blocks and draws the pixels it sends
+  back, so the panel answers while a slider moves. When something changes during a drawing, only
+  the newest state is drawn next.
 - **Like free values in GeoGebra**, some `let` lines become controls in the side panel:
   - a number or `slider(value, min, max, step)` becomes a slider (distances on a
     square-root scale);
@@ -233,7 +237,7 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 | `../packages/engine/` | The weighting engine, shared with the backend and imported as `@boligmaskinen/engine` (a path in `tsconfig.json`). See its README. |
 | `src/app/data/` | Loading the data pack (byte containers, chunked PMTiles source). |
 | `src/app/state/` | The maps with their blocks and groups, the places and the map settings as signals, persisted in localStorage. `migrate.ts` carries over the earlier prototypes' choices. |
-| `src/app/map/` | MapLibre map, heatmap rendering (`heat.service.ts`) and the points breakdown. |
+| `src/app/map/` | MapLibre map, and the heatmap: `heat-engine.ts` weighs the blocks, smooths and colours the cells and explains a cell's points; it runs in a Web Worker (`heat.worker.ts`), and `heat.service.ts` sends it the blocks and puts its pixels on the map. |
 | `src/app/panel/` | The two panels: the map panel (the result and the map settings) and the weighting panel (the map switcher, the groups with their block rows and controls, the places, the footer), and their dialogs. |
 | `src/app/sheet/` | The bottom sheet the weighting panel is in on a phone. |
 | `src/app/admin/` | The data-jobs dialog, its API client, the job model it shares with the backend, and the simulated preview. |

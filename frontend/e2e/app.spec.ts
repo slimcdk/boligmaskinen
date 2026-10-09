@@ -44,6 +44,18 @@ test('a suggestion adds a block and colours the map', async ({ page }) => {
   await expect(page.locator('.maplibregl-ctrl-attrib')).toHaveCount(0);
 });
 
+test('a click on the map explains the points of the spot', async ({ page }) => {
+  await open(page);
+  await page.locator('mat-chip', { hasText: 'Forest' }).click();
+  await expect(result(page)).toHaveAttribute('aria-label', /cells/);
+  // Aarhus C, in the middle of the test data pack: the weighting runs in the heat worker, which explains it too
+  await page.goto(`${page.url().split('#')[0]}#map=13/56.1567/10.2108`);
+  await page.locator('.maplibregl-canvas').click({ position: { x: 900, y: 450 } });
+  const popup = page.locator('.maplibregl-popup');
+  await expect(popup.locator('h3')).toHaveText(/^(\d+ points|Left out)$/);
+  await expect(popup.locator('tr').first()).toContainText('Forest');
+});
+
 test('moving a slider rewrites the code and changes the result', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Supermarket' }).click();

@@ -37,7 +37,8 @@
             "styles": [
               "src/styles.scss"
             ],
-            "baseHref": "./"
+            "baseHref": "./",
+            "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
             "production": {

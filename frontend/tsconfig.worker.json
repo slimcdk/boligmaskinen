@@ -1,0 +1,11 @@
+/* The heat worker (src/app/map/heat.worker.ts) */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2022", "webworker"],
+    "types": []
+  },
+  "include": [
+    "src/**/*.worker.ts"
+  ]
+}

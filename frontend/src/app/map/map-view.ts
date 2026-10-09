@@ -249,7 +249,7 @@ export class MapView implements AfterViewInit, OnDestroy {
         this.store.placing.set(false);
         return;
       }
-      this.showBreakdown(event.lngLat);
+      void this.showBreakdown(event.lngLat);
     });
     this.syncMarkers(this.store.places());
   }
@@ -302,8 +302,8 @@ export class MapView implements AfterViewInit, OnDestroy {
     this.map.triggerRepaint();
   }
 
-  private showBreakdown(lngLat: LngLat): void {
-    const breakdown = this.heat.explain(this.heat.cellAt(lngLat.lng, lngLat.lat));
+  private async showBreakdown(lngLat: LngLat): Promise<void> {
+    const breakdown = await this.heat.explain(this.heat.cellAt(lngLat.lng, lngLat.lat));
     if (!breakdown || !this.map) return;
     this.popup?.remove();
     this.popup = new Popup({ maxWidth: '340px' }).setLngLat(lngLat).setHTML(this.popupHtml(breakdown)).addTo(this.map);
