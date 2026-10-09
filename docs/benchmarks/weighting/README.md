@@ -20,7 +20,7 @@ Run them again with:
 ```sh
 npx esbuild ../../../packages/engine/src/blocks.ts --bundle --format=esm --platform=node --outfile=blocks.mjs
 node bench.mjs                       # Node 24
-uv run --project ../../../pilot python -I bench_numpy.py
+uv run --project ../../../pipeline python -I bench_numpy.py
 go run bench.go
 rustc -C opt-level=3 -C target-cpu=native -o bench_rs bench.rs && ./bench_rs
 ```

@@ -3,17 +3,18 @@
 Avoids downloading multi-gigabyte archives when only a few members are needed.
 
 Usage:
-    python remote_zip.py list <url>
-    python remote_zip.py extract <url> <regex> <out_dir>
+    python -m boligmaskinen_pipeline remote-zip list <url>
+    python -m boligmaskinen_pipeline remote-zip extract <url> <regex> <out_dir>
 """
 
 import io
 import re
-import sys
 import zipfile
 from pathlib import Path
 
 import httpx
+
+from .progress import log
 
 
 class HttpRangeFile(io.RawIOBase):
@@ -53,6 +54,8 @@ class HttpRangeFile(io.RawIOBase):
         end = self.size - 1 if n is None or n < 0 else min(self.size, self.pos + n) - 1
         response = self.client.get(self.url, headers={"Range": f"bytes={self.pos}-{end}"})
         response.raise_for_status()
+        if response.status_code != 206:
+            raise RuntimeError(f"The server ignored the byte range and answered {response.status_code}")
         data = response.content
         self.pos += len(data)
         return data
@@ -63,17 +66,20 @@ class HttpRangeFile(io.RawIOBase):
         return len(data)
 
 
-def main() -> None:
-    command, url = sys.argv[1], sys.argv[2]
+def cli(argv: list[str]) -> None:
+    if len(argv) < 2 or argv[0] not in ("list", "extract") or (argv[0] == "extract" and len(argv) != 4):
+        raise SystemExit(__doc__)
+    command, url = argv[0], argv[1]
     with httpx.Client(timeout=120, follow_redirects=True) as client:
         remote = io.BufferedReader(HttpRangeFile(url, client), buffer_size=1 << 20)
         with zipfile.ZipFile(remote) as archive:
             if command == "list":
                 for info in archive.infolist():
-                    print(f"{info.file_size:>14,}  {info.filename}")
+                    log(f"{info.file_size:>14,}  {info.filename}")
                 return
-            pattern, out_dir = re.compile(sys.argv[3]), Path(sys.argv[4])
+            pattern, out_dir = re.compile(argv[2]), Path(argv[3])
             out_dir.mkdir(parents=True, exist_ok=True)
+            found = 0
             for info in archive.infolist():
                 if info.is_dir() or not pattern.search(info.filename):
                     continue
@@ -81,8 +87,7 @@ def main() -> None:
                 with archive.open(info) as source, open(target, "wb") as sink:
                     while chunk := source.read(1 << 20):
                         sink.write(chunk)
-                print(f"extracted {info.filename} -> {target} ({info.file_size:,} bytes)")
-
-
-if __name__ == "__main__":
-    main()
+                found += 1
+                log(f"Extracted {info.filename} ({info.file_size:,} bytes)")
+            if not found:
+                raise SystemExit(f"No member of the archive matches {argv[2]}")

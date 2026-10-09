@@ -169,15 +169,14 @@ browser.
 ## Requirements
 
 - Node.js 22.22.3 or newer (see `.nvmrc`). Angular 22 does not run on Node 20.
-- The data pack produced by the pilot pipeline in `../pilot` (see below).
+- The data pack, which the pipeline in `../pipeline` builds (see below).
 
 ## Data pack
 
 `public/data-pack/` is generated and git-ignored. It holds the byte-container PNGs
 for the basemap and the 13 feature layers, plus glyphs, sprites and the basemap styles.
-Build it with the pilot pipeline (`../pilot/README.md`) and `../pilot/web/pack_site.py`,
-then copy the output's `basemap/`, `data/`, `sprites/`, `world/`, `fonts.json` and
-`style-layers*.json` into `public/data-pack/`.
+Build it with the pipeline's steps (`../pipeline/README.md`), whose `pack` step writes it,
+or copy the one a running app has built.
 
 `e2e/data-pack/` is a small data pack for Aarhus Kommune, which is committed. The
 end-to-end tests use it, and `npm start -- --configuration e2e` serves the app with it.

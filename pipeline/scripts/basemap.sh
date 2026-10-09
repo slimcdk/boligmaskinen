@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Extract the Protomaps basemap for the area build_grid.py outlined (basemap-region.geojson).
+# Extract the Protomaps basemap for the area the grid step outlined (basemap-region.geojson), by hand.
 # Only the tiles that touch the outline are fetched, with HTTP range requests on the daily planet build.
-# Usage: pipeline/basemap.sh <work_dir> <basemap-region.geojson> <out.pmtiles> [maxzoom]
+# Usage: scripts/basemap.sh <work_dir> <basemap-region.geojson> <out.pmtiles> [maxzoom]
 set -euo pipefail
 
 WORK="${1:?usage: basemap.sh <work_dir> <region.geojson> <out.pmtiles> [maxzoom]}"

@@ -1,13 +1,15 @@
-"""Extract the OpenStreetMap layers the pilot needs from a Geofabrik extract.
+"""Extract the OpenStreetMap layers the grid needs from a Geofabrik extract.
 
-Writes one GeoPackage (EPSG:4326) with a layer per theme, clipped to a lon/lat
-bounding box around Denmark, plus a NumPy file with address points.
+Writes one GeoPackage (EPSG:4326) with a layer per theme, clipped to a lon/lat bounding box
+around Denmark, and a NumPy file with the address points.
 
 Usage:
-    python extract_osm.py <denmark-latest.osm.pbf> <work_dir> <out.gpkg> <addresses.npy>
+    python -m boligmaskinen_pipeline osm <denmark-latest.osm.pbf> <out_dir>
+
+<out_dir> gets layers.gpkg and addresses.npy.
 """
 
-import sys
+import argparse
 import time
 from pathlib import Path
 
@@ -15,6 +17,8 @@ import geopandas as gpd
 import numpy as np
 import osmium
 import shapely
+
+from .progress import log, progress
 
 BBOX = (7.70, 54.40, 15.50, 57.95)  # lon/lat, all of Denmark including Bornholm, plus a buffer
 
@@ -36,9 +40,15 @@ FEATURE_TAGS = [
     *[("highway", key) for key in ROAD_CLASSES],
 ]
 
+# Every theme, with the columns it has besides the geometry, so each layer exists even when empty
+THEMES: dict[str, list[str]] = {
+    "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [],
+    "supermarket": ["name"], "station": ["name"], "municipality": ["name", "ref"], "country": [], "road": ["road_class"],
+}
+
 
 def classify(tags) -> str | None:
-    """Map OSM tags to a pilot theme."""
+    """Map OSM tags to a theme."""
     landuse, natural = tags.get("landuse"), tags.get("natural")
     if landuse == "forest" or natural == "wood":
         return "forest"
@@ -75,7 +85,7 @@ def filter_features(pbf: Path, filtered: Path) -> None:
 def build_layers(filtered: Path) -> dict[str, list[dict]]:
     """Turn filtered OSM objects into rows of geometry and attributes per theme."""
     wkb = osmium.geom.WKBFactory()
-    rows: dict[str, list[dict]] = {}
+    rows: dict[str, list[dict]] = {theme: [] for theme in THEMES}
     processor = osmium.FileProcessor(str(filtered)).with_locations().with_areas()
     for obj in processor:
         theme = classify(obj.tags)
@@ -93,14 +103,14 @@ def build_layers(filtered: Path) -> dict[str, list[dict]]:
                 continue
         except (RuntimeError, osmium.InvalidLocationError):
             continue
-        row = {"geometry": shapely.from_wkb(geom), "osm_type": kind}
+        row = {"geometry": shapely.from_wkb(geom)}
         if theme == "road":
             row["road_class"] = ROAD_CLASSES[obj.tags["highway"]]
         if theme in ("municipality", "station", "supermarket"):
             row["name"] = obj.tags.get("name", "")
         if theme == "municipality":
             row["ref"] = obj.tags.get("ref", "")  # the municipality code Danmarks Statistik uses
-        rows.setdefault(theme, []).append(row)
+        rows[theme].append(row)
     return rows
 
 
@@ -112,36 +122,44 @@ def extract_addresses(pbf: Path, out: Path) -> int:
         location = obj.location
         if location.valid() and west <= location.lon <= east and south <= location.lat <= north:
             points.append((location.lon, location.lat))
-    np.save(out, np.asarray(points, dtype=np.float64))
+    np.save(out, np.asarray(points, dtype=np.float64).reshape(-1, 2))
     return len(points)
 
 
-def main() -> None:
-    pbf, work_dir, out_gpkg, out_addresses = (Path(arg) for arg in sys.argv[1:5])
-    work_dir.mkdir(parents=True, exist_ok=True)
-    filtered = work_dir / "features.osm.pbf"
-
+def extract(pbf: Path, out_dir: Path) -> dict[str, int]:
+    """Write layers.gpkg and addresses.npy for the extract; returns the number of rows per layer."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filtered = out_dir / "features.osm.pbf"
     started = time.time()
-    if not filtered.exists():
-        filter_features(pbf, filtered)
-    print(f"filtered features in {time.time() - started:.0f}s ({filtered.stat().st_size / 1e6:.1f} MB)")
+    filter_features(pbf, filtered)
+    log(f"Filtered the extract in {time.time() - started:.0f} s ({filtered.stat().st_size / 1e6:.1f} MB)")
+    progress(0.4)
 
     started = time.time()
     rows = build_layers(filtered)
+    filtered.unlink()
     clip = shapely.box(*BBOX)
-    if out_gpkg.exists():
-        out_gpkg.unlink()
-    for theme, theme_rows in rows.items():
-        frame = gpd.GeoDataFrame(theme_rows, geometry="geometry", crs="EPSG:4326")
+    out_gpkg = out_dir / "layers.gpkg"
+    out_gpkg.unlink(missing_ok=True)
+    counts = {}
+    for theme, columns in THEMES.items():
+        frame = gpd.GeoDataFrame(rows[theme], columns=["geometry", *columns], geometry="geometry", crs="EPSG:4326")
         frame = frame[frame.intersects(clip)]
         frame.to_file(out_gpkg, layer=theme, driver="GPKG")
-        print(f"  {theme:<13} {len(frame):>8,}")
-    print(f"built layers in {time.time() - started:.0f}s")
+        counts[theme] = len(frame)
+    log(f"Built the layers in {time.time() - started:.0f} s: " + ", ".join(f"{theme} {count:,}" for theme, count in counts.items()))
+    progress(0.8)
 
     started = time.time()
-    count = extract_addresses(pbf, out_addresses)
-    print(f"addresses: {count:,} in {time.time() - started:.0f}s")
+    counts["addresses"] = extract_addresses(pbf, out_dir / "addresses.npy")
+    log(f"Addresses: {counts['addresses']:,} in {time.time() - started:.0f} s")
+    progress(1)
+    return counts
 
 
-if __name__ == "__main__":
-    main()
+def cli(argv: list[str]) -> None:
+    parser = argparse.ArgumentParser(prog="osm", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("pbf", type=Path)
+    parser.add_argument("out_dir", type=Path)
+    args = parser.parse_args(argv)
+    extract(args.pbf, args.out_dir)

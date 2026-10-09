@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Download every source the pilot uses, for all of Denmark, into <work>/raw.
-# Usage: pipeline/download.sh <work_dir>
-# Requires: curl, python3, uv (for remote_zip.py), node/npm (for the basemap style).
+# Download every source the grid uses, for all of Denmark, into <work>/raw, by hand. The app's data
+# jobs replace this script.
+# Usage: scripts/download.sh <work_dir>
+# Requires: curl, python3, uv (for the remote-zip step), node/npm (for the basemap style).
 set -euo pipefail
 
 WORK="${1:?usage: download.sh <work_dir>}"
@@ -14,7 +15,7 @@ curl -sSL -o "$RAW/osm/denmark-latest.osm.pbf" "https://download.geofabrik.de/eu
 
 # Miljøstyrelsen road noise 2022 (EU strategic noise maps, Lden). Only the 131 MB road layer is pulled
 # out of the 2 GB archive with HTTP range requests.
-uv run --project "$HERE/.." python -I "$HERE/remote_zip.py" extract \
+uv run --project "$HERE/.." python -I -m boligmaskinen_pipeline remote-zip extract \
   "https://files-miljoegis.mim.dk/noise2022/2022_noise_shp.zip" '^(.*/)?eu_2022_vej_4m\.(shp|shx|dbf|prj|cpg)$' "$RAW/mst/eu_vej_4m"
 
 # Plandata.dk zone map (byzone and sommerhusområde polygons; everything else on land is landzone).
@@ -41,7 +42,7 @@ curl -sS -b "$RAW/stil/cookies.txt" -X POST --data @"$RAW/stil/post.txt" -H "Con
 curl -sSL -o "$RAW/ens/vinddata.xlsx" "https://ens.dk/media/8748/download"
 
 # Danmarks Statistik: municipal tax 2026, home burglaries 2025, population (latest quarter).
-# "*" returns every area (country, regions, municipalities); build_grid.py picks the municipalities.
+# "*" returns every area (country, regions, municipalities); the grid step picks the municipalities.
 K='"*"'
 statbank() { curl -sS -X POST "https://api.statbank.dk/v1/data" -H "Content-Type: application/json" -d "$1" -o "$2"; }
 statbank "{\"table\":\"PSKAT\",\"format\":\"JSONSTAT\",\"lang\":\"da\",\"variables\":[{\"code\":\"OMRÅDE\",\"values\":[$K]},{\"code\":\"SKATPCT\",\"values\":[\"KOM\",\"GRUND\"]},{\"code\":\"Tid\",\"values\":[\"2026\"]}]}" "$RAW/dst/pskat.json"
@@ -54,7 +55,7 @@ for f in physical/ne_50m_land physical/ne_50m_lakes cultural/ne_50m_admin_0_boun
   curl -sSL -o "$RAW/world/$(basename "$f").zip" "https://naciscdn.org/naturalearth/50m/$f.zip"
 done
 
-# go-pmtiles, for pipeline/basemap.sh (the basemap is extracted after build_grid.py, which writes its outline)
+# go-pmtiles, for scripts/basemap.sh (the basemap is extracted after the grid step, which writes its outline)
 curl -sSL -o "$WORK/tools/pmtiles.tgz" "https://github.com/protomaps/go-pmtiles/releases/download/v1.31.2/go-pmtiles_1.31.2_Linux_x86_64.tar.gz"
 tar -xzf "$WORK/tools/pmtiles.tgz" -C "$WORK/tools" pmtiles
 
@@ -92,5 +93,16 @@ def walk(node):
 json.dump(walk(json.load(open(sys.argv[1]))), open(sys.argv[2], "w"), separators=(",", ":"))
 PY
 done
+
+# What the grid step reads (python -m boligmaskinen_pipeline grid "$WORK/inputs.json" ...), relative to $WORK
+cat > "$WORK/inputs.json" <<'JSON'
+{
+  "osm_layers": "work/osm/layers.gpkg", "osm_addresses": "work/osm/addresses.npy",
+  "noise": "raw/mst/eu_vej_4m/eu_2022_vej_4m.shp", "zones": "raw/plandata/zonekort.geojson",
+  "institutions": "raw/stil/institutions.json", "daycare": "raw/stil/dagtilbud_LinkButtonAnv.csv",
+  "turbines": "raw/ens/vinddata.xlsx",
+  "tax": "raw/dst/pskat.json", "burglaries": "raw/dst/straf.json", "population": "raw/dst/folk.json"
+}
+JSON
 
 echo "Downloaded into $RAW"

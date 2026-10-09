@@ -88,6 +88,20 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  pipeline:
+    name: Pipeline tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v7
+      # uv installs the Python version pipeline/.python-version asks for
+      - run: pipx install uv==0.11.6
+      - run: uv sync --frozen
+      - run: uv run pytest
+
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-24.04
@@ -138,6 +152,11 @@ jobs:
           mkdir -p data
           cp -r frontend/e2e/data-pack data/data-pack
           docker compose up -d --wait --wait-timeout 180
+      - name: Check the pipeline in the image
+        run: |
+          docker run --rm --entrypoint /app/pipeline/.venv/bin/python boligmaskinen:ci -I -c \
+            'import boligmaskinen_pipeline.grid, boligmaskinen_pipeline.osm, boligmaskinen_pipeline.pack, boligmaskinen_pipeline.world'
+          docker run --rm --entrypoint pmtiles boligmaskinen:ci version
       - name: Check that it answers
         run: |
           curl -fsS http://localhost:8080/api/health | tee /dev/stderr | grep -q '"database":"ok"'
@@ -175,7 +194,7 @@ jobs:
 
   image:
     name: Container image
-    needs: [engine, frontend, backend, e2e, compose]
+    needs: [engine, frontend, backend, pipeline, e2e, compose]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-24.04
     timeout-minutes: 20

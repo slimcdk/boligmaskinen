@@ -1,0 +1,28 @@
+[project]
+name = "boligmaskinen-pipeline"
+version = "0.1.0"
+description = "Builds Boligmaskinen's data pack from open data: the OSM extract, the grid, the world map and the pack"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "geopandas>=1.0",
+    "pyogrio>=0.10",
+    "shapely>=2.0",
+    "pyproj>=3.7",
+    "numpy>=2.0",
+    "scipy>=1.14",
+    "rasterio>=1.4",
+    "osmium>=4.0",
+    "openpyxl>=3.1",
+    "httpx>=0.28",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
