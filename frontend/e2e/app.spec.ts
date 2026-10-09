@@ -248,27 +248,43 @@ test('a link opens the same view', async ({ page }) => {
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test('the panel lies over the map and steps aside to drop a place', async ({ page }) => {
+  test('the panel is a bottom sheet, which goes down while a place is dropped', async ({ page }) => {
     await open(page);
-    const hide = page.getByRole('button', { name: 'Hide panel' });
-    await expect(hide).toBeHidden();
-    await page.getByRole('button', { name: 'What matters to you' }).tap();
+    // It starts down, with only its head over the map
+    const handle = page.locator('app-bottom-sheet .handle');
+    await expect(handle).toHaveAttribute('aria-expanded', 'false');
+    await handle.tap();
+    await expect(handle).toHaveAttribute('aria-expanded', 'true');
     await page.locator('mat-chip', { hasText: 'Forest' }).tap();
     await expect(block(page, 'Forest')).toBeVisible();
     await page.getByRole('button', { name: 'Add place' }).tap();
     await expect(page.locator('.placing-hint')).toContainText('Click or tap the map where the place is');
-    await expect(hide).toBeHidden();
+    await expect(handle).toHaveAttribute('aria-expanded', 'false');
     const map = (await page.locator('.maplibregl-canvas').boundingBox())!;
-    await page.locator('.maplibregl-canvas').tap({ position: { x: map.width / 2, y: map.height / 2 } });
-    // The panel comes back with the new place's block
+    await page.locator('.maplibregl-canvas').tap({ position: { x: map.width / 2, y: map.height / 3 } });
+    // It comes back up with the new place's block
+    await expect(handle).toHaveAttribute('aria-expanded', 'true');
     await expect(block(page, 'Place 1')).toBeVisible();
-    await expect(hide).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
+  });
+
+  test('the sheet follows its handle up, and settles near the top', async ({ page }) => {
+    await open(page);
+    const sheet = page.locator('app-bottom-sheet');
+    const handle = (await page.locator('app-bottom-sheet .handle').boundingBox())!;
+    const x = handle.x + handle.width / 2;
+    await page.mouse.move(x, handle.y + handle.height / 2);
+    await page.mouse.down();
+    for (let y = handle.y; y > 40; y -= 60) await page.mouse.move(x, y, { steps: 3 });
+    await page.mouse.up();
+    // All the way up, with a strip of map left above it
+    await expect.poll(async () => (await sheet.boundingBox())!.y).toBeLessThan(80);
+    await expect(page.getByRole('heading', { name: 'Where would you like to live?' })).toBeVisible();
   });
 
   test('the data jobs fit the screen', async ({ page }) => {
     await open(page);
-    await page.getByRole('button', { name: 'What matters to you' }).tap();
+    await page.locator('app-bottom-sheet .handle').tap();
     await page.getByRole('button', { name: 'Data jobs' }).tap();
     const run = page.getByRole('button', { name: 'Run OpenStreetMap now' });
     await expect(run).toBeInViewport();

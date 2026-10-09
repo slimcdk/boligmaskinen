@@ -4,25 +4,57 @@
 }
 
 .shell {
-  height: 100%;
-}
-
-.side {
-  width: min(380px, 92vw);
-  border-right: 1px solid var(--mat-sys-outline-variant);
-}
-
-.content {
   position: relative;
+  height: 100%;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .map-area {
-  position: relative;
-  flex: 1 1 0;
+  position: absolute;
+  inset: 0;
+}
+
+// The panel floats over the map like Home Assistant's: 12px from the edges, M3's large corners and
+// elevation, and only as tall as its content, up to the window. Its body scrolls inside it.
+.floating {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  width: 380px;
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--mat-sys-corner-large);
+  box-shadow: var(--mat-sys-level3);
+  background: var(--mat-sys-surface-container-low);
+  outline: none;
+  transition: transform 250ms cubic-bezier(0.2, 0, 0, 1), visibility 0s;
+
+  &:not(.open) {
+    transform: translateX(calc(-100% - 24px));
+    visibility: hidden;
+    transition: transform 200ms cubic-bezier(0.3, 0, 1, 1), visibility 0s 200ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating,
+  .floating:not(.open) {
+    transition: none;
+  }
+}
+
+app-panel {
+  flex: 1 1 auto;
   min-height: 0;
+  height: auto;
+}
+
+// In the sheet, the handle lowers the panel; it has no button of its own to hide it
+.sheet ::ng-deep button[aria-label='Hide panel'] {
+  display: none;
 }
 
 .open-panel {
@@ -36,14 +68,15 @@
 .placing-hint {
   position: absolute;
   top: 12px;
-  left: 50%;
+  // In the middle of the map that can be seen beside the panel
+  left: calc(50% + var(--map-inset-left, 0px) / 2);
   transform: translateX(-50%);
-  z-index: 2;
+  z-index: 4;
   display: flex;
   align-items: center;
   gap: 4px;
   width: max-content;
-  max-width: calc(100% - 24px);
+  max-width: calc(100% - 24px - var(--map-inset-left, 0px));
   box-sizing: border-box;
   background: var(--mat-sys-inverse-surface);
   color: var(--mat-sys-inverse-on-surface);
@@ -53,4 +86,3 @@
   box-shadow: var(--mat-sys-level2);
   --mat-button-text-label-text-color: var(--mat-sys-inverse-primary);
 }
-

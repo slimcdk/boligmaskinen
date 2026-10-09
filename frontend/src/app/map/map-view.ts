@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import {
   addProtocol, CanvasSource, LayerSpecification, LngLat, LngLatLike, Map as MapLibreMap, Marker, NavigationControl, Popup,
   setWorkerUrl, SourceSpecification,
@@ -92,6 +92,11 @@ export class MapView implements AfterViewInit, OnDestroy {
   private readonly heat = inject(HeatService);
   protected readonly colours = computed(() => MAP_COLOURS[this.theme.scheme()]);
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('host');
+  /**
+   * How much of the map the panel covers, in pixels: the left side on a larger screen, the bottom on a
+   * phone. The map centres what it shows in the rest, and moves with the panel.
+   */
+  readonly inset = input<{ left: number; bottom: number }>({ left: 0, bottom: 0 });
 
   private map: MapLibreMap | null = null;
   /** Shown when the map fails before it has loaded, e.g. when the host blocks its worker. */
@@ -129,6 +134,10 @@ export class MapView implements AfterViewInit, OnDestroy {
       // Start the map once the grid (and its bounds) is known
       if (this.data.grid() && !this.map) void this.createMap();
     });
+    effect(() => {
+      const { left, bottom } = this.inset();
+      untracked(() => this.map?.easeTo({ padding: { top: 0, right: 0, bottom, left }, duration: 300 }));
+    });
   }
 
   ngAfterViewInit(): void {
@@ -137,11 +146,6 @@ export class MapView implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.map?.remove();
-  }
-
-  /** Call after the container changed size, e.g. when the side panel opens or closes. */
-  resize(): void {
-    this.map?.resize();
   }
 
   private async createMap(): Promise<void> {
@@ -200,6 +204,9 @@ export class MapView implements AfterViewInit, OnDestroy {
     });
     this.map = map;
     this.styledScheme = scheme;
+    // What the panel covers is left out of the view; a link with a view of its own keeps it
+    map.setPadding({ top: 0, right: 0, ...this.inset() });
+    if (!/[#&]map=/.test(location.hash)) map.fitBounds([[b.west, b.south], [b.east, b.north]], { padding: 24, duration: 0 });
     // Until the map has loaded, report what goes wrong instead of showing an empty map
     const report = (reason: unknown) => this.problem.set(reason instanceof Error ? reason.message : String(reason));
     const onError = (event: ErrorEvent) => report(event.error ?? event.message);

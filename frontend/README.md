@@ -84,17 +84,23 @@ browser.
 - **Ids are random** (`newId` in the engine), so maps from two devices never share one.
   `crypto.randomUUID` is not used, since it needs HTTPS and a home server on the LAN has none.
 
-## Phones and tablets
+## The panel: floating, or a bottom sheet on phones
 
-- **Up to 700 px wide** the panel lies over the map and starts closed; "What matters to you" opens
-  it. Wider screens, tablets included, have the panel beside the map.
-- **Dropping a place on a phone:** the panel steps aside while the map is tapped, and comes back
-  with the new place's block. The hint at the top can cancel.
-- The panel's footer and the legend get smaller on small screens, and the data jobs show each task
-  as a block of its own when their dialog is narrow.
+- **On a larger screen the panel floats over the map**, as Home Assistant's map does: 12 px from the
+  window's edges, with M3's large corners and elevation, and only as tall as its content. The map runs
+  under it to the edges, and keeps its view in the part beside the panel (MapLibre's padding), so
+  opening or closing the panel moves the map with it. "What matters to you" opens it again, and
+  Escape inside it closes it.
+- **On a phone (up to 700 px) the panel is an M3 bottom sheet** (`src/app/sheet/bottom-sheet.ts`). It
+  starts down, with only its head over the map, and its handle raises it to half the screen or near
+  the top: drag it to any height and it settles at the nearest, or tap it (or Enter or Space) to go
+  up and down. The map stays usable above it and keeps its view above it.
+- **Dropping a place on a phone:** the sheet goes down while the map is tapped, and comes back up with
+  the new place's block. The hint at the top can cancel.
+- The legend is gone from the map; the panel's footer and the data jobs adapt to a narrow screen.
 - The weight sliders have no tooltip on touch screens, which would stop the panel from scrolling
   under a finger.
-- The end-to-end tests run the panel and the data jobs at 390 × 844 with touch.
+- The end-to-end tests run the sheet and the data jobs at 390 × 844 with touch.
 
 ## Light and dark mode
 
