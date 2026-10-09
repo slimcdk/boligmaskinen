@@ -19,6 +19,8 @@ export interface Config {
   pipelinePython: string;
   /** go-pmtiles, which cuts the region's basemap out of Protomaps' planet build. */
   pmtiles: string;
+  /** pg_dump of PostgreSQL 18, for the nightly backup. */
+  pgDump: string;
   /** The grid the data is built on: its cell size, and the municipalities it covers. */
   grid: GridSettings;
   /** PostgreSQL with PostGIS. Without it the app runs, but the parts that need the database say so. */
@@ -96,6 +98,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
     dataDir,
     pipelinePython: env['PIPELINE_PYTHON'] || fileURLToPath(new URL('../../pipeline/.venv/bin/python', import.meta.url)),
     pmtiles: env['PMTILES'] || 'pmtiles',
+    pgDump: env['PG_DUMP'] || 'pg_dump',
     grid: { cellMetres, region },
     databaseUrl,
     timeZone,

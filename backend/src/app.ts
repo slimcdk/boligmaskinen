@@ -26,7 +26,7 @@ declare module 'fastify' {
 }
 
 export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl' | 'version'>
-  & Partial<Pick<Config, 'timeZone' | 'dataDir' | 'pipelinePython' | 'pmtiles' | 'grid'>> & {
+  & Partial<Pick<Config, 'timeZone' | 'dataDir' | 'pipelinePython' | 'pmtiles' | 'grid' | 'pgDump'>> & {
   /** False for no logs, as in the tests. */
   logLevel?: LogLevel | false;
   /** The data jobs; the tests bring their own. */
@@ -58,7 +58,7 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     grid: options.grid ?? { cellMetres: 100, region: 'denmark' },
     revision: options.version?.revision || options.version?.version || 'dev', timeZone: options.timeZone,
     urls: options.sourceUrls, protomaps: options.protomapsUrls,
-  });
+  }, { databaseUrl: options.databaseUrl, pgDump: options.pgDump ?? 'pg_dump' });
   // What downloads left behind when the app stopped during one; no job runs yet
   if (db && dataDir) await new Archive(db, dataDir).cleanTmp();
   const runner = db && options.databaseUrl

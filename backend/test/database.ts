@@ -11,7 +11,8 @@ const adminUrl = process.env['TEST_DATABASE_URL'] || process.env['DATABASE_URL']
 
 if (!adminUrl && process.env['CI']) throw new Error('CI needs TEST_DATABASE_URL for the database tests');
 
-export const describeWithDatabase = describe.skipIf(!adminUrl);
+export const hasDatabase = !!adminUrl;
+export const describeWithDatabase = describe.skipIf(!hasDatabase);
 
 /** A new, empty database; `drop` removes it again. */
 export async function createTestDatabase(): Promise<{ url: string; drop: () => Promise<void> }> {
