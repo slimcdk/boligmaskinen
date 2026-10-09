@@ -114,7 +114,7 @@ export const SOURCES: DataSource[] = [
     <mat-dialog-content class="body">
       <section class="how" aria-labelledby="about-how">
         <h3 id="about-how">How the map is made</h3>
-        <p>Denmark is divided into {{ cell() }} m cells. Every cell gets a value for each data layer, and every block in your weighting turns those values into a score. The map shows the blocks averaged by their importance.</p>
+        <p>Denmark is divided into {{ cell() }} m cells{{ detail() ? ', and into ' + detail() + ' m cells for the map zoomed in' : '' }}. Every cell gets a value for each data layer, and every block in your weighting turns those values into a score. The map shows the blocks averaged by their importance.</p>
         <p>Homes are approximated by address points from OpenStreetMap, which are imported from the national address register. Cells in industrial areas are left out.</p>
         <p>Road noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere. Other places are estimated from road type and distance.</p>
         <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation. Tax and burglaries are per municipality.</p>
@@ -197,5 +197,7 @@ export class AboutDialog {
   protected readonly sources = SOURCES;
   protected readonly version = inject(BuildInfoService).label;
   protected readonly cell = computed(() => this.data.grid()?.meta.cellMetres ?? 100);
+  /** The detail tiles' cell size, when the pack has them. */
+  protected readonly detail = computed(() => this.data.grid()?.meta.tiles?.cellMetres ?? null);
   protected readonly built = computed(() => this.data.grid()?.meta.built ?? 'unknown');
 }

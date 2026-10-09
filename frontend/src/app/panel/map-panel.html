@@ -2,7 +2,7 @@
   <header class="head">
     <div class="title">
       <h1><svg class="logo" viewBox="0 -960 960 960" aria-hidden="true"><path [attr.d]="logo" /></svg>Boligmaskinen</h1>
-      <p>Pilot{{ region() ? ' · ' + region() : '' }} · {{ cell() }} m cells from open data</p>
+      <p>Pilot{{ region() ? ' · ' + region() : '' }} · {{ cells() }} from open data</p>
     </div>
     <button mat-icon-button (click)="closePanel.emit()" aria-label="Hide panel"><mat-icon>chevron_left</mat-icon></button>
   </header>

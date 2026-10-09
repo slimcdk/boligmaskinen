@@ -60,6 +60,7 @@ MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "Ld
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
           "density", "zone", "municipality", "mask"]
+TILE = 256  # cells per side of a detail tile
 
 
 class Grid:
@@ -353,6 +354,8 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         values = raster[rows_, cols]
         return np.where(inside, values, 0).astype(raster.dtype)
 
+    # The detail tiles show the grid's own cells, so their mask has the homes as they are
+    detail_mask = region_land.astype(np.uint8) | (homes.astype(np.uint8) << 1)
     # A display cell larger than the grid's has homes when any grid cell around its centre has
     factor = display / cell
     if factor > 1:
@@ -369,6 +372,40 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     step(f"Display grid {width} × {height} at {display} m; wrote {len(files)} layers "
          f"({sum((out / f).stat().st_size for f in files.values()) / 1e6:.1f} MB); display cells: "
          f"{(display_mask & 1).astype(bool).sum():,} land, {(display_mask & 2).astype(bool).sum():,} with homes", 0.95)
+
+    # --- Detail tiles: the grid's own cells, for the map zoomed in -------------------------------
+    # Where the display grid is coarser than the grid, the same area is also cut into tiles of TILE ×
+    # TILE cells at the grid's cell size, aligned with the display grid, holding every layer.
+    tiles = None
+    if display > cell:
+        detail = cell / np.cos(lat_mid)
+        columns, rows_count = int(np.ceil((mx1 - mx0) / detail / TILE)), int(np.ceil((my1 - my0) / detail / TILE))
+        (out / "tiles").mkdir(exist_ok=True)
+        detail_layers = {**{name: layers[name] for name in LAYERS if name != "mask"}, "mask": detail_mask}
+        available = []
+        offsets = (np.arange(TILE) + 0.5) * detail
+        for ty in range(rows_count):
+            for tx in range(columns):
+                tx0, ty1 = mx0 + tx * TILE * detail, my1 - ty * TILE * detail
+                tgx, tgy = np.meshgrid(tx0 + offsets, ty1 - offsets)
+                tux, tuy = from_merc.transform(tgx.ravel(), tgy.ravel())
+                tcols = ((tux - grid.x0) // cell).astype(np.int64)
+                trows = ((grid.y1 - tuy) // cell).astype(np.int64)
+                tinside = (tcols >= 0) & (tcols < grid.width) & (trows >= 0) & (trows < grid.height)
+                tcols, trows = np.clip(tcols, 0, grid.width - 1), np.clip(trows, 0, grid.height - 1)
+                mask = np.where(tinside, detail_layers["mask"][trows, tcols], 0)
+                if not (mask & 1).any():
+                    continue
+                data = b"".join(np.where(tinside, detail_layers[name][trows, tcols], 0).astype(np.uint8).tobytes() for name in LAYERS)
+                (out / "tiles" / f"{tx}-{ty}.u8.gz").write_bytes(gzip.compress(data, compresslevel=6, mtime=0))
+                available.append(f"{tx}-{ty}")
+            progress(0.95 + 0.04 * (ty + 1) / rows_count)
+        tiles = {
+            "cellMetres": cell, "size": TILE, "columns": columns, "rows": rows_count,
+            "origin": {"x": float(mx0), "y": float(my1)}, "pixel": float(detail), "layers": LAYERS, "available": available,
+        }
+        step(f"Detail tiles at {cell} m: {len(available)} of {columns} × {rows_count} have land "
+             f"({sum((out / 'tiles' / f'{key}.u8.gz').stat().st_size for key in available) / 1e6:.1f} MB)", 0.99)
 
     # --- Municipal outlines for the map ------------------------------------------------------
     outlines = region[["index", "name", "geometry"]].copy()
@@ -390,6 +427,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         "gridMetres": cell,
         "distanceMax": DIST_MAX,
         "files": files,
+        **({"tiles": tiles} if tiles else {}),
         "municipalities": municipality_stats,
         "counts": {
             "addresses": int(len(ax)), "homeCells": int((display_mask & 2).astype(bool).sum()),

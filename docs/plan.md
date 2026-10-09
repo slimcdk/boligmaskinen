@@ -122,12 +122,14 @@ What was built is described in `backend/README.md` (the jobs, the raw archive, t
 
 1. **Compiled blocks.** The engine compiles each block to one JavaScript function. The
    benchmark showed this is 23 times faster than the interpreter. Target: all of Denmark
-   at 100 m in under 150 ms.
+   at 100 m in under 150 ms. Done (2026-10-10): six times faster, 320 ms for all of Denmark at
+   100 m and 71 ms for the map's 200 m grid.
 2. **Off the main thread.** The weighting runs in a Web Worker, so the panel never
-   stutters. WebGL or WebGPU only if that is not enough.
+   stutters. WebGL or WebGPU only if that is not enough. Done (2026-10-10).
 3. **Tiles instead of one grid.** The layers are served as a tile pyramid: coarse when
    zoomed out, 100 m from about zoom 10. This replaces the single 200 m grid for the whole
-   country.
+   country. Done (2026-10-10) as two levels: the 200 m grid of the whole country, and 100 m
+   detail tiles that the map loads around the view from zoom 10.
 4. **Real travel times.**
    - Routing for car, bike and walk, with OSRM or Valhalla on OSM.
    - Public transport from the Rejseplanen GTFS feed.
