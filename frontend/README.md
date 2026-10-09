@@ -46,8 +46,10 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   places, so another map can give a place a block too. A new name or a removed place reaches every
   map.
 - **Groups** hold the blocks of a map. A predefined block starts in its catalogue group ("Nature",
-  "Peace and quiet", …), the user's own blocks in "My blocks", places in "Your places". The block's
-  menu moves it to another group or a new one, and a group without blocks is gone.
+  "Peace and quiet", …), or wherever blocks of its kind already are, also under a new name; the
+  user's own blocks go in "My blocks", places in "Your places". The block's menu moves it to another
+  group or a new one, and a group without blocks is gone.
+- **No two groups share a name:** a group renamed to the name of another joins it.
 - **A group can be switched off.** Its blocks then count for nothing, as if they were left out, and
   keep their settings. A group has no weight of its own.
 - **A requirement has a switch** in place of a weight. A preference is turned off with its weight
@@ -116,22 +118,26 @@ browser.
 
 ## Heatmap colours
 
-- **"Map settings" picks the colours:** Orange (the theme's tertiary colour, the default), Azure (its
-  primary), Violet, Rose, or Red to green.
+- **"Map settings" picks the colours:** Red to green (the default), Orange (the theme's tertiary
+  colour), Azure (its primary), Violet or Rose. A browser keeps the colours it had.
 - **The scales are made from the tones of Angular Material's M3 palettes** (`src/app/map/m3-tones.ts`,
   copied from `@angular/material`). One hue in steps of lightness can be read with every kind of
   colour vision; Red to green says that it cannot.
 - **"Smooth" or "Steps":** steps divide the scale into five, each with one colour and opacity.
 - **The panel shows the histogram, not the numbers.** The result in words (cells and median) is the
-  histogram's label for screen readers.
+  histogram's label for screen readers. The map itself has no legend: the histogram's bars have the
+  map's colours.
 
 ## Footer: about, data jobs and version
 
-- **"About the data"** opens a dialog: how the map is made, and every source with its
-  licence and a link.
+- **"About the data"** opens a dialog: how the map is made, and a section per source with what it
+  gives, its licence and the credit it asks for (`SOURCES` in `src/app/panel/about-dialog.ts`). The map
+  itself shows only "© OpenStreetMap", until it is first moved or for five seconds, as OSMF's
+  attribution guidelines ask; see `../docs/data-sources.md`.
 - **The gear** opens the data jobs: what each fetch or build does, how often it runs, when
-  it runs next and when it last ran. "Run now" starts it, and the history shows each
-  run's log.
+  it runs next and when it last ran. "Run now" starts it.
+  - "Tasks" can be filtered to the failing, running, waiting or not yet built ones; "Recent runs"
+    has each run's result, and its log when picked.
   - With a backend, the dialog shows its jobs through `api/jobs` and refreshes every 2 seconds
     while it is open (`src/app/admin/jobs.service.ts`, `jobs-api.ts`).
   - Without one, such as on the artifact host, it shows a simulated preview

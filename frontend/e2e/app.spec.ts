@@ -40,7 +40,8 @@ test('a suggestion adds a block and colours the map', async ({ page }) => {
   await expect(block(page, 'Forest')).toBeVisible();
   await expect(block(page, 'Forest').locator('.rule')).toHaveText('Full points up to 300 m · No points from 3.0 km');
   await expect(result(page)).toHaveAttribute('aria-label', /^Points of the [\d,]+ cells that meet your requirements, median \d+$/);
-  await expect(page.locator('app-legend')).toContainText('Points');
+  // The map itself has no legend and no list of sources: "About the data" has them
+  await expect(page.locator('.maplibregl-ctrl-attrib')).toHaveCount(0);
 });
 
 test('moving a slider rewrites the code and changes the result', async ({ page }) => {
@@ -72,11 +73,11 @@ test('turning a block around gives full points at the other end', async ({ page 
 test('the heatmap\'s colours can be chosen, smooth or in steps', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Forest' }).click();
-  const legend = page.locator('app-legend .ramp');
   await page.getByText('Map settings').click();
+  const swatch = page.locator('app-panel mat-select-trigger .swatch');
   await page.getByRole('combobox', { name: 'Heatmap colours' }).click();
   await page.getByRole('option', { name: /Azure/ }).click();
-  const gradient = () => legend.evaluate((el) => getComputedStyle(el).backgroundImage);
+  const gradient = () => swatch.evaluate((el) => getComputedStyle(el).backgroundImage);
   // Azure's lightest tone (90) starts the scale on the light map, with stops at every quarter
   await expect.poll(gradient).toMatch(/^linear-gradient\(90deg, rgb\(215, 227, 255\) 0%, .* 25%/);
   await page.getByRole('radio', { name: 'Steps' }).click();
@@ -215,6 +216,17 @@ async function zoom(page: Page): Promise<number> {
   const hash = await page.evaluate(() => location.hash);
   return Number(/map=([\d.]+)\//.exec(hash)?.[1] ?? NaN);
 }
+
+test('OpenStreetMap is credited on the map until the map is used, or for five seconds', async ({ page }) => {
+  await open(page);
+  // It may be gone already when the map loaded a while ago; either way it goes, and stays in the DOM
+  const credit = page.locator('app-map-view a.credit');
+  await expect(credit).toHaveAttribute('href', 'https://www.openstreetmap.org/copyright');
+  await expect(credit).toHaveText('© OpenStreetMap');
+  await page.locator('.maplibregl-ctrl-zoom-in').click();
+  await expect(credit).toHaveClass(/gone/);
+  await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toHaveCount(0);
+});
 
 test('the whole world is open to explore', async ({ page }) => {
   await open(page);

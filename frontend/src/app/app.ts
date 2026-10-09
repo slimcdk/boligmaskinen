@@ -6,14 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { PilotData } from './data/pilot-data';
-import { Legend } from './legend/legend';
 import { MapView } from './map/map-view';
 import { Panel } from './panel/panel';
 import { Store } from './state/store';
 
 @Component({
   selector: 'app-root',
-  imports: [MatButtonModule, MatIconModule, MatSidenavModule, MapView, Panel, Legend],
+  imports: [MatButtonModule, MatIconModule, MatSidenavModule, MapView, Panel],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

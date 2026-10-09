@@ -40,7 +40,7 @@ describe('heatmap colour scales', () => {
     expect(steps[0]).toEqual(rampOf('azure', 'light')[10]);
   });
 
-  it('gives the legend the same colours as the map, with hard edges between steps', () => {
+  it('gives the colour choices the same colours as the map, with hard edges between steps', () => {
     const [r, g, b] = hex(M3_TONES.orange[90]);
     expect(rampGradient('orange', 'light')).toMatch(new RegExp(`^linear-gradient\\(90deg, rgb\\(${r} ${g} ${b}\\) 0%, `));
     expect(rampGradient('orange', 'light', 'steps').match(/% \d+%/g)).toHaveLength(STEPS);

@@ -22,7 +22,7 @@ const DETAIL_ZOOM = 5;
  * They sit under the detailed basemap, which draws over them where it has data.
  */
 function worldSources(): Record<string, SourceSpecification> {
-  const source = (name: string): SourceSpecification => ({ type: 'geojson', data: `${DATA_BASE}world/${name}.json`, attribution: 'World: Natural Earth' });
+  const source = (name: string): SourceSpecification => ({ type: 'geojson', data: `${DATA_BASE}world/${name}.json` });
   return { 'world-land': source('land'), 'world-lakes': source('lakes'), 'world-boundaries': source('boundaries'), 'world-countries': source('countries'), 'world-places': source('places') };
 }
 
@@ -69,6 +69,9 @@ async function workerUrl(): Promise<string> {
   }
 }
 
+/** How long OpenStreetMap's credit stays on the map once it has loaded. */
+const CREDIT_MS = 5000;
+
 /** The full-screen MapLibre map with the heatmap overlay and the user's places. */
 @Component({
   selector: 'app-map-view',
@@ -77,6 +80,8 @@ async function workerUrl(): Promise<string> {
     @if (problem()) {
       <div class="problem" role="alert">The map could not load: {{ problem() }}</div>
     }
+    <a class="credit" [class.gone]="!credit()" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener"
+       [attr.aria-hidden]="credit() ? null : 'true'" [attr.tabindex]="credit() ? null : -1">© OpenStreetMap</a>
   `,
   styleUrl: './map-view.scss',
 })
@@ -91,6 +96,11 @@ export class MapView implements AfterViewInit, OnDestroy {
   private map: MapLibreMap | null = null;
   /** Shown when the map fails before it has loaded, e.g. when the host blocks its worker. */
   protected readonly problem = signal<string | null>(null);
+  /**
+   * OpenStreetMap's credit, on the map until it is first moved or for five seconds, as OSMF's
+   * attribution guidelines ask; after that, "About the data" credits it with every other source.
+   */
+  protected readonly credit = signal(true);
   private popup: Popup | null = null;
   private readonly markers = new Map<string, Marker>();
   private overlayReady = false;
@@ -174,7 +184,6 @@ export class MapView implements AfterViewInit, OnDestroy {
             type: 'vector',
             url: 'pmtiles://basemap',
             minzoom: DETAIL_ZOOM,
-            attribution: 'Basemap: <a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
           },
           ...worldSources(),
         },
@@ -186,10 +195,8 @@ export class MapView implements AfterViewInit, OnDestroy {
       maxZoom: 18,
       // Keep the view in the address (#map=zoom/lat/lng), so a link opens the same place
       hash: 'map',
-      attributionControl: {
-        compact: true,
-        customAttribution: 'Heatmap: © OpenStreetMap contributors · Miljøstyrelsen · Plandata.dk · Energistyrelsen · STIL · Danmarks Statistik',
-      },
+      // Every source is credited in "About the data" (SOURCES), not on the map
+      attributionControl: false,
     });
     this.map = map;
     this.styledScheme = scheme;
@@ -201,7 +208,10 @@ export class MapView implements AfterViewInit, OnDestroy {
     window.addEventListener('unhandledrejection', onRejection);
     map.on('error', (event) => { if (!this.overlayReady) report(event.error); });
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
+    const hideCredit = () => this.credit.set(false);
+    for (const event of ['dragstart', 'zoomstart', 'click'] as const) map.once(event, hideCredit);
     map.on('load', () => {
+      setTimeout(hideCredit, CREDIT_MS);
       window.removeEventListener('error', onError);
       window.removeEventListener('unhandledrejection', onRejection);
       this.problem.set(null);

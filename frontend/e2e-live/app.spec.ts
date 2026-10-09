@@ -8,14 +8,14 @@ test.beforeEach(async ({ page }) => {
 test('runs a real job from the jobs dialog, and shows its log', async ({ page }) => {
   await page.getByRole('button', { name: 'Data jobs' }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.locator('.bar p')).toHaveText('Fetching and building the data on this server');
+  await expect(dialog.locator('.head p')).toHaveText('Fetching and building the data on this server');
   await expect(dialog.getByRole('row').filter({ hasText: 'OpenStreetMap' })).toContainText('Not built yet');
 
   const row = dialog.getByRole('row').filter({ hasText: 'Check the data pack' });
   await row.getByRole('button', { name: 'Run Check the data pack now' }).click();
   await expect(row.locator('.status.succeeded')).toBeVisible();
 
-  await dialog.getByText('Recent runs').click();
+  await dialog.getByRole('tab', { name: 'Recent runs' }).click();
   await dialog.locator('table.runs tr.mat-mdc-row').filter({ hasText: 'Check the data pack' }).first().click();
   const log = dialog.getByRole('log');
   await expect(log).toContainText('Region Aarhus Kommune');

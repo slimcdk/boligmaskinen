@@ -19,8 +19,9 @@ The pilot covers all of Denmark. `pilot/pipeline/` fetches and processes everyth
   easier to diff between runs.
 - **One coordinate system internally**: EPSG:25832 (ETRS89 / UTM 32N), the Danish standard.
   Every source in this list either uses it or converts cleanly.
-- **Attribution travels with the data.** OSM (ODbL) and Rejseplanen (CC BY 4.0) require it.
-  The map shows the attributions for what it draws.
+- **Every source is credited as it asks**, in "About the data" (`SOURCES` in
+  `frontend/src/app/panel/about-dialog.ts`): what it gives, its licence and its credit. The terms were
+  checked on the providers' own pages on 2026-10-09; see [Licences and credits](#licences-and-credits).
 - **Personal data.** Datatilsynet's 2024 decision on Boliglag means no owner names and no
   search by owner name. Sale prices are tied to addresses, so they need a GDPR legal basis
   (see EJF below).
@@ -39,6 +40,33 @@ The pilot covers all of Denmark. `pilot/pipeline/` fetches and processes everyth
 | Basemap | Protomaps daily planet build `build.protomaps.com/YYYYMMDD.pmtiles` (OpenStreetMap data) | ODbL (data), BSD (style) | The planet is well over 100 GB. Denmark up to zoom 12 is 75 MB (3,070 tiles), fetched in under a minute | `go-pmtiles extract` with the outline of Denmark (`basemap.sh`) fetches only those tiles by HTTP range requests |
 | Basemap style, fonts, icons | `@protomaps/basemaps` (npm) and `protomaps.github.io/basemaps-assets` | BSD / OFL | Small | npm install and plain downloads |
 | World map outside Denmark | Natural Earth 1:50m (`naciscdn.org/naturalearth/50m/...`) | Public domain | 2 MB after processing; rarely changes | Five zip downloads, converted by `build_world.py` |
+
+## Licences and credits
+
+Checked on the providers' own pages on 2026-10-09.
+
+| Source | Licence or terms | Credit |
+|---|---|---|
+| OpenStreetMap | [ODbL 1.0](https://www.openstreetmap.org/copyright), share-alike | "© OpenStreetMap contributors", linked to the copyright page |
+| Miljøstyrelsen, noise mapping 2022 | CC BY 4.0 (Miljøstyrelsen's INSPIRE metadata; the download says nothing) | "Støjkortlægning 2022: Miljøstyrelsen", and that we changed it |
+| Plandata.dk, zone map | CC BY 4.0 ([webservices](https://www.plandata.dk/webservices/introduktion-til-webservices)) | "Zonekort: Plan- og Landdistriktsstyrelsen, Plandata.dk", and that we changed it |
+| STIL Institutionsregisteret and Dagtilbudsregisteret | No licence stated; STIL calls the daycare data free for everyone | A courtesy credit to Styrelsen for It og Læring |
+| Energistyrelsen, wind turbines | [Website terms](https://ens.dk/om-os/datapolitik): free with the source named, not to be changed or distorted | "Kilde: Energistyrelsen"; derived values are marked as our own calculations |
+| Danmarks Statistik | [Free with the source named](https://www.dst.dk/da/presse/kildeangivelse), as CC BY 4.0; not the logo | "Egne beregninger baseret på tal fra Danmarks Statistik", with links to the tables |
+| Protomaps | Tiles: ODbL produced work. Style: CC0. Code: BSD-3-Clause | "Protomaps © OpenStreetMap" (Protomaps' own credit is a request, not a duty) |
+| ESA WorldCover 2020, land cover in Protomaps' tiles up to zoom 7 | CC BY 4.0 | "© ESA WorldCover project 2020 / Contains modified Copernicus Sentinel data (2020) processed by ESA WorldCover consortium" |
+| Noto fonts and Mapzen icons (basemaps-assets) | SIL OFL 1.1 and MIT | Copyright notices; the licence texts must go with the copies we serve |
+| Natural Earth | Public domain | None needed; "Made with Natural Earth" |
+
+- **Where OpenStreetMap's credit goes.** OSMF's [attribution guidelines](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines)
+  ask for it on the map without a click. It may go away when the map is first used, or after five
+  seconds, as long as it can be found again, such as under "About". So the map shows "© OpenStreetMap"
+  until it is moved or for five seconds, and "About the data" has the rest.
+- **Open:**
+  - The data pack should carry the font and icon licence texts; the jobs that build it (milestone 2)
+    add them.
+  - Data layers made from OSM are a derived database. If an instance is ever public, it must offer
+    them or the way they are made (ODbL 4.6); publishing the pipeline does that (milestone 7).
 
 ## Sources not used yet, and what they need
 
