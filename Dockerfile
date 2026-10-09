@@ -8,7 +8,7 @@
 # not rebuild it: the release workflow gives the same image its version with crane, which only
 # changes the version label and APP_VERSION, so the layers that passed the tests are the ones that ship.
 
-FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend
+FROM --platform=$BUILDPLATFORM node:25-alpine AS frontend
 WORKDIR /src/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -21,7 +21,7 @@ RUN REVISION="$REVISION" SOURCE="$SOURCE" npm run build
 
 # Debian, not Alpine: the pipeline's Python packages (geopandas, rasterio, scipy, osmium) come as
 # wheels built for glibc. Python runs the pipeline's steps, and wget answers the healthcheck.
-FROM node:24-trixie-slim AS base
+FROM node:25-trixie-slim AS base
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates wget \
     && rm -rf /var/lib/apt/lists/*
