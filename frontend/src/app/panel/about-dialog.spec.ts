@@ -33,6 +33,8 @@ describe('AboutDialog', () => {
     expect(osm.querySelector<HTMLAnchorElement>('dd a')!.href).toBe('https://www.openstreetmap.org/copyright');
     const links = [...element.querySelectorAll<HTMLAnchorElement>('.sources a')];
     expect(links.every((a) => a.href.startsWith('https://') && a.target === '_blank' && a.rel === 'noopener')).toBe(true);
+    // One row each, with a divider between them
+    expect(element.querySelectorAll('.sources mat-divider')).toHaveLength(SOURCES.length - 1);
     // Every source is credited, and one without terms says so
     expect(SOURCES.every((s) => s.credit && s.licence.name)).toBe(true);
     expect(sections.find((s) => s.textContent!.includes('Dagtilbudsregisteret'))!.textContent).toContain('No licence stated');
