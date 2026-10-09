@@ -37,6 +37,8 @@ export class MapPanel {
   /** On a phone the panel has no head: it is a card at the top, with the weighting in the sheet below. */
   readonly compact = input(false);
   readonly closePanel = output<void>();
+  /** The app's logo, a house with a magnifying glass, drawn from Material Symbols' home and search; the same as public/favicon.svg. */
+  protected readonly logo = 'M480-840L160-600L160-120L487.9-120A250 250 0 0 1 430-280A250 250 0 0 1 680-530A250 250 0 0 1 800-499.3L800-600L480-840zM646.4-447.7C609.3-447.7 577.8-434.7 551.8-408.7C525.8-382.7 512.8-351.3 512.8-314.6C512.8-277.9 525.8-246.5 551.8-220.5C577.8-194.5 609.5-181.5 647-181.5C662.6-181.5 677.3-184 691.2-189C705-194 717.2-201.1 727.6-210.1L864.3-73.3L887.2-96.2L749.9-232.4C759.6-244.6 766.9-257.6 771.8-271.4C776.6-285.3 779-299.7 779-314.6C779-351.3 766.1-382.7 740.3-408.7C714.5-434.7 683.2-447.7 646.4-447.7zM646.4-416.5C674.5-416.5 698.4-406.6 718.2-386.6C738-366.7 747.8-342.7 747.8-314.6C747.8-286.5 738-262.5 718.2-242.6C698.4-222.6 674.5-212.7 646.4-212.7C618-212.7 593.8-222.6 573.9-242.6C554-262.5 544-286.5 544-314.6C544-342.7 554-366.7 573.9-386.6C593.8-406.6 618-416.5 646.4-416.5z';
 
   protected readonly stats = this.heat.stats;
   protected readonly view = this.store.view;

@@ -28,6 +28,20 @@ test('the footer shows which version is running, and links to the repository', a
   await expect(page.locator('app-panel .foot a.version')).toHaveAttribute('href', 'https://github.com/slimcdk/boligmaskinen');
 });
 
+test('the logo stands by the name, and the browser tab shows the same mark', async ({ page, request }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await open(page);
+  const logo = page.locator('app-map-panel .head svg.logo');
+  await expect(logo).toBeVisible();
+  // Drawn in the theme's primary colour (azure 40 in light mode)
+  await expect(logo).toHaveCSS('fill', 'rgb(0, 92, 187)');
+
+  const href = await page.locator('link[rel="icon"][type="image/svg+xml"]').getAttribute('href');
+  const favicon = await request.get(href!);
+  expect(favicon.ok()).toBe(true);
+  expect(await favicon.text()).toContain(`d="${await logo.locator('path').getAttribute('d')}"`);
+});
+
 test('the gear opens the data jobs, which can be run at once', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Data jobs' }).click();
