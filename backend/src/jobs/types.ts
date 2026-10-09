@@ -8,7 +8,7 @@ import type pg from 'pg';
 export interface Job {
   id: string;
   name: string;
-  kind: 'fetch' | 'build' | 'check';
+  kind: 'fetch' | 'build' | 'check' | 'backup';
   /** Who provides the data, e.g. "Geofabrik". */
   source: string;
   description: string;

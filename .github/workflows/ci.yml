@@ -80,6 +80,14 @@ jobs:
       TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v7
+      # The backup tests dump and restore with PostgreSQL's client 18, as the server
+      - name: Install PostgreSQL's client 18
+        run: |
+          sudo apt-get install -y --no-install-recommends postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y --no-install-recommends postgresql-client-18
+          echo "PG_DUMP=/usr/lib/postgresql/18/bin/pg_dump" >> "$GITHUB_ENV"
+          echo "PG_RESTORE=/usr/lib/postgresql/18/bin/pg_restore" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -185,6 +193,7 @@ jobs:
           docker run --rm --entrypoint /app/pipeline/.venv/bin/python boligmaskinen:ci -I -c \
             'import boligmaskinen_pipeline.grid, boligmaskinen_pipeline.osm, boligmaskinen_pipeline.pack, boligmaskinen_pipeline.world'
           docker run --rm --entrypoint pmtiles boligmaskinen:ci version
+          docker run --rm --entrypoint pg_dump boligmaskinen:ci --version | grep -q 'PostgreSQL) 18\.' 
       - name: Check that it answers
         run: |
           curl -fsS http://localhost:8080/api/health | tee /dev/stderr | grep -q '"database":"ok"'

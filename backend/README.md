@@ -64,6 +64,9 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
   and the basemap starts the pack. The world map starts the pack directly.
 - **A new install** has no data pack, so at its first start every fetch job runs, and the builds
   follow.
+- **"Back up the database"** (`src/jobs/backup.ts`) runs pg_dump of PostgreSQL 18 every night into
+  `DATA_DIR/backups/`, without pg-boss's queue, and keeps the newest seven. The password goes to
+  pg_dump through libpq's variables, not the command line. Restoring is in `../README.md`.
 - The jobs that need access say what they wait for.
 
 ## The raw archive
@@ -154,6 +157,7 @@ need the database say so.
 | `DATA_DIR` | none | Where the data jobs keep the raw archive (`raw/`), what they build (`work/`) and their temporary files (`tmp/`). It has to be an absolute path. Without it the jobs that fetch and build say so and do not run. The image uses `/data`. |
 | `PIPELINE_PYTHON` | `../pipeline/.venv/bin/python` | The Python that has the pipeline installed (`uv sync` in `../pipeline`). The image has it at `/app/pipeline/.venv/bin/python`. |
 | `PMTILES` | `pmtiles` | go-pmtiles, which cuts the basemap. The image has it. |
+| `PG_DUMP` | `pg_dump` | pg_dump of PostgreSQL 18 or newer, for the nightly backup. The image has it. |
 | `REGION` | `denmark` | The area the data covers: `denmark`, `oestjylland`, `aarhus`, or municipality codes such as `751,706`. |
 | `GRID_CELL_METRES` | `100` | The size of the grid's cells, from 10 to 1000 m. The map shows 200 m cells for all of Denmark and 100 m for a smaller region, never finer than the grid. |
 | `DATABASE_URL` | none | PostgreSQL with PostGIS, e.g. `postgres://user:password@db:5432/boligmaskinen`. |

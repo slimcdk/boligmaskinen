@@ -47,6 +47,8 @@ export interface ProgramOptions {
   missing: string;
   /** Whether to log the lines it writes to stderr when it succeeds, such as warnings. */
   logErrors?: boolean;
+  /** More environment, such as the PG* variables of pg_dump. */
+  env?: Record<string, string>;
 }
 
 /**
@@ -59,7 +61,7 @@ export async function runProgram(context: JobContext, options: ProgramOptions, a
   const child = spawn(options.program, args, {
     stdio: ['ignore', 'pipe', 'pipe'],
     // Only what the step needs: Python ignores its own variables with -I
-    env: { PATH: process.env['PATH'] ?? '/usr/bin:/bin', HOME: process.env['HOME'] ?? options.tmpDir, LANG: 'C.UTF-8', TMPDIR: options.tmpDir },
+    env: { PATH: process.env['PATH'] ?? '/usr/bin:/bin', HOME: process.env['HOME'] ?? options.tmpDir, LANG: 'C.UTF-8', TMPDIR: options.tmpDir, ...options.env },
   });
   const stop = () => {
     child.kill('SIGTERM');

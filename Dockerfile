@@ -20,10 +20,17 @@ ARG SOURCE=""
 RUN REVISION="$REVISION" SOURCE="$SOURCE" npm run build
 
 # Debian, not Alpine: the pipeline's Python packages (geopandas, rasterio, scipy, osmium) come as
-# wheels built for glibc. Python runs the pipeline's steps, and wget answers the healthcheck.
+# wheels built for glibc. Python runs the pipeline's steps, wget answers the healthcheck, and
+# PostgreSQL's client 18 (from PostgreSQL's own apt repository, as Debian has 17) dumps the
+# database for the nightly backup.
 FROM node:24-trixie-slim AS base
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates wget \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && wget -qO /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS backend

@@ -55,6 +55,27 @@ docker compose up -d                 # http://localhost:8080
 - **The image:** `BOLIGMASKINEN_TAG` picks it. `master` (the default) is the newest build, and a
   release has its version, such as `v0.1.0`.
 
+### Backups
+
+Every night at 01:30 the job "Back up the database" dumps the database into `./data/backups/`
+(pg_dump's custom format; the newest seven are kept). The database holds the maps, the places
+and the history of the data jobs; the data pack and the raw archive are rebuilt by the jobs.
+Copy `./data/backups/` somewhere else to keep it safe.
+
+Restoring a dump replaces the database:
+
+```sh
+docker compose stop app
+docker compose exec db dropdb -U boligmaskinen boligmaskinen
+docker compose exec db createdb -U boligmaskinen boligmaskinen
+docker compose run --rm --no-deps --entrypoint sh app -c \
+  'pg_restore --no-owner --no-privileges --dbname "$DATABASE_URL" /data/backups/20261010T013000Z.dump'
+docker compose start app
+```
+
+The app finds its migrations applied and recreates its job queue at start. The backend's tests
+restore a dump this way into an empty database.
+
 ## CI and releases
 
 GitHub Actions (`.github/workflows/`):
