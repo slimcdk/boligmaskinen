@@ -209,11 +209,12 @@ describeWithDatabase('the source jobs', () => {
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: proposed ? 0 : 1072 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
     });
-    expect(await run('plans')).toMatchObject({ changed: true, result: '1,072 adopted, 0 proposed, 0 proposed local plans, 1,072 adopted local plans' });
+    expect(await run('plans')).toMatchObject({ changed: true, result: '1,072 adopted, 0 proposed, 0 proposed local plans, 1,072 adopted local plans, 1,072 supply areas' });
     const since = (date: Date) => date.toISOString().slice(0, 10).replaceAll('-', '');
     expect(asked).toEqual([
       'pdk:theme_pdk_planlagttrafikanlaeg_vedtaget', 'pdk:theme_pdk_planlagttrafikanlaeg_forslag',
       expect.stringMatching(/^pdk:theme_pdk_lokalplan_forslag datoforsl>=\d{8}$/), expect.stringMatching(/^pdk:theme_pdk_lokalplan_vedtaget datovedt>=\d{8}$/),
+      'pdk:theme_pdk_forsyningomraade_vedtaget_v',
     ]);
     // Two years back, give or take the time zone
     expect(Number(asked[3].slice(-8))).toBeGreaterThanOrEqual(Number(since(new Date(Date.now() - 731 * 86_400_000))));

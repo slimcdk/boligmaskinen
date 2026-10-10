@@ -364,6 +364,9 @@ const PLANNED_LAYERS: WfsLayer[] = [
   { name: 'planlagttrafikanlaeg_forslag.geojson', layer: 'pdk:theme_pdk_planlagttrafikanlaeg_forslag', check: areas('proposed', 0) },
 ];
 
+/** The heat plans' supply areas: district heating, or individual natural gas, among others. */
+const SUPPLY_AREAS: WfsLayer = { name: 'forsyningomraade_vedtaget.geojson', layer: 'pdk:theme_pdk_forsyningomraade_vedtaget_v', check: areas('supply areas', 1000) };
+
 /** The local plans of the last two years, proposed or adopted: building to come, or change. */
 function localPlanLayers(since: string): WfsLayer[] {
   return [
@@ -375,7 +378,7 @@ function localPlanLayers(since: string): WfsLayer[] {
 function fetchPlans(w: Work): Promise<JobOutcome> {
   // Two years back, as Plandata writes a date: 20241010
   const since = w.day(new Date(Date.now() - 730 * 86_400_000).toISOString()).replaceAll('-', '');
-  return fetchWfs(w, 'plans', w.urls.plans, LICENCES.plandata, [...PLANNED_LAYERS, ...localPlanLayers(since)], 20_000);
+  return fetchWfs(w, 'plans', w.urls.plans, LICENCES.plandata, [...PLANNED_LAYERS, ...localPlanLayers(since), SUPPLY_AREAS], 20_000);
 }
 
 /** Natural Earth's world map, and the layers built from it. */
@@ -439,7 +442,7 @@ const SOURCES: SourceJob[] = [
   },
   {
     id: 'plans', name: 'Plans', source: 'Plandata.dk', schedule: '35 3 * * *', then: ['grid'], fetch: fetchPlans,
-    description: 'The roads and railways the municipal plans lay out, and the local plans of the last two years, adopted or proposed, from the WFS.',
+    description: 'The roads and railways the municipal plans lay out, the local plans of the last two years, adopted or proposed, and the heat plans’ supply areas, from the WFS.',
   },
   {
     id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,

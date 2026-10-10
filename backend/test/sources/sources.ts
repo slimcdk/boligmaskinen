@@ -39,7 +39,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
   });
   server.on('GET /plans', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 600 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
+    response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 1200 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
   });
   server.on('GET /protected', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' });

@@ -3,7 +3,7 @@
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
   | 'station' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
-  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
@@ -181,6 +181,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'airfield', group: 'Peace and quiet', name: 'Away from airfields', opposite: 'Close to an airfield', note: 'Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.', kind: 'distance', layer: 'airfield', role: 'want', weight: 1, full: 3000, zero: 1000 },
   { id: 'air_station', group: 'Peace and quiet', name: 'Away from air stations', opposite: 'Close to an air station', note: "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup.", kind: 'distance', layer: 'air_station', role: 'want', weight: 1, full: 15000, zero: 5000 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
+  { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
   { id: 'burglary', group: 'Area and economy', name: 'Few home burglaries', opposite: 'Many home burglaries', note: 'Reported per 1,000 residents per municipality, 2025.', kind: 'municipal', field: 'burglariesPer1000', unit: 'per 1,000', min: 1, max: 5, step: 0.1, role: 'want', weight: 1, full: 2.5, zero: 4.5 },
   {
