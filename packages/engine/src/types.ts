@@ -3,7 +3,7 @@
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
   | 'station' | 'departures' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
-  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'water_hardness' | 'mask';
+  | 'natura2000' | 'building_line' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'water_hardness' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
@@ -194,6 +194,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'departures', group: 'Everyday life', name: 'Frequent public transport', opposite: 'Little public transport', note: 'Departures per hour between 7 and 9 on a weekday from the stops within 500 m, each trip once, from Rejseplanen.', kind: 'count', layer: 'departures', unit: 'per hour', max: 100, step: 1, role: 'want', weight: 1, full: 12, zero: 2 },
   { id: 'water_hardness', group: 'Everyday life', name: 'Soft water', opposite: 'Hard water', note: 'Hardness of the drinking water in the public waterworks’ supply areas, from GEUS (samples up to 2023). No data where homes have wells of their own.', kind: 'scaled', layer: 'water_hardness', unit: '°dH', min: 0, max: 30, step: 0.5, role: 'want', weight: 1, full: 8, zero: 18 },
   { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
+  { id: 'building_line', group: 'Area and economy', name: 'Outside building lines', opposite: 'Inside building lines', note: 'Nearest building line around a forest, church, lake or stream, inside which building needs a dispensation, from Danmarks Miljøportal.', kind: 'distance', layer: 'building_line', role: 'want', weight: 1, full: 100, zero: 0 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
   { id: 'income', group: 'Area and economy', name: 'High incomes', opposite: 'Low incomes', note: 'Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik.', kind: 'municipal', field: 'income', unit: 'kr.', min: 200000, max: 600000, step: 5000, role: 'want', weight: 1, full: 320000, zero: 260000 },
   { id: 'nurseryPrice', group: 'Area and economy', name: 'Low nursery prices', opposite: 'High nursery prices', note: 'Yearly rate for a municipal nursery place (0–2 years), 2026, from Danmarks Statistik.', kind: 'municipal', field: 'nurseryPrice', unit: 'kr.', min: 30000, max: 65000, step: 500, role: 'want', weight: 1, full: 40000, zero: 55000 },

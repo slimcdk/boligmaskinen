@@ -76,8 +76,9 @@ describeWithDatabase('a new install', () => {
     expect(outcome('grid').filter((o) => o.includes(' cells '))).toEqual(['succeeded: aarhus: 2 × 2 cells of 200 m, 459,924 with homes']);
     expect(outcome('basemap')).toEqual([expect.stringMatching(/^succeeded: Planet build 20261009 up to zoom 12, \d+ B$/)]);
     expect(outcome('pack').filter((o) => o.includes('Switched'))).toHaveLength(1);
-    // The road network follows the OSM extract, with the timetable of public transport beside it
-    expect(outcome('roads')).toEqual(['succeeded: 7,200,839 nodes: 8,565,564 edges by car, 12,979,152 by bike, 15,345,026 on foot; public transport of 2026-10-06: 1,168,243 connections']);
+    // The road network follows the OSM extract and the timetables, with the timetables beside it; as
+    // both start it, a second run may wait in the queue and be dropped
+    expect(outcome('roads').filter((o) => !o.startsWith('cancelled: The queue already had'))).toEqual(['succeeded: 7,200,839 nodes: 8,565,564 edges by car, 12,979,152 by bike, 15,345,026 on foot; public transport of 2026-10-06: 1,168,243 connections']);
     expect(runs.filter((r) => r.status === 'failed')).toEqual([]);
     expect(outcome('data-pack')).toEqual(['succeeded: 1 layer']);
 

@@ -43,7 +43,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
   });
   server.on('GET /protected', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 1200 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
+    response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 6000 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
   });
   for (const path of NATURAL_EARTH) server.file(`/ne/${path}.zip`, { content: zip(path) });
   server.file('/transit/GTFS.zip', { content: zip('agency.txt stops.txt trips.txt stop_times.txt'), etag: '"gtfs"' });

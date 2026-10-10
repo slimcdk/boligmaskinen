@@ -191,6 +191,11 @@
       "opposite": "Uden for fjernvarme",
       "note": "Inden for et område, som varmeplanerne giver fjernvarme, fra Plandata.dk."
     },
+    "building_line": {
+      "name": "Uden for byggelinjer",
+      "opposite": "Inden for byggelinjer",
+      "note": "Nærmeste byggelinje om en skov, kirke, sø eller å, hvor byggeri kræver dispensation, fra Danmarks Miljøportal."
+    },
     "consequence_zone": {
       "name": "Væk fra konsekvenszoner",
       "opposite": "Tæt på konsekvenszoner",
@@ -277,6 +282,7 @@
     "planned_road": "Afstand til en vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået",
     "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
     "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)",
+    "building_line": "Afstand til en byggelinje om en skov, kirke, sø eller å, hvor byggeri kræver dispensation (0 inden for en)",
     "consequence_zone": "Afstand til en konsekvenszone om en virksomhed eller et teknisk anlæg (0 inden for en)",
     "extraction_area": "Afstand til et område, som regionernes råstofplaner udlægger til gravning (0 inden for et)",
     "extraction_interest": "Afstand til et område, som regionernes råstofplaner holder i reserve til senere gravning (0 inden for et)",
@@ -670,7 +676,7 @@
       },
       "protected": {
         "name": "Miljøstyrelsen og regionerne, via Danmarks Miljøportal",
-        "uses": "Gældende arealfredninger, som beskytter landskab og natur, Natura 2000-områderne for naturtyper og fugle, og de områder, som regionernes råstofplaner udlægger til gravning nu eller senere.",
+        "uses": "Gældende arealfredninger, som beskytter landskab og natur, Natura 2000-områderne for naturtyper og fugle, de områder, som regionernes råstofplaner udlægger til gravning nu eller senere, og byggelinjerne om skove, kirker, søer og åer.",
         "note": "Ændret: lagt på kortets celler på 100 m. CC0 kræver ingen kreditering; den gives af høflighed."
       }
     }
@@ -824,7 +830,7 @@
       },
       "protected": {
         "name": "Beskyttede områder",
-        "description": "Fredninger, Natura 2000-områderne for naturtyper og fugle og regionernes råstofområder fra Danmarks Miljøportals WFS."
+        "description": "Fredninger, Natura 2000-områderne for naturtyper og fugle, regionernes råstofområder og byggelinjerne om skove, kirker, søer og åer fra Danmarks Miljøportals WFS."
       },
       "water": {
         "name": "Drikkevand",

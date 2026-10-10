@@ -93,6 +93,11 @@ const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
   // And had no timetables before the departures came, nor the drinking water
   transit: ['transit', 'GTFS.zip'],
   water_hardness: ['water', 'haardhed.zip'],
+  // And the protected areas before the building lines came
+  forest_lines: ['protected', 'skovbyggelinjer.geojson'],
+  church_lines: ['protected', 'kirkebyggelinjer.geojson'],
+  lake_lines: ['protected', 'soe_bes_linjer.geojson'],
+  stream_lines: ['protected', 'aa_bes_linjer.geojson'],
   noise_rail: ['noise', 'eu_2022_jernbane_4m.shp'],
   noise_air: ['noise', 'eu_2022_lufthavn_4m.shp'],
   noise_industry: ['noise', 'eu_2022_virksomhed_by_4m.shp'],

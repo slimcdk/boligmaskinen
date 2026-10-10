@@ -398,14 +398,19 @@ const fetchAir = (w: Work) => fetchWfs(w, 'air', w.urls.air, LICENCES.air, AIR_L
 })), 200_000);
 
 /**
- * Miljøstyrelsen's protected areas (fredninger), the Natura 2000 areas for habitats and birds, and
- * the regions' raw material areas: for digging now, or kept for later.
+ * Miljøstyrelsen's protected areas (fredninger), the Natura 2000 areas for habitats and birds, the
+ * regions' raw material areas, for digging now or kept for later, and the building lines around
+ * forests, churches, lakes and streams.
  */
 const PROTECTED_LAYERS: WfsLayer[] = [
   { name: 'fredede_omr.geojson', layer: 'dai:fredede_omr', check: areas('protected areas', 1000) },
   { name: 'habitat_omr.geojson', layer: 'dai:habitat_omr', check: areas('habitat areas', 100) },
   { name: 'fugle_bes_omr.geojson', layer: 'dai:fugle_bes_omr', check: areas('bird protection areas', 50) },
   { name: 'raastofomr.geojson', layer: 'dai:raastofomr', check: areas('raw material areas', 500) },
+  { name: 'skovbyggelinjer.geojson', layer: 'dai:skovbyggelinjer', check: areas('forest building lines', 5000) },
+  { name: 'kirkebyggelinjer.geojson', layer: 'dai:kirkebyggelinjer', check: areas('church building lines', 1000) },
+  { name: 'soe_bes_linjer.geojson', layer: 'dai:soe_bes_linjer', check: areas('lake protection lines', 1000) },
+  { name: 'aa_bes_linjer.geojson', layer: 'dai:aa_bes_linjer', check: areas('stream protection lines', 1000) },
 ];
 
 const fetchProtected = (w: Work) => fetchWfs(w, 'protected', w.urls.protected, LICENCES.protected, PROTECTED_LAYERS, 100_000);
@@ -511,7 +516,7 @@ const SOURCES: SourceJob[] = [
   },
   {
     id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,
-    description: 'Fredninger, the Natura 2000 areas for habitats and birds, and the regions’ raw material areas, from Danmarks Miljøportal’s WFS.',
+    description: 'Fredninger, the Natura 2000 areas for habitats and birds, the regions’ raw material areas, and the building lines around forests, churches, lakes and streams, from Danmarks Miljøportal’s WFS.',
   },
   {
     id: 'water', name: 'Drinking water', source: 'GEUS', schedule: '0 5 5 * *', then: ['grid'], fetch: fetchWater,
