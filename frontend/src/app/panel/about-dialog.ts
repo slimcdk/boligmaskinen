@@ -90,13 +90,14 @@ export const SOURCES: DataSource[] = [
   },
   {
     id: 'dst', name: 'Danmarks Statistik', url: 'https://www.statistikbanken.dk',
-    uses: 'Income tax and land tax, population and home burglaries per municipality.',
+    uses: 'Income tax and land tax, population, home burglaries and mean disposable income per municipality.',
     licence: { name: 'Free to use with the source named, as CC BY 4.0', url: 'https://www.dst.dk/da/presse/kildeangivelse' },
     credit: 'Source: our own calculations based on figures from Danmarks Statistik',
     links: [
       { label: 'PSKAT', url: 'https://www.statistikbanken.dk/PSKAT' },
       { label: 'FOLK1A', url: 'https://www.statistikbanken.dk/FOLK1A' },
       { label: 'STRAF22', url: 'https://www.statistikbanken.dk/STRAF22' },
+      { label: 'INDKP101', url: 'https://www.statistikbanken.dk/INDKP101' },
     ],
   },
   {

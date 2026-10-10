@@ -185,6 +185,11 @@
       "name": "Væk fra konsekvenszoner",
       "opposite": "Tæt på konsekvenszoner",
       "note": "Nærmeste zone, som planerne lægger om en virksomhed eller et anlæg, der lugter, larmer eller er en risiko, fra Plandata.dk."
+    },
+    "income": {
+      "name": "Høje indkomster",
+      "opposite": "Lave indkomster",
+      "note": "Gennemsnitlig disponibel indkomst pr. indbygger i kommunen, 2024, fra Danmarks Statistik."
     }
   },
   "examples": {
@@ -240,7 +245,8 @@
     "planned_road": "Afstand til en vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået",
     "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
     "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)",
-    "consequence_zone": "Afstand til en konsekvenszone om en virksomhed eller et teknisk anlæg (0 inden for en)"
+    "consequence_zone": "Afstand til en konsekvenszone om en virksomhed eller et teknisk anlæg (0 inden for en)",
+    "income": "Gennemsnitlig disponibel indkomst pr. indbygger i kommunen, 2024"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -590,7 +596,7 @@
         "note": "Afstanden til nærmeste mølle er vores egen beregning."
       },
       "dst": {
-        "uses": "Indkomstskat og grundskyld, befolkning og indbrud i beboelser pr. kommune.",
+        "uses": "Indkomstskat og grundskyld, befolkning, indbrud i beboelser og gennemsnitlig disponibel indkomst pr. kommune.",
         "licence": "Fri brug med kildeangivelse, som CC BY 4.0",
         "credit": "Kilde: Egne beregninger på baggrund af tal fra Danmarks Statistik"
       },
@@ -714,7 +720,7 @@
       },
       "dst": {
         "name": "Kommunal statistik",
-        "description": "Skat (PSKAT), befolkning (FOLK1A) og indbrud (STRAF22), hver i sin nyeste periode."
+        "description": "Skat (PSKAT), befolkning (FOLK1A), indbrud (STRAF22) og indkomst (INDKP101), hver i sin nyeste periode."
       },
       "noise": {
         "name": "Støj",

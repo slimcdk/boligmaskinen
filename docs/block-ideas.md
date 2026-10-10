@@ -367,7 +367,7 @@ close and others far away, so the block is turned around rather than written twi
 | How the area votes | Party shares in the polling district at the last general election | `vote_<party>` (%) | DST FV26TOTA | Possible but sensitive; offer it only as the user's own choice, never as a predefined block |
 | Kinds of crime | Violence, vandalism, theft and burglary per 1,000 inhabitants, quarterly | `crime_violence`, `crime_vandalism`, … | DST STRAF11 per municipality | Coarse; extends `burglaries` |
 | Childcare and schools by the numbers | Childcare price, children per adult, and class size | `childcare_price` (kr. a month), `childcare_ratio`, `class_size` | DST RES88, BOERN8, KVOTIEN per municipality | Per institution later from the registers |
-| Income in the area | Mean income | `income` (kr.) | DST INDKP101 per municipality (free); per parish or postcode only paid | Both ways |
+| Income in the area | Mean income | `income` (kr.; in use since 2026-10-10: mean disposable income per resident of the municipality) | DST INDKP101 per municipality (free); per parish or postcode only paid | Both ways |
 | Fewer cars | Cars per household | `cars_per_household` | DST BIL800 per municipality | A rough proxy for how well a place does without a car |
 
 Not a block: residents' origin (DST KMSTA001 per parish). Weighing a place by its residents' origin would be discrimination in housing, so it is left out on purpose.

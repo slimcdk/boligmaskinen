@@ -16,7 +16,7 @@ Usage:
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
     noise_rail, noise_air, noise_industry  Miljøstyrelsen's maps of railways, airports and industry (optional)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
-    turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST)
+    turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST); income  INDKP101 (DST, optional)
     no2, pm25     DCE's air quality on a 1 km grid, as GeoJSON (optional: without them the layers have no data)
     protected_areas, natura2000_habitats, natura2000_birds
                   Miljøstyrelsen's fredninger and Natura 2000 areas, as GeoJSON (optional: without them the
@@ -79,7 +79,7 @@ CODES = re.compile(r"^\d{3}(,\d{3})*$")
 
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
 # Sources a build can do without: their layers have no data then
-OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
+OPTIONAL_INPUTS = ["income", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
                    "consequence_zones", "consequence_zones_plants"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
@@ -211,6 +211,23 @@ def jsonstat_values(path: Path) -> dict[str, float]:
     sizes = dataset["dimension"]["size"]
     stride = int(np.prod(sizes[1:]))
     return {code: values[index * stride] for code, index in areas.items()}
+
+
+def jsonstat_newest(path: Path) -> tuple[str, dict[str, float]]:
+    """Read a single-measure JSON-stat response of one or more periods into the newest period with
+    numbers, and its {area code: value}: Statistikbanken lists a year before it has its numbers,
+    with zeros."""
+    dataset = json.loads(path.read_text(encoding="utf-8"))["dataset"]
+    dims = dataset["dimension"]
+    sizes = dims["size"]
+    strides = [int(np.prod(sizes[i + 1:])) for i in range(len(sizes))]
+    area_stride, period_stride = strides[dims["id"].index("OMRÅDE")], strides[dims["id"].index("Tid")]
+    areas, periods, values = dims["OMRÅDE"]["category"]["index"], dims["Tid"]["category"]["index"], dataset["value"]
+    for period in sorted(periods, reverse=True):
+        found = {code: values[i * area_stride + periods[period] * period_stride] for code, i in areas.items()}
+        if any(found.values()):
+            return period, found
+    raise ValueError(f"{path.name} has no period with numbers")
 
 
 def jsonstat_matrix(path: Path, dim: str) -> dict[str, dict[str, float]]:
@@ -665,6 +682,9 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     tax = jsonstat_matrix(inputs["tax"], "SKATPCT")
     burglaries = jsonstat_values(inputs["burglaries"])
     population = jsonstat_values(inputs["population"])
+    income_year, income = jsonstat_newest(inputs["income"]) if inputs.get("income") else (None, {})
+    if not income:
+        warn("No source for the income: the municipalities have none")
     municipality_stats = []
     for row in region.itertuples():
         municipality_stats.append({
@@ -672,6 +692,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
             "incomeTax": tax[row.code]["KOM"], "landTax": tax[row.code]["GRUND"],
             "population": population[row.code],
             "burglariesPer1000": round(burglaries[row.code] / population[row.code] * 1000, 2),
+            **({"income": income[row.code]} if income.get(row.code) else {}),
         })
     layers["municipality"] = np.where(region_land, municipality_index, 0).astype(np.uint8)
 

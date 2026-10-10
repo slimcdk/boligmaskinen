@@ -61,7 +61,7 @@ export function decodeValue(item: Pick<ScoringItem, 'kind' | 'field'> & { layerN
       return raw;
     case 'municipal': {
       const municipality = ctx.municipalities[raw];
-      return municipality && item.field ? municipality[item.field] : null;
+      return municipality && item.field ? (municipality[item.field] ?? null) : null;
     }
   }
 }

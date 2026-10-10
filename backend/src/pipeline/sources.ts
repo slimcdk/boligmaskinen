@@ -219,19 +219,23 @@ async function fetchTurbines(w: Work): Promise<JobOutcome> {
 }
 
 /** Danmarks Statistik's tables per municipality, each in its newest period. */
-const STATBANK_TABLES: { name: string; table: string; variables: Record<string, string[]> }[] = [
+/** The tables, and the periods each takes: the newest, "(1)", unless a table lists one before it has its numbers. */
+const STATBANK_TABLES: { name: string; table: string; variables: Record<string, string[]>; periods?: string[] }[] = [
   { name: 'pskat.json', table: 'PSKAT', variables: { SKATPCT: ['KOM', 'GRUND'] } },
   { name: 'straf.json', table: 'STRAF22', variables: { 'OVERTRÆD': ['1320'], ANMSIGT: ['ANM'] } },
   { name: 'folk.json', table: 'FOLK1A', variables: { 'KØN': ['TOT'], ALDER: ['IALT'], CIVILSTAND: ['TOT'] } },
+  // The mean disposable income of all residents. Its newest year comes with zeros before the
+  // numbers, so the two newest come along, and the grid takes the newest with numbers
+  { name: 'indkomst.json', table: 'INDKP101', variables: { ENHED: ['116'], KOEN: ['MOK'], INDKOMSTTYPE: ['100'] }, periods: ['(1)', '(2)'] },
 ];
 
 async function fetchStatistics(w: Work): Promise<JobOutcome> {
   const fetched: Archived[] = [];
-  for (const [i, { name, table, variables }] of STATBANK_TABLES.entries()) {
+  for (const [i, { name, table, variables, periods = ['(1)'] }] of STATBANK_TABLES.entries()) {
     const body = {
       table, format: 'JSONSTAT', lang: 'da',
       // "*" is every area: the country, the regions and the municipalities; "(1)" the newest period
-      variables: [{ code: 'OMRÅDE', values: ['*'] }, ...Object.entries(variables).map(([code, values]) => ({ code, values })), { code: 'Tid', values: ['(1)'] }],
+      variables: [{ code: 'OMRÅDE', values: ['*'] }, ...Object.entries(variables).map(([code, values]) => ({ code, values })), { code: 'Tid', values: periods }],
     };
     fetched.push(await w.archive.download(w.context, {
       source: 'dst', name, url: w.urls.statbank, licence: LICENCES.dst, method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' },
@@ -437,7 +441,7 @@ const SOURCES: SourceJob[] = [
     id: 'ens', name: 'Wind turbines', source: 'Energistyrelsen', schedule: '0 4 2 * *', then: ['grid'], fetch: fetchTurbines,
     description: 'The monthly master data register; the job finds the newest upload on the data overview page.',
   },
-  { id: 'dst', name: 'Municipal statistics', source: 'Danmarks Statistik', schedule: '0 5 * * 1', then: ['grid'], fetch: fetchStatistics, description: 'Tax (PSKAT), population (FOLK1A) and burglaries (STRAF22), each in its newest period.' },
+  { id: 'dst', name: 'Municipal statistics', source: 'Danmarks Statistik', schedule: '0 5 * * 1', then: ['grid'], fetch: fetchStatistics, description: 'Tax (PSKAT), population (FOLK1A), burglaries (STRAF22) and income (INDKP101), each in its newest period.' },
   {
     id: 'noise', name: 'Noise', source: 'Miljøstyrelsen', schedule: '0 4 1 * *', then: ['grid'], fetch: fetchNoise,
     description: 'The strategic noise maps of roads, railways, airports and industry, taken out of the 2 GB archive with range requests. New maps every 5 years.',

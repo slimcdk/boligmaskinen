@@ -185,6 +185,11 @@
       "name": "Away from consequence zones",
       "opposite": "Close to consequence zones",
       "note": "Nearest zone the plans draw around a business or plant that smells, makes noise or is a risk, from Plandata.dk."
+    },
+    "income": {
+      "name": "High incomes",
+      "opposite": "Low incomes",
+      "note": "Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik."
     }
   },
   "examples": {
@@ -240,7 +245,8 @@
     "planned_road": "Distance to a road or railway the municipal plans lay out, adopted or proposed",
     "new_local_plan": "Distance to a local plan of the last two years, proposed or adopted (0 inside one)",
     "district_heating": "Distance to an area the heat plans give district heating (0 inside one)",
-    "consequence_zone": "Distance to a zone the plans draw around a business or technical plant (0 inside one)"
+    "consequence_zone": "Distance to a zone the plans draw around a business or technical plant (0 inside one)",
+    "income": "Mean disposable income per resident of the municipality, 2024"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",

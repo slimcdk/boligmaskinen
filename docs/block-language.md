@@ -107,6 +107,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `land_tax` | Land tax, ‰ |
 | `burglaries` | Home burglaries per 1,000 residents |
 | `population` | Residents of the municipality |
+| `income` | Mean disposable income per resident of the municipality, kr.; missing where the statistics have none (Danmarks Statistik; added 2026-10-10, which keeps the language version) |
 | `<place>_car`, `_bike`, `_walk`, `_train` | Minutes to one of the user's places, e.g. `work_car`. Renaming the place renames the values in every block |
 
 ### Constants

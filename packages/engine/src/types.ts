@@ -15,7 +15,7 @@ export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'cate
 export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10 };
 
 /** Numbers Danmarks Statistik gives per municipality. */
-export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population';
+export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population' | 'income';
 
 /** A preference gives points; a requirement removes cells that do not meet it. */
 export type Role = 'want' | 'must';
@@ -74,6 +74,8 @@ export interface Municipality {
   landTax: number;
   population: number;
   burglariesPer1000: number;
+  /** The mean disposable income of its residents, in kroner; missing where the statistics have none yet. */
+  income?: number;
 }
 
 export interface GridMeta {
@@ -184,6 +186,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
   { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
+  { id: 'income', group: 'Area and economy', name: 'High incomes', opposite: 'Low incomes', note: 'Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik.', kind: 'municipal', field: 'income', unit: 'kr.', min: 200000, max: 600000, step: 5000, role: 'want', weight: 1, full: 320000, zero: 260000 },
   { id: 'burglary', group: 'Area and economy', name: 'Few home burglaries', opposite: 'Many home burglaries', note: 'Reported per 1,000 residents per municipality, 2025.', kind: 'municipal', field: 'burglariesPer1000', unit: 'per 1,000', min: 1, max: 5, step: 0.1, role: 'want', weight: 1, full: 2.5, zero: 4.5 },
   {
     id: 'zone', group: 'Area and economy', name: 'Planning zone', note: 'Homes in a sommerhusområde cannot be lived in all year.', kind: 'category', layer: 'zone',
