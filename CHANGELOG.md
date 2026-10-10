@@ -16,8 +16,9 @@ Everything so far: there is no release yet. The test instance follows `master`.
   can be turned around. Blocks run as compiled JavaScript in a Web Worker.
 - Several maps, groups of blocks that switch on and off, and places with travel times.
 - Travel times by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries,
-  for every cell of the map; each place says when they are, and by train they are estimated from
-  the distance.
+  for every cell of the map, and by public transport on Rejseplanen's timetables: the time to be
+  at the place between 7:30 and 8:30 on a weekday, waiting included. Each place says when they
+  are; until then they are estimated from the distance.
 - Maps and places are saved on the server, so every browser has them, and a map can be shared as
   a link.
 - 34 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,

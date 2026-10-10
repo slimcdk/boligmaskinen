@@ -4,7 +4,7 @@ import { basename, join } from 'node:path';
 import { roadVersions } from './builds.ts';
 import { runStep } from './python.ts';
 
-export const TRAVEL_MODES = ['car', 'bike', 'walk'] as const;
+export const TRAVEL_MODES = ['car', 'bike', 'walk', 'transit'] as const;
 export type TravelMode = (typeof TRAVEL_MODES)[number];
 
 /** How far the travel times to a place are: the shape POST /api/travel answers with. */
@@ -14,6 +14,8 @@ export interface TravelState {
   state: 'ready' | 'working' | 'failed' | 'unavailable';
   /** Why there are none. */
   message?: string;
+  /** The modes there are travel times by, when they are ready: by public transport only on a network with a timetable. */
+  modes?: TravelMode[];
 }
 
 export interface TravelOptions {
@@ -29,8 +31,8 @@ const KEEP = 200;
 const ID = /^[0-9a-f]{24}$/;
 
 /**
- * The travel times to the user's places by car, by bike and on foot, found on the road network for
- * every cell of the data pack in use. The first request for a position starts the travel step,
+ * The travel times to the user's places by car, by bike, on foot and by public transport, found on
+ * the road network and its timetable for every cell of the data pack in use. The first request for a position starts the travel step,
  * which takes a few seconds once the pack's cells are matched to the network; the result is kept
  * in DATA_DIR/travel, one folder per pack and network, and the folders of older ones are removed.
  */
@@ -68,7 +70,7 @@ export class TravelTimes {
     const position = `${lng.toFixed(5)},${lat.toFixed(5)}`;
     const id = createHash('sha256').update(`${basename(basis.dir)}|${position}`).digest('hex').slice(0, 24);
     const dir = join(basis.dir, id);
-    if (await exists(dir)) return { id, state: 'ready' };
+    if (await exists(dir)) return { id, state: 'ready', modes: await modesIn(dir) };
     const failure = this.failed.get(id);
     if (failure) return { id, state: 'failed', message: failure };
     if (!this.working.has(id)) {
@@ -130,3 +132,8 @@ export class TravelTimes {
 }
 
 const exists = (path: string) => stat(path).then(() => true, () => false);
+
+async function modesIn(dir: string): Promise<TravelMode[]> {
+  const found = await Promise.all(TRAVEL_MODES.map((mode) => exists(join(dir, `${mode}.png`))));
+  return TRAVEL_MODES.filter((_, i) => found[i]);
+}

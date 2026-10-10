@@ -42,6 +42,13 @@ export const SOURCES: DataSource[] = [
     note: 'The data layers made from it are under the ODbL too.',
   },
   {
+    id: 'transit', name: 'Rejseplanen', url: 'https://www.rejseplanen.dk',
+    uses: 'The timetables of every bus, train, metro, light rail and ferry, as a GTFS feed, for the travel times to your places by public transport.',
+    licence: CC_BY,
+    credit: 'Køreplaner: Rejseplanen',
+    note: 'Changed: travel times found on the timetable of a weekday.',
+  },
+  {
     id: 'mst', name: 'Miljøstyrelsen', url: 'https://miljoegis.mim.dk',
     uses: 'Noise from roads, railways, airports and industry, from the strategic noise mapping 2022 (Lden).',
     licence: CC_BY,

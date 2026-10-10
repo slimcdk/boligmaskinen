@@ -23,6 +23,8 @@ export const SOURCE_URLS = {
   protected: 'https://arealeditering-dist-geo.miljoeportal.dk/geoserver/wfs',
   /** Plandata.dk's WFS, for the roads and railways the municipal plans plan. */
   plans: 'https://geoserver.plandata.dk/geoserver/wfs',
+  /** Rejseplanen's timetables of all public transport in Denmark, as a GTFS feed: about 55 MB, new every fortnight. */
+  transit: 'https://www.rejseplanen.info/labs/GTFS.zip',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -37,6 +39,7 @@ const LICENCES = {
   naturalEarth: 'Public domain, Natural Earth',
   air: 'CC BY 4.0, DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet (Danmarks Miljøportal)',
   protected: 'CC0 1.0, Miljøstyrelsen and the regions (Danmarks Miljøportal)',
+  transit: 'CC BY 4.0, Rejsekort & Rejseplan A/S (Rejseplanen)',
 };
 
 /** What the data jobs need to fetch and build. */
@@ -115,6 +118,14 @@ const zipCheck = (content: Buffer) => {
   return formatBytes(content.length);
 };
 
+/** A GTFS feed: a ZIP file with the timetable's files in it, whose names its directory lists as they are. */
+const gtfsCheck = (content: Buffer) => {
+  zipCheck(content);
+  const missing = ['stops.txt', 'trips.txt', 'stop_times.txt'].filter((name) => !content.includes(name));
+  if (missing.length) throw new Error(`a ZIP file without ${missing.join(', ')}`);
+  return formatBytes(content.length);
+};
+
 function jsonCheck(describe: (json: unknown) => string) {
   return (content: Buffer) => {
     let json: unknown;
@@ -145,6 +156,13 @@ async function fetchOsm(w: Work): Promise<JobOutcome> {
   const dir = await extracts.publish(stage, id);
   const counts = (await readJson<Record<string, number>>(join(dir, 'counts.json'))) ?? {};
   return { changed: true, result: `${number(counts['addresses'] ?? 0)} addresses, ${number(counts['road'] ?? 0)} roads, ${number(counts['forest'] ?? 0)} forests`, bytes: pbf.file.bytes };
+}
+
+/** Rejseplanen's GTFS feed: the timetables the road network job adds to the network, for travel by public transport. */
+async function fetchTransit(w: Work): Promise<JobOutcome> {
+  const feed = await w.archive.download(w.context, { source: 'transit', name: 'GTFS.zip', url: w.urls.transit, licence: LICENCES.transit, check: gtfsCheck });
+  await w.context.log(`The timetables: ${freshness(feed, w.day)}`);
+  return outcome(w, feed);
 }
 
 async function fetchZones(w: Work): Promise<JobOutcome> {
@@ -440,6 +458,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'osm', name: 'OpenStreetMap', source: 'Geofabrik', schedule: '0 3 * * *', then: ['grid', 'roads'], fetch: fetchOsm,
     description: 'The extract of Denmark, and from it forests, water, beaches, shops, stations, roads, addresses and municipalities.',
+  },
+  {
+    id: 'transit', name: 'Public transport', source: 'Rejseplanen', schedule: '50 3 * * *', then: ['roads'], fetch: fetchTransit,
+    description: 'The timetables of every bus, train, metro, light rail and ferry in Denmark, as a GTFS feed; new about every fortnight.',
   },
   { id: 'plandata', name: 'Planning zones', source: 'Plandata.dk', schedule: '30 3 * * *', then: ['grid'], fetch: fetchZones, description: 'Byzone and sommerhusområde polygons from the WFS.' },
   { id: 'stil-schools', name: 'Schools', source: 'STIL Institutionsregisteret', schedule: '40 3 * * *', then: ['grid'], fetch: fetchSchools, description: 'Folkeskoler, friskoler and private schools.' },

@@ -21,15 +21,20 @@ describe('travel times from the server', () => {
   const service = () => {
     const travel = TestBed.inject(TravelService);
     travel.pollMs = 1;
-    travel.load = async (url) => Uint8Array.of(url.endsWith('/car') ? 12 : url.endsWith('/bike') ? 34 : 56);
+    travel.load = async (url) => Uint8Array.of({ car: 12, bike: 34, walk: 56, transit: 78 }[url.split('/').pop()!]!);
     return travel;
   };
+  const first = (times: Record<string, Uint8Array> | null) => times && Object.fromEntries(Object.entries(times).map(([mode, layer]) => [mode, layer[0]]));
 
-  it('asks until they are ready, then loads every mode', async () => {
-    answers.push(json({ id: 'abc', state: 'working' }), json({ id: 'abc', state: 'ready' }));
-    const times = await service().times('pack-1', 10.2039, 56.15);
-    expect(times && { car: times.car[0], bike: times.bike[0], walk: times.walk[0] }).toEqual({ car: 12, bike: 34, walk: 56 });
+  it('asks until they are ready, then loads every mode the server found them by', async () => {
+    answers.push(json({ id: 'abc', state: 'working' }), json({ id: 'abc', state: 'ready', modes: ['car', 'bike', 'walk', 'transit'] }));
+    expect(first(await service().times('pack-1', 10.2039, 56.15))).toEqual({ car: 12, bike: 34, walk: 56, transit: 78 });
     expect(fetches.map((f) => f.body)).toEqual(['{"lng":10.2039,"lat":56.15}', '{"lng":10.2039,"lat":56.15}']);
+  });
+
+  it('loads the road modes from a server that names none, and leaves public transport to the estimate', async () => {
+    answers.push(json({ id: 'abc', state: 'ready' }));
+    expect(first(await service().times('pack-1', 10.2039, 56.15))).toEqual({ car: 12, bike: 34, walk: 56 });
   });
 
   it('asks once for the same place on the same pack', async () => {

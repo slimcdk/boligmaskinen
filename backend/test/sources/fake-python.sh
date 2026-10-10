@@ -47,11 +47,19 @@ case "$step" in
     printf '{"nodes": 7200839, "edges": 7784925, "carEdges": 8565564, "bikeEdges": 12979152, "walkEdges": 15345026}' > "$2/counts.json"
     echo "Built the network"
     ;;
+  transit)
+    # transit <feed> <network>
+    printf '{"day": "2026-10-06", "until": "2026-12-30", "stops": 36344, "trips": 42935, "connections": 1168243, "footpaths": 94420, "stopsOffFoot": 127}' > "$2/transit.json"
+    echo "Timetable of 2026-10-06 (Tuesday): 42,935 trips"
+    ;;
   travel)
-    # travel <roads> <pack> <lng> <lat> <out> --cache <dir>: a layer that names where it is to, or a failure for (0, 0)
+    # travel <roads> <pack> <lng> <lat> <out> --cache <dir>: a layer that names where it is to, or a failure for (0, 0);
+    # by public transport too when the network has a timetable
     if [ "$3" = "0.00000" ]; then echo "There is no road near (0, 0)" >&2; exit 1; fi
     mkdir -p "$5" "$7"
-    for mode in car bike walk; do printf '%s to %s,%s on %s' "$mode" "$3" "$4" "$(basename "$1")" > "$5/$mode.png"; done
+    modes="car bike walk"
+    if [ -f "$1/transit.json" ]; then modes="$modes transit"; fi
+    for mode in $modes; do printf '%s to %s,%s on %s' "$mode" "$3" "$4" "$(basename "$1")" > "$5/$mode.png"; done
     echo "car: 1,035,599 of 1,051,319 land cells within 254 minutes"
     ;;
   remote-zip)

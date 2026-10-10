@@ -37,7 +37,7 @@ These hold for every milestone.
 ## Where we are (2026-10-10)
 
 **Done: the prototype (milestone 0), the backend foundation (milestone 1) and the data pipeline
-as jobs (milestone 2). Milestone 3 is done but for public transport and the sources that need
+as jobs (milestone 2). Milestone 3 is done but for the sources that need
 access; milestone 7 but for a first release. Of milestone 4, scoring in the database is ready for
 the homes.**
 
@@ -52,7 +52,7 @@ the homes.**
   blocks run as compiled JavaScript in a Web Worker, and compile to SQL for the database.
 - Several maps, each with its own blocks in groups that can be switched off. The places are
   shared by the maps; their travel times by car, bike and on foot are found on OSM's roads, and
-  by train they are still estimated. The maps and places are saved on the server, so every
+  by public transport on Rejseplanen's timetables. The maps and places are saved on the server, so every
   browser has them.
 - Material 3 in light and dark mode, on desktops, tablets and phones, with a finger's 48 px on
   touch screens; axe finds no WCAG 2.2 AA violations in the main views.
@@ -68,7 +68,7 @@ the homes.**
   it; Dependabot proposes updates. Every green commit on `master` is published as `:master`,
   which the test instance on a home server runs.
 
-**Not yet:** public transport, data about homes, homes for sale and prices, and alerts, which wait
+**Not yet:** data about homes, homes for sale and prices, and alerts, which wait
 for the access in Track A.
 
 ## Track A: access applications (start now, runs alongside)
@@ -80,7 +80,7 @@ Approvals take weeks or months, so they start before the code needs them.
 | Datafordeleren user and API key | DAR, BBR, MAT, EBR, VUR (milestone 4) | The login failed. Try again, or create a new web user. Build only against GraphQL and file downloads; the old services close 15 January 2027. |
 | EJF via Geodatastyrelsen | Sale prices (milestone 5) | Needs MitID Erhverv, OAuth, a whitelisted IP, a stated purpose and a GDPR legal basis. Ask GST what a private, self-hosted use needs. Råd til Bolig shows that a small company can get access. |
 | Listings feed | Homes for sale (milestone 5) | Ask Boligsiden (datasalg) and Geomatic (Udbudsdata) for terms and price. Until then: the user's own search-alert e-mails. |
-| Rejseplanen Labs | Public transport times (milestone 3) | Apply for a key. The GTFS feed is CC BY 4.0 and needs no key. |
+| Rejseplanen Labs | Public transport times (milestone 3) | Not needed for them (2026-10-10): the GTFS feed is CC BY 4.0 and needs no key, and the travel times are found on it. A key only for the real-time API. |
 | uddannelsesstatistik.dk | School grades and well-being (milestone 4) | Apply for a key. |
 
 **Done when** every row has an answer: access, a price, or a no with a fallback.
@@ -131,7 +131,7 @@ what they took (#69).
   manual step.
 - The nightly jobs keep the data current.
 
-## Milestone 3: the map at full detail and speed (done 2026-10-10, but for public transport and the sources that need access)
+## Milestone 3: the map at full detail and speed (done 2026-10-10, but for the sources that need access)
 
 **Goal:** detail follows the zoom, and the map answers a slider at once.
 
@@ -149,9 +149,13 @@ what they took (#69).
    - Routing for car, bike and walk on OSM. Decided 2026-10-10: our own network and Dijkstra in
      the pipeline (SciPy) rather than OSRM or Valhalla, which would be a service of their own. One
      search from a place gives the times from every cell, in a few seconds.
-   - Public transport from the Rejseplanen GTFS feed (needs the key from Track A).
+   - Public transport from the Rejseplanen GTFS feed. Done (2026-10-10): the feed needs no key. The
+     road network job keeps a weekday's timetable beside the roads, and the travel step scans its
+     connections back from the place (the connection scan algorithm), walking to the first stop
+     and from the last: the time to be there between 7:30 and 8:30, waiting included.
    - When a place is added, the app finds its travel times (`POST /api/travel`). Done
-     (2026-10-10) for car, bike and walk; the place says whether its times come from the roads.
+     (2026-10-10) for car, bike and walk, and for public transport the same day; the place says
+     whether its times come from the roads and the timetables.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
    districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too, and Miljøstyrelsen's protected areas and Natura 2000 from Danmarks Miljøportal; pharmacies, libraries and the overhead power lines of 132 kV or more from OpenStreetMap, where they are nearly all mapped; and the roads and railways the municipal plans lay out, the local plans of the last two years, the zones around businesses and plants, and the district heating areas, from Plandata.dk; and the areas the regions' raw material plans set aside for digging, now or later, from Danmarks Miljøportal. And
    drinking water quality (hardness per supply area, PFAS, nitrate); see

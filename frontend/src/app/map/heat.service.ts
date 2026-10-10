@@ -13,7 +13,8 @@ import { TravelService } from './travel.service';
 export type { Breakdown, BreakdownRow, HeatStats } from './heat-engine';
 
 /** How a place's travel times are found: on the road network, being found there, or estimated from the distance. */
-export type RouteState = 'routed' | 'working' | 'estimated';
+/** How a place's travel times are found: on the roads, also by public transport, still working, or estimated. */
+export type RouteState = 'routed' | 'transit' | 'working' | 'estimated';
 
 type WorkerReply =
   | { type: 'rendered'; id: number; result: HeatResult; buffer: ArrayBuffer; detail: ArrayBuffer | null }
@@ -123,10 +124,10 @@ export class HeatService {
       const key = `${pack}|${position}`;
       // An estimate is asked again with the next change: the road network may have been built since
       const state = this.routeStates.get(key);
-      if (state === 'routed' || state === 'working') continue;
+      if (state === 'routed' || state === 'transit' || state === 'working') continue;
       this.routeStates.set(key, 'working');
       void this.travel.times(pack, place.lng, place.lat).then((times) => {
-        this.routeStates.set(key, times ? 'routed' : 'estimated');
+        this.routeStates.set(key, !times ? 'estimated' : times.transit ? 'transit' : 'routed');
         this.routeChanges.update((n) => n + 1);
         // Found for a pack the map has left since
         if (!times || this.data.grid() !== grid) return;

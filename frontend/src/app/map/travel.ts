@@ -1,11 +1,14 @@
 import { Grid, mercatorFrame, TravelMode } from '@boligmaskinen/engine';
 
-/** The modes the road network has travel times for; a train is still an estimate. */
-export const ROUTED_MODES = ['car', 'bike', 'walk'] as const satisfies readonly TravelMode[];
+/** The modes the server can find travel times by: on the road network, and by public transport on its timetable. */
+export const ROUTED_MODES = ['car', 'bike', 'walk', 'transit'] as const satisfies readonly TravelMode[];
 export type RoutedMode = (typeof ROUTED_MODES)[number];
 
-/** Minutes to a place from every cell of the region's grid, by mode (255 for 254 or more). */
-export type RoutedTimes = Record<RoutedMode, Uint8Array>;
+/**
+ * Minutes to a place from every cell of the region's grid (255 for 254 or more), by the modes the
+ * server found them by: by public transport only where its road network has a timetable.
+ */
+export type RoutedTimes = Partial<Record<RoutedMode, Uint8Array>>;
 
 /** A place's position as the heat engine names it: its travel times belong to the position. */
 export const positionOf = (place: { lng: number; lat: number }) => `${place.lng.toFixed(5)},${place.lat.toFixed(5)}`;
