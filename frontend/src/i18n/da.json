@@ -352,8 +352,7 @@
     "intro": "Hvert valg bliver en blok. Blokke er kode: deres skydere er i sidepanelet, og du kan læse og rette koden.",
     "blocks": "Blokke",
     "travelTo": "Rejsetid til {{ name }}",
-    "examples": "Eksempler på kode",
-    "travelTime": "Rejsetid til {{ place }}"
+    "examples": "Eksempler på kode"
   },
   "code": {
     "blockName": "Blokkens navn",
