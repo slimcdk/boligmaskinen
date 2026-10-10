@@ -10,7 +10,7 @@ empty folder to the map, and through updates and backups.
 |---|---|
 | Software | Docker with Compose (Docker Engine 24 or newer, or Docker Desktop) |
 | Machine | 64-bit Intel/AMD (amd64) or ARM (arm64, such as a Raspberry Pi 5 with a 64-bit OS); Docker picks the image for the machine |
-| Memory | About 1 GB while the data is built (each night, for a few minutes); about 300 MB the rest of the time |
+| Memory | About 1.1 GB while the data is built (each night, for a few minutes), so give the app's container 1.5 GB if you limit it: a new install was checked under that limit. About 300 MB the rest of the time |
 | Disk | About 4 GB in `./data`: the raw downloads, the builds, the road network and the data packs. Reading the OpenStreetMap extract takes 1 GB more for a few minutes |
 | Network | About 1 GB of downloads the first time (OpenStreetMap is 500 MB of it), then a few hundred MB a night |
 | Time | About six minutes for the first build of all of Denmark on a fast connection (5½ on 2026-10-10) |
@@ -100,7 +100,7 @@ The rest of `./data` is rebuilt by the jobs, so it needs no backup.
 | What you see | What to do |
 |---|---|
 | The jobs fail with "permission denied" | `./data` belongs to another user than the app's; see step 3 |
-| A step "was killed, most likely because the memory ran out" | Give the app's container about 1 GB of memory |
+| A step "was killed, most likely because the memory ran out" | Give the app's container 1.5 GB of memory |
 | "Waiting for …" in a job | Normal: it waits for another job, which starts it when done |
 | "The new data was not switched in, because …" | A source answered with far less than before. The map keeps its data; when the source is right again, the next night fixes it. If the change is real, run "Pack the data" by hand to switch anyway |
 | A source fails for days | Its site may have changed. See the job's log, and `docs/data-sources.md` for the source |
