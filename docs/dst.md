@@ -7,7 +7,10 @@ finest level that variable reaches. It then rates what is useful for a home sear
 
 The pilot already uses three StatBank tables per municipality: [PSKAT](https://www.statbank.dk/PSKAT)
 (income tax and land tax rates), [FOLK1A](https://www.statbank.dk/FOLK1A) (population) and
-[STRAF22](https://www.statbank.dk/STRAF22) (home burglaries). See `data-sources.md`.
+[STRAF22](https://www.statbank.dk/STRAF22) (home burglaries). Since 2026-10-10 it also uses
+[INDKP101](https://www.statbank.dk/INDKP101) (mean disposable income),
+[RES88](https://www.statbank.dk/RES88) (the yearly rate of a nursery place) and
+[KVOTIEN](https://www.statbank.dk/KVOTIEN) (pupils per class). See `data-sources.md`.
 
 **Method.**
 
@@ -343,7 +346,7 @@ uses it today.
 
 | # | Theme | Best tables | Period, cadence | Why | Rating | Used |
 |--:|---|---|---|---|---|---|
-| 1 | Income and inequality | [INDKP101](https://www.statbank.dk/INDKP101) (average income per person, 39 income types), [INDKF112](https://www.statbank.dk/INDKF112) (families, by children), [IFOR41](https://www.statbank.dk/IFOR41) (Gini, P90/P10), [IFOR12P](https://www.statbank.dk/IFOR12P) (relative poverty), [IFOR22](https://www.statbank.dk/IFOR22) (deciles) | 1987–2025, yearly | The main socio-economic signal. Not free below the municipality | **High** | No |
+| 1 | Income and inequality | [INDKP101](https://www.statbank.dk/INDKP101) (average income per person, 39 income types), [INDKF112](https://www.statbank.dk/INDKF112) (families, by children), [IFOR41](https://www.statbank.dk/IFOR41) (Gini, P90/P10), [IFOR12P](https://www.statbank.dk/IFOR12P) (relative poverty), [IFOR22](https://www.statbank.dk/IFOR22) (deciles) | 1987–2025, yearly | The main socio-economic signal. Not free below the municipality | **High** | INDKP101, since 2026-10-10 |
 | 2 | Crime by type | [STRAF11](https://www.statbank.dk/STRAF11) (reported offences, 91 kinds) | 2007Q1–2026Q2, quarterly | Violence, vandalism, vehicle theft and so on, besides burglary. Divide by FOLK1A | **High** | Partly: burglaries from STRAF22 |
 | 3 | Education | [HFUDD11](https://www.statbank.dk/HFUDD11) | 2008–2025, yearly | Context where parish data is thin; KMST007A is better | Medium | No |
 | 4 | Families, age, population change | [FAM44N](https://www.statbank.dk/FAM44N) (families with children), [FAM55N](https://www.statbank.dk/FAM55N) (households), [GALDER](https://www.statbank.dk/GALDER) (average age), [BEV107](https://www.statbank.dk/BEV107) (births, deaths, moves), [FRKM126](https://www.statbank.dk/FRKM126) (forecast 2026–2050) | 1986/2005–2026, yearly | Families with children, and whether an area grows. The forecast says where schools and services will be under pressure | **High** | Population only (FOLK1A) |
@@ -351,7 +354,7 @@ uses it today.
 | 6 | Unemployment and labour market | [AULP01](https://www.statbank.dk/AULP01) (full-time unemployed %), [AUP02](https://www.statbank.dk/AUP02) (monthly), [RAS201](https://www.statbank.dk/RAS201) (socio-economic status) | 2007–2026 | Economic health of an area; KMSTA005 gives it per parish | Medium | No |
 | 7 | Commuting | [AFSTB4](https://www.statbank.dk/AFSTB4) (average commuting distance of residents), [PEND100](https://www.statbank.dk/PEND100) (residence × workplace municipality) | 2008–2024, yearly | How far people from here travel to work. Our own travel-time blocks measure it per cell | Medium | No |
 | 8 | Cars | [BIL800](https://www.statbank.dk/BIL800) (families with 0, 1, 2+ cars), [BIL710](https://www.statbank.dk/BIL710) (cars by fuel, incl. electric) | 2007/2018–2026, yearly | A car-free life is possible where few families have cars | Medium | No |
-| 9 | Childcare and school | [RES88](https://www.statbank.dk/RES88) (yearly childcare fees per institution type), [BOERN8](https://www.statbank.dk/BOERN8) (children per adult in daycare), [KVOTIEN](https://www.statbank.dk/KVOTIEN) (pupils per class) | 2007/2009/2023–2025/2026, yearly | Real costs and quality for families. Fees differ a lot between municipalities | **High** for families | No |
+| 9 | Childcare and school | [RES88](https://www.statbank.dk/RES88) (yearly childcare fees per institution type), [BOERN8](https://www.statbank.dk/BOERN8) (children per adult in daycare), [KVOTIEN](https://www.statbank.dk/KVOTIEN) (pupils per class) | 2007/2009/2023–2025/2026, yearly | Real costs and quality for families. Fees differ a lot between municipalities | **High** for families | RES88 (nurseries) and KVOTIEN, since 2026-10-10 |
 | 10 | Property taxes and valuations | [EJDSK2](https://www.statbank.dk/EJDSK2) (land tax per mille and rates), [ESKAT](https://www.statbank.dk/ESKAT) (tax base) | 2006/2007–2026, yearly | Running cost of owning | Medium | Land tax rate via PSKAT |
 | 11 | Forced sales | [TVANG3](https://www.statbank.dk/TVANG3) | 2012–2025, yearly | A weak sign of financial stress; divide by the number of homes | Low | No |
 | 12 | Health and services | [SUNDAF01](https://www.statbank.dk/SUNDAF01) (average distance to the nearest GP, experimental, 2024), [HISBK](https://www.statbank.dk/HISBK) (life expectancy, five-year windows), [NGLK](https://www.statbank.dk/NGLK) (municipal spending per pupil, per child 0–10, per elderly) | 2008–2025 | Service level. Distance to a GP can be computed per cell once GP locations are known | Low–medium | No |
