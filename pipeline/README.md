@@ -139,7 +139,7 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 | Criterion | Source | Notes |
 |---|---|---|
 | Forest, lake/sea, beach, supermarket, station, roads, address points, municipalities | OpenStreetMap (Geofabrik) | ODbL. Forests and lakes count from 5 ha |
-| Road noise | Miljøstyrelsen, strategic noise maps 2022 (Lden) | Every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere (3 % of the land). Elsewhere estimated from road class and distance |
+| Noise | Miljøstyrelsen, strategic noise maps 2022 (Lden) | Every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere (3 % of the land); the major railways, Copenhagen Airport and industry in the four cities, where their band is louder (0.2 % of the land). Elsewhere estimated from road class and distance |
 | Planning zone | Plandata.dk zone map | |
 | Schools | STIL Institutionsregisteret | Folkeskoler, friskoler and private schools |
 | Daycare | STIL Dagtilbudsregisteret | Active units |

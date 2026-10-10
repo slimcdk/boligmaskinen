@@ -39,7 +39,7 @@ export const SOURCES: DataSource[] = [
   },
   {
     name: 'Miljøstyrelsen', url: 'https://miljoegis.mim.dk',
-    uses: 'Road noise from the strategic noise mapping 2022 (Lden).',
+    uses: 'Noise from roads, railways, airports and industry, from the strategic noise mapping 2022 (Lden).',
     licence: CC_BY,
     credit: 'Støjkortlægning 2022: Miljøstyrelsen',
     note: "Changed: put on the map's 100 m cells. Where it has no data, the noise is our own estimate.",
@@ -135,7 +135,7 @@ export const SOURCES: DataSource[] = [
         <h3 id="about-how">How the map is made</h3>
         <p>Denmark is divided into {{ cell() }} m cells{{ detail() ? ', and into ' + detail() + ' m cells for the map zoomed in' : '' }}. Every cell gets a value for each data layer, and every block in your weighting turns those values into a score. The map shows the blocks averaged by their importance.</p>
         <p>Homes are approximated by address points from OpenStreetMap, which are imported from the national address register. Cells in industrial areas are left out.</p>
-        <p>Road noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere. Other places are estimated from road type and distance.</p>
+        <p>Noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, the major roads and railways elsewhere, Copenhagen Airport, and industry in the four cities. A cell has the loudest of them. Other places are estimated from road type and distance.</p>
         <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation. Tax and burglaries are per municipality, and the air per square kilometre.</p>
         <p>Travel times to your places by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries, once the server has built its road network; each place says which. By train, and until then, they are estimated from the straight-line distance.</p>
         <p>Colours are stretched over the points currently shown, so the map always shows the differences that matter. Outside Denmark the map shows Natural Earth's world map.</p>

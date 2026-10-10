@@ -57,8 +57,10 @@ case "$step" in
   remote-zip)
     # remote-zip extract <url> <pattern> <out_dir>
     noise="$(cat "$TMPDIR/../noise.txt" 2>/dev/null || echo noise)"
-    for ext in shp shx dbf prj; do printf '%s %s' "$noise" "$ext" > "$4/eu_2022_vej_4m.$ext"; done
-    echo "Extracted 5 files"
+    for map in eu_2022_vej_4m eu_2022_jernbane_4m eu_2022_lufthavn_4m eu_2022_virksomhed_by_4m; do
+      for ext in shp shx dbf prj; do printf '%s %s' "$noise" "$ext" > "$4/$map.$ext"; done
+    done
+    echo "Extracted 16 files"
     ;;
   world)
     out="$1"

@@ -38,7 +38,7 @@ const count = (n: number, word: string) => `${number(n)} ${word}${n === 1 ? '' :
 const sha256 = (content: string | Buffer) => createHash('sha256').update(content).digest('hex');
 const exists = (path: string) => stat(path).then(() => true, () => false);
 
-/** "Road noise and Wind turbines". */
+/** "Noise and Wind turbines". */
 function names(jobIds: string[]): string {
   const named = jobIds.map((id) => FETCH_JOBS[id] ?? BUILD_NAMES[id] ?? id);
   return named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named.at(-1)}` : named[0];
@@ -71,6 +71,12 @@ const GRID_SOURCES: Record<string, [job: string, name: string]> = {
   population: ['dst', 'folk.json'],
   no2: ['air', 'no2.geojson'],
   pm25: ['air', 'pm25.geojson'],
+};
+/** Files the grid reads when they are there: an install fetched the noise archive before it took these out too. */
+const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
+  noise_rail: ['noise', 'eu_2022_jernbane_4m.shp'],
+  noise_air: ['noise', 'eu_2022_lufthavn_4m.shp'],
+  noise_industry: ['noise', 'eu_2022_virksomhed_by_4m.shp'],
 };
 
 interface GridMeta {
@@ -106,6 +112,12 @@ async function buildGrid(w: Work, settings: GridSettings): Promise<JobOutcome> {
     hashes[key] = file.sha256;
   }
   if (missing.size) return waiting(`Waiting for ${names([...missing])}: nothing fetched yet`);
+  for (const [key, [job, name]] of Object.entries(OPTIONAL_GRID_SOURCES)) {
+    const file = await w.archive.newest(job, name);
+    if (!file || !(await w.archive.present(file))) continue;
+    files[key] = file.path;
+    hashes[key] = file.sha256;
+  }
 
   const grids = new Versions(join(w.dataDir, 'work', 'grid'));
   const wanted: MadeFrom = { revision: w.revision, inputs: { ...hashes, cellMetres: String(settings.cellMetres), region: settings.region } };

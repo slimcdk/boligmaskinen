@@ -13,6 +13,7 @@ Usage:
 
     osm_layers    layers.gpkg from the osm step        osm_addresses  addresses.npy from the osm step
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
+    noise_rail, noise_air, noise_industry  Miljøstyrelsen's maps of railways, airports and industry (optional)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
     turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST)
     no2, pm25     DCE's air quality on a 1 km grid, as GeoJSON (optional: without them the layers have no data)
@@ -66,7 +67,9 @@ CODES = re.compile(r"^\d{3}(,\d{3})*$")
 
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
 # Sources a build can do without: their layers have no data then
-OPTIONAL_INPUTS = ["no2", "pm25"]
+OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry"]
+# Miljøstyrelsen's noise maps besides the roads', in the same bands
+OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
 CONCENTRATIONS = {"no2": ("NO2", 4), "pm25": ("PM2_5", 10)}
 
@@ -377,7 +380,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     step(f"Planning zones: {len(zones):,} polygons", 0.45)
     del zones
 
-    # --- Road noise: Miljøstyrelsen where mapped, otherwise an estimate from road classes ----
+    # --- Noise: Miljøstyrelsen where mapped, otherwise an estimate from road classes ----------
     # A cell has the loudest band of the polygons over it
     mst_level = np.zeros(grid.shape, dtype=np.uint8)
     agglomeration_roads = np.zeros(grid.shape, dtype=bool)
@@ -407,12 +410,26 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         del cells, noise
     del roads
     estimate = np.where(agglomeration, np.minimum(estimate, 54.0), estimate)
-    layers["noise"] = np.where(mst_level > 0, mst_level + 100, np.clip(np.round(estimate), 0, 99)).astype(np.uint8)
+    road = np.where(mst_level > 0, mst_level, np.clip(np.round(estimate), 0, 99).astype(np.uint8))
     del estimate
+    # Railways, airports and industry where Miljøstyrelsen maps them: their band counts where it is
+    # louder than the road's
+    other = np.zeros(grid.shape, dtype=np.uint8)
+    for key, what in OTHER_NOISE.items():
+        if inputs.get(key) is None:
+            warn(f"No noise map of {what}: the noise is the roads' alone")
+            continue
+        for polygons in read_chunks(inputs[key], 2_000, bbox=(grid.x0, grid.y0, grid.x1, grid.y1), columns=["category"]):
+            for category, level in MST_BANDS.items():
+                np.maximum(other, grid.burn(polygons[polygons["category"] == category].geometry, value=level), out=other)
+    louder = other > road
+    layers["noise"] = np.where(louder, other + 100, np.where(mst_level > 0, road + 100, road)).astype(np.uint8)
     mapped = float((mst_level > 0)[region_land].mean()) if region_land.any() else 0.0
-    step(f"Noise: {mst_polygons:,} MST polygons; {mapped:.1%} of the region's land mapped by MST; "
-         f"agglomerations cover {agglomeration[region_land].mean() if region_land.any() else 0:.1%}", 0.65)
-    del mst_level, agglomeration
+    other_share = float(louder[region_land].mean()) if region_land.any() else 0.0
+    step(f"Noise: {mst_polygons:,} MST polygons of roads; {mapped:.1%} of the region's land mapped by MST; "
+         f"agglomerations cover {agglomeration[region_land].mean() if region_land.any() else 0:.1%}; "
+         f"railways, airports or industry are louder on {other_share:.1%}", 0.65)
+    del mst_level, agglomeration, road, other, louder
 
     # --- Homes: OSM address points (imported from the national address register) -------------
     lons_lats = np.load(inputs["osm_addresses"]).reshape(-1, 2)

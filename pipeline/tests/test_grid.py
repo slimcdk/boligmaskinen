@@ -105,6 +105,14 @@ def test_takes_noise_from_the_noise_map_where_it_has_some(aarhus: Built):
     assert estimate < 100 and estimate >= grid.NOISE_FLOOR
 
 
+def test_takes_the_railway_s_band_where_it_is_louder_than_the_road(aarhus: Built):
+    # Far from the roads, the railway's 60–64 dB band
+    assert aarhus.at("noise", 571_000, 6_218_000) == 162
+    # Where it crosses the secondary road, the road's estimate is louder
+    crossing = aarhus.at("noise", 574_000, 6_218_000)
+    assert 62 < crossing < 100
+
+
 def test_puts_the_air_quality_of_each_square_on_its_cells(aarhus: Built, sources, tmp_path):
     # NO₂ is 5 + the kilometres from the west edge, in steps of 1/4 µg/m³; PM2.5 is 5.5 in steps of 1/10
     assert aarhus.at("no2", 574_500, 6_219_500) == 1 + 9 * 4

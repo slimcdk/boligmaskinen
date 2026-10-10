@@ -94,6 +94,9 @@ def sources(tmp_path_factory) -> Path:
     ], geometry="geometry", crs="EPSG:25832")
     (root / "mst").mkdir()
     noise.to_file(root / "mst" / "eu_2022_vej_4m.shp")
+    # ...and a railway across the south of Aarhus, in the 60–64 dB band
+    rail = gpd.GeoDataFrame([{"category": "Lden6064", "geometry": box(570_000, 6_217_950, 580_000, 6_218_050)}], geometry="geometry", crs="EPSG:25832")
+    rail.to_file(root / "mst" / "eu_2022_jernbane_4m.shp")
 
     # --- Plandata's zone map: 1 is byzone, 3 sommerhusområde ---
     zones = gpd.GeoDataFrame([{"zone": 1, "geometry": BYZONE}, {"zone": 3, "geometry": SOMMERHUS}], geometry="geometry", crs="EPSG:25832")
@@ -143,7 +146,7 @@ def sources(tmp_path_factory) -> Path:
 
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
-        "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp",
+        "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json",
     }
