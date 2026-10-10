@@ -2,13 +2,16 @@
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
-  | 'station' | 'turbine' | 'solar' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'station' | 'turbine' | 'turbine_heights' | 'solar' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
-export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'concentration';
+export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
 
-/** Raw steps per µg/m³ of a concentration layer: raw 0 is no data, raw r is (r - 1) / scale µg/m³. */
-export const CONCENTRATION_SCALE: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10 };
+/**
+ * Raw steps per unit of a scaled layer: raw 0 is no data, raw r is (r - 1) / steps. The air's are per
+ * µg/m³; a turbine's distance is in its total heights.
+ */
+export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10 };
 
 /** Numbers Danmarks Statistik gives per municipality. */
 export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population';
@@ -152,14 +155,19 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   {
     // Denmark ranges from about 3 to 13 µg/m³ (median 4.2); WHO's guideline is 10
     id: 'no2', group: 'Nature', name: 'Clean air', opposite: 'Polluted air', note: 'Nitrogen dioxide (NO₂), yearly mean 2024 on a 1 km grid, from DCE.',
-    kind: 'concentration', layer: 'no2', unit: 'µg/m³', min: 0, max: 15, step: 0.1, role: 'want', weight: 2, full: 3.5, zero: 7,
+    kind: 'scaled', layer: 'no2', unit: 'µg/m³', min: 0, max: 15, step: 0.1, role: 'want', weight: 2, full: 3.5, zero: 7,
   },
   {
     // Denmark ranges from about 5.5 to 7.7 µg/m³; WHO's guideline is 5
     id: 'pm25', group: 'Nature', name: 'Few fine particles', opposite: 'Many fine particles', note: 'Fine particles (PM2.5), yearly mean 2024 on a 1 km grid, from DCE.',
-    kind: 'concentration', layer: 'pm25', unit: 'µg/m³', min: 0, max: 10, step: 0.1, role: 'want', weight: 1, full: 6, zero: 7.5,
+    kind: 'scaled', layer: 'pm25', unit: 'µg/m³', min: 0, max: 10, step: 0.1, role: 'want', weight: 1, full: 6, zero: 7.5,
   },
   { id: 'turbine', group: 'Peace and quiet', name: 'Away from wind turbines', opposite: 'Close to wind turbines', note: 'Nearest turbine in operation.', kind: 'distance', layer: 'turbine', role: 'want', weight: 1, full: 2000, zero: 500 },
+  {
+    id: 'turbine_heights', group: 'Peace and quiet', name: 'Away from wind turbines, by height', opposite: 'Close to wind turbines, by height',
+    note: 'Distance to the nearest turbine in its total heights; Danish rules keep 4 from a neighbour.',
+    kind: 'scaled', layer: 'turbine_heights', unit: 'heights', min: 0, max: 25, step: 0.5, role: 'want', weight: 1, full: 10, zero: 4,
+  },
   { id: 'solar', group: 'Peace and quiet', name: 'Away from solar parks', opposite: 'Close to solar parks', note: 'Nearest solar park of at least 1 ha, from OpenStreetMap.', kind: 'distance', layer: 'solar', role: 'want', weight: 1, full: 1000, zero: 300 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },

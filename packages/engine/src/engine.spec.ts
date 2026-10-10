@@ -32,9 +32,11 @@ describe('decodeValue', () => {
     expect(decodeValue({ kind: 'noise' }, 162, ctx)).toBe(62);
     expect(decodeValue({ kind: 'noise' }, 53, ctx)).toBe(53);
     // Concentrations: 0 is no data, then steps of 1/4 µg/m³ for NO₂ and 1/10 for PM2.5
-    expect(decodeValue({ kind: 'concentration', layerName: 'no2' }, 0, ctx)).toBeNull();
-    expect(decodeValue({ kind: 'concentration', layerName: 'no2' }, 41, ctx)).toBe(10);
-    expect(decodeValue({ kind: 'concentration', layer: 'pm25' }, 56, ctx)).toBe(5.5);
+    expect(decodeValue({ kind: 'scaled', layerName: 'no2' }, 0, ctx)).toBeNull();
+    expect(decodeValue({ kind: 'scaled', layerName: 'no2' }, 41, ctx)).toBe(10);
+    expect(decodeValue({ kind: 'scaled', layer: 'pm25' }, 56, ctx)).toBe(5.5);
+    // A turbine's distance in its heights, in tenths
+    expect(decodeValue({ kind: 'scaled', layerName: 'turbine_heights' }, 41, ctx)).toBe(4);
   });
 });
 

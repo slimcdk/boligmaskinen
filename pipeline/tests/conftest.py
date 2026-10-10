@@ -119,13 +119,16 @@ def sources(tmp_path_factory) -> Path:
         lines.append(f"{name};{status};{lat};{lon}")
     (root / "dagtilbud.csv").write_text("\n".join(lines) + "\n", encoding="utf-8-sig")
 
-    # --- Energistyrelsen: data from the fourth row; column 4 is the decommissioning date, 14 and 15 the position ---
+    # --- Energistyrelsen: data from the fourth row; column 4 is the decommissioning date, 6 and 7 the rotor and
+    # the hub in metres, 14 and 15 the position ---
     book = openpyxl.Workbook()
     sheet = book.active
     for _ in range(3):
         sheet.append(["header"])
     sheet.append([1, "Mølle", None, None, *[None] * 9, "571000,0", "6234000,0"])
     sheet.append([2, "Mølle", None, "2020-01-01", *[None] * 9, 579_000, 6_224_000])
+    # A turbine 150 m tall in the west of Aarhus: a rotor of 100 m on a hub of 100 m
+    sheet.append([3, "Mølle", None, None, 3600, 100, 100, *[None] * 6, 570_500, 6_220_000])
     book.save(root / "vinddata.xlsx")
 
     # --- Danmarks Statistik ---

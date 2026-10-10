@@ -25,9 +25,10 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'water', label: 'Distance to a lake of at least 5 ha, or the sea', unit: 'm', group: 'Nature', kind: 'distance', layer: 'water' },
   { name: 'beach', label: 'Distance to a beach', unit: 'm', group: 'Nature', kind: 'distance', layer: 'beach' },
   { name: 'noise', label: 'Noise from roads, railways, airports and industry, Lden', unit: 'dB', group: 'Peace and quiet', kind: 'noise', layer: 'noise' },
-  { name: 'no2', label: 'Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'concentration', layer: 'no2' },
-  { name: 'pm25', label: 'Fine particles (PM2.5), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'concentration', layer: 'pm25' },
+  { name: 'no2', label: 'Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'scaled', layer: 'no2' },
+  { name: 'pm25', label: 'Fine particles (PM2.5), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'scaled', layer: 'pm25' },
   { name: 'turbine', label: 'Distance to a wind turbine in operation', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'turbine' },
+  { name: 'turbine_heights', label: 'Distance to a wind turbine in operation, in its total heights (25.4 or more where none is near)', unit: 'heights', group: 'Peace and quiet', kind: 'scaled', layer: 'turbine_heights' },
   { name: 'solar', label: 'Distance to a solar park of at least 1 ha', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'solar' },
   { name: 'density', label: 'Addresses within 300 m', unit: 'addresses', group: 'Peace and quiet', kind: 'count', layer: 'density' },
   { name: 'supermarket', label: 'Distance to a supermarket', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'supermarket' },
@@ -71,7 +72,7 @@ export function formatValueOf(info: Pick<ValueInfo, 'kind' | 'unit' | 'field'>, 
     case 'distance': return formatDistance(value);
     case 'category': return ZONES[value] ?? String(value);
     case 'minutes': return value >= 255 ? '4 h or more' : `${Math.round(value)} min`;
-    case 'concentration': return `${value.toFixed(1)} ${info.unit}`;
+    case 'scaled': return `${value.toFixed(1)} ${info.unit}`;
     case 'municipal':
       if (info.field === 'population') return Math.round(value).toLocaleString('en-US');
       return `${value.toFixed(info.field === 'incomeTax' ? 2 : 1)} ${info.unit}`;

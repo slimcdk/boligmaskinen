@@ -61,7 +61,7 @@ def test_writes_every_layer_on_the_display_grid(aarhus: Built):
 def test_counts_what_each_source_has(aarhus: Built):
     counts = aarhus.meta["counts"]
     assert {key: counts[key] for key in ["addresses", "supermarkets", "stations", "schools", "daycare", "turbines"]} == {
-        "addresses": 40, "supermarkets": 2, "stations": 1, "schools": 2, "daycare": 2, "turbines": 1,
+        "addresses": 40, "supermarkets": 2, "stations": 1, "schools": 2, "daycare": 2, "turbines": 2,
     }
     assert counts["regionLandCells"] > 9_000  # 100 km² of land less the lake
     assert counts["homeCells"] >= 9  # the 300 m block of homes, not the addresses in the industrial area
@@ -79,6 +79,16 @@ def test_measures_distances_from_every_cell(aarhus: Built):
     assert decode_distance(aarhus.at("school", 573_900, 6_219_100)) < 150
     # The closed school does not count
     assert decode_distance(aarhus.at("school", 575_500, 6_216_500)) > 2_000
+
+
+def test_measures_the_distance_to_a_turbine_in_its_heights(aarhus: Built):
+    # 1,200 m from the turbine of 150 m is 8 of its heights (Danish rules allow 4 to a neighbour),
+    # give or take a cell of 100 m
+    raw = aarhus.at("turbine_heights", 571_700, 6_220_000)
+    assert (raw - 1) / grid.TURBINE_HEIGHT_STEPS == pytest.approx(8.0, abs=0.8)
+    assert decode_distance(aarhus.at("turbine", 571_700, 6_220_000)) == pytest.approx(1_200, abs=150)
+    # Far from it, more than the layer holds; the turbine without a height counts as distance only
+    assert aarhus.at("turbine_heights", 579_500, 6_224_500) == 255
 
 
 def test_measures_the_distance_to_solar_parks_of_at_least_1_ha(aarhus: Built):
