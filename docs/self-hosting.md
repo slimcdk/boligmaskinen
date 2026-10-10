@@ -48,7 +48,9 @@ The image is private for now: you need read access to `ghcr.io/slimcdk/boligmask
    ```
 
    A folder that Docker creates by itself belongs to root, and the data jobs then fail with
-   "permission denied"; the app says so in its log at start.
+   "permission denied"; the app says so in its log at start. A named volume in place of `./data`
+   (`boligmaskinen-data:/data`) needs none of this while the app runs as 1000: a new volume
+   starts as the image's `/data`, which belongs to that user.
 
 4. **Start it:**
 
