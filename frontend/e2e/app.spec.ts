@@ -221,8 +221,9 @@ test('a map shared as a link opens in another browser with its blocks and view',
   await page.getByRole('option', { name: /Azure/ }).click();
   await page.getByRole('button', { name: /^Map: / }).click();
   await page.getByRole('menuitem', { name: 'Share this map' }).click();
-  const link = await page.getByRole('textbox', { name: 'Link to the map' }).inputValue();
-  expect(link).toMatch(/#(map=[^&]+&)?share=[A-Za-z0-9_-]+$/);
+  const field = page.getByRole('textbox', { name: 'Link to the map' });
+  await expect(field).toHaveValue(/#(map=[^&]+&)?share=[A-Za-z0-9_-]+$/);
+  const link = await field.inputValue();
 
   // Someone else, with nothing of their own
   const other = await (await browser.newContext()).newPage();
