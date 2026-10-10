@@ -280,7 +280,7 @@ Cell values to start with, each from the adopted (`_vedtaget`) or proposed (`_fo
 | `coastal_zone` | Inside the coastal zone |
 | `groundwater_near_surface` | The plan marks groundwater near the surface |
 | `extraction_area` | Distance to an area the regions' raw material plans set aside for digging sand, gravel or clay (»råstofgraveområde«), 0 inside. From Danmarks Miljøportal (`dai:raastofomr`, `Omr_tkode` 1; in use since 2026-10-10: "Away from gravel pits") |
-| `extraction_interest` | Distance to an area kept for digging later (»råstofinteresseområde«, `Omr_tkode` 2) |
+| `extraction_interest` | Distance to an area kept for digging later (»råstofinteresseområde«, `Omr_tkode` 2; in use since 2026-10-10: "Away from gravel pits to come") |
 | `in_building_line` | Inside the building line of a forest, church, lake or stream, where building needs a dispensation (Miljøportal's `dai:skovbyggelinjer`, `dai:kirkebyggelinjer`, `dai:soe_bes_linjer`, `dai:aa_bes_linjer`) |
 
 ```

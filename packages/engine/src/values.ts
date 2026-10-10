@@ -37,6 +37,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'new_local_plan', label: 'Distance to a local plan of the last two years, proposed or adopted (0 inside one)', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'new_local_plan' },
   { name: 'consequence_zone', label: 'Distance to a zone the plans draw around a business or technical plant (0 inside one)', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'consequence_zone' },
   { name: 'extraction_area', label: 'Distance to an area the regions’ raw material plans set aside for digging (0 inside one)', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'extraction_area' },
+  { name: 'extraction_interest', label: 'Distance to an area the regions’ raw material plans keep for digging later (0 inside one)', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'extraction_interest' },
   { name: 'power_line', label: 'Distance to an overhead power line of 132 kV or more', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'power_line' },
   { name: 'airport', label: 'Distance to an airport (one with an IATA code)', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'airport' },
   { name: 'airfield', label: 'Distance to an airfield of any kind, also gliding and microlight fields', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'airfield' },
