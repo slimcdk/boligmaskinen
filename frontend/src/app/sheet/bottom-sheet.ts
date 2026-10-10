@@ -1,4 +1,5 @@
 import { Component, DestroyRef, computed, effect, inject, model, output, signal, untracked } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 /** How far up the sheet is: just its head, half the screen, or nearly all of it. */
 export type SheetState = 'peek' | 'half' | 'full';
@@ -22,9 +23,10 @@ const FLICK = 0.5;
  */
 @Component({
   selector: 'app-bottom-sheet',
+  imports: [TranslocoPipe],
   template: `
     <div class="handle" role="button" tabindex="0" [attr.aria-expanded]="state() !== 'peek'"
-         [attr.aria-label]="state() === 'peek' ? 'Show the panel' : 'Show less of the panel'"
+         [attr.aria-label]="(state() === 'peek' ? 'sheet.show' : 'sheet.less') | transloco"
          (pointerdown)="dragStart($event)" (pointermove)="dragMove($event)" (pointerup)="dragEnd($event)" (pointercancel)="dragEnd($event)"
          (keydown.enter)="toggle(); $event.preventDefault()" (keydown.space)="toggle(); $event.preventDefault()">
       <span class="bar" aria-hidden="true"></span>

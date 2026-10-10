@@ -3,14 +3,18 @@ import {
   addProtocol, CanvasSource, LayerSpecification, LngLat, LngLatLike, Map as MapLibreMap, Marker, NavigationControl, Popup,
   setWorkerUrl, SourceSpecification,
 } from 'maplibre-gl';
+import { formatNumber, formatValueOf } from '@boligmaskinen/engine';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { PMTiles, Protocol } from 'pmtiles';
 import { ChunkedPmtilesSource } from '../data/byte-container';
 import { PilotData } from '../data/pilot-data';
+import { I18n } from '../i18n/i18n';
+import { Texts } from '../i18n/texts';
 import { Store } from '../state/store';
 import { PLACE_COLOURS } from '@boligmaskinen/engine';
 import { Scheme, ThemeService } from '../theme/theme.service';
 import { BASEMAP_FILES, MAP_COLOURS, MapColours } from './colours';
-import { Breakdown, HeatService } from './heat.service';
+import { Breakdown, BreakdownRow, HeatService } from './heat.service';
 
 let protocolsRegistered = false;
 
@@ -75,10 +79,11 @@ const CREDIT_MS = 5000;
 /** The full-screen MapLibre map with the heatmap overlay and the user's places. */
 @Component({
   selector: 'app-map-view',
+  imports: [TranslocoPipe],
   template: `
     <div #host class="map" [class.placing]="store.placing()" [class.dark]="theme.scheme() === 'dark'" [style.background]="colours().water"></div>
     @if (problem()) {
-      <div class="problem" role="alert">The map could not load: {{ problem() }}</div>
+      <div class="problem" role="alert">{{ 'map.problem' | transloco: { problem: problem() } }}</div>
     }
     <a class="credit" [class.gone]="!credit()" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener"
        [attr.aria-hidden]="credit() ? null : 'true'" [attr.tabindex]="credit() ? null : -1">© OpenStreetMap</a>
@@ -90,6 +95,8 @@ export class MapView implements AfterViewInit, OnDestroy {
   protected readonly theme = inject(ThemeService);
   private readonly data = inject(PilotData);
   private readonly heat = inject(HeatService);
+  private readonly i18n = inject(I18n);
+  private readonly texts = inject(Texts);
   protected readonly colours = computed(() => MAP_COLOURS[this.theme.scheme()]);
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('host');
   /**
@@ -334,10 +341,34 @@ export class MapView implements AfterViewInit, OnDestroy {
   }
 
   private popupHtml(b: Breakdown): string {
+    const t = this.i18n.t.bind(this.i18n);
+    const where = t('popup.municipality', { name: b.municipality });
+    const [title, subtitle] = b.points === null ? [t('popup.noScore'), `${t('popup.addSomething')} · ${where}`]
+      : b.leftOut ? [t('popup.leftOut'), `${t('popup.notMet')} · ${where}`]
+        : [t('popup.points', { points: b.points }), [t(b.homes ? 'popup.homes' : 'popup.noHomes'), where, ...(b.area === null ? [] : [t('popup.area', { points: b.area })])].join(' · ')];
     const rows = b.rows.length
-      ? b.rows.map((r) => `<tr><td>${escapeHtml(r.name)}</td><td class="v">${escapeHtml(r.value)}</td><td class="p${r.failed ? ' fail' : ''}">${escapeHtml(r.result)}</td></tr>`).join('')
-      : '<tr><td colspan="3">Pick what matters to you in the panel to score this spot.</td></tr>';
-    return `<div class="pop"><h3>${escapeHtml(b.title)}</h3><div class="sub">${escapeHtml(b.subtitle)}</div><table>${rows}</table></div>`;
+      ? b.rows.map((r) => {
+        const { name, value, result, failed } = this.rowWords(r);
+        return `<tr><td>${escapeHtml(name)}</td><td class="v">${escapeHtml(value)}</td><td class="p${failed ? ' fail' : ''}">${escapeHtml(result)}</td></tr>`;
+      }).join('')
+      : `<tr><td colspan="3">${escapeHtml(t('popup.empty'))}</td></tr>`;
+    return `<div class="pop"><h3>${escapeHtml(title)}</h3><div class="sub">${escapeHtml(subtitle)}</div><table>${rows}</table></div>`;
+  }
+
+  /** A block's row in the popup: its name, the value it reads, and what it gives. */
+  private rowWords(row: BreakdownRow): { name: string; value: string; result: string; failed: boolean } {
+    const wording = this.texts.wording();
+    const block = this.store.activeBlocks().find((b) => b.id === row.id);
+    const name = block ? this.texts.blockName(block) : row.id;
+    const info = row.input && this.heat.values().find((v) => v.name === row.input!.name);
+    const input = info ? formatValueOf(info, row.input!.value, wording) : '';
+    if (row.role === 'must') {
+      const met = row.score !== 0;
+      return { name, value: input, result: this.i18n.t(met ? 'popup.met' : 'popup.failed'), failed: !met };
+    }
+    const weight = formatNumber(row.weight, wording, 0, 2);
+    if (Number.isNaN(row.score)) return { name, value: input || wording.noData, result: `– / ${weight}`, failed: false };
+    return { name, value: input || formatNumber(row.score, wording, 2), result: `${formatNumber(row.score * row.weight, wording, 1)} / ${weight}`, failed: false };
   }
 
   private syncMarkers(places: ReturnType<Store['places']>): void {

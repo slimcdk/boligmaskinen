@@ -14,6 +14,7 @@ import { compileCached, describeError, type FormulaParam, formulaParams } from '
 import { type Role } from './types.ts';
 import { LANGUAGE_VERSION, languageOf, upgradeCode } from './migrations.ts';
 import { formatWithUnit } from './values.ts';
+import { ENGLISH, fill, word, type Wording } from './wording.ts';
 
 export interface Block {
   id: string;
@@ -167,7 +168,7 @@ export function newId(prefix: string): string {
 export const MAX_WEIGHT = 10;
 
 /** One line about a block for the side panel: its controls' values, or its first comment. */
-export function blockSummary(block: Block, params: FormulaParam[] = formulaParams(block.code)): string {
+export function blockSummary(block: Block, params: FormulaParam[] = formulaParams(block.code), wording: Wording = ENGLISH): string {
   const parts: string[] = [];
   const flags = params.filter((p) => p.kind === 'flag');
   // The two ends of a ramp are described together, in the direction it points
@@ -175,22 +176,20 @@ export function blockSummary(block: Block, params: FormulaParam[] = formulaParam
   const zero = params.find((p) => p.kind === 'number' && p.name === 'zero');
   const ramp = full && zero ? { full, zero } : null;
   for (const p of params) {
-    if (p.kind === 'number' && !(ramp && (p === full || p === zero))) parts.push(`${p.label} ${formatWithUnit(p.value, p.unit)}`);
-    if (p.kind === 'choice') parts.push(capitalise(p.options[p.value - 1] ?? ''));
+    if (p.kind === 'number' && !(ramp && (p === full || p === zero))) parts.push(`${word(wording, p.label)} ${formatWithUnit(p.value, p.unit, wording)}`);
+    if (p.kind === 'choice') parts.push(capitalise(word(wording, p.options[p.value - 1] ?? '')));
   }
   if (ramp) {
-    const at = (p: FormulaParam) => formatWithUnit(p.value, p.unit || ramp.full.unit);
-    parts.push(ramp.full.value <= ramp.zero.value
-      ? `Full points up to ${at(ramp.full)} · No points from ${at(ramp.zero)}`
-      : `No points below ${at(ramp.zero)} · Full points from ${at(ramp.full)}`);
+    const at = (p: FormulaParam) => formatWithUnit(p.value, p.unit || ramp.full.unit, wording);
+    parts.push(fill(ramp.full.value <= ramp.zero.value ? wording.fullUpTo : wording.noPointsBelow, { full: at(ramp.full), zero: at(ramp.zero) }));
   }
   if (flags.length) {
-    const on = flags.filter((p) => p.value).map((p) => p.label);
-    parts.unshift(on.length ? `${block.role === 'must' ? 'Only ' : ''}${on.join(', ')}` : 'Nothing allowed');
+    const on = flags.filter((p) => p.value).map((p) => word(wording, p.label));
+    parts.unshift(on.length ? (block.role === 'must' ? fill(wording.only, { list: on.join(', ') }) : on.join(', ')) : wording.nothingAllowed);
   }
   if (!parts.length) {
     const comment = block.code.split('\n').map((l) => l.trim()).find((l) => l.startsWith('//'));
-    parts.push(comment ? comment.replace(/^\/\/\s*/, '') : 'Custom code');
+    parts.push(comment ? comment.replace(/^\/\/\s*/, '') : wording.customCode);
   }
   return parts.join(' · ');
 }

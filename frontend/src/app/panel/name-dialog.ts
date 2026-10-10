@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,7 +18,7 @@ export interface NameDialogData {
 /** Asks for a name, e.g. for a new map. Closes with the name, or nothing when cancelled. */
 @Component({
   selector: 'app-name-dialog',
-  imports: [FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule],
+  imports: [FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <form (submit)="$event.preventDefault(); done()">
@@ -28,7 +29,7 @@ export interface NameDialogData {
         </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
-        <button mat-button type="button" mat-dialog-close>Cancel</button>
+        <button mat-button type="button" mat-dialog-close>{{ 'common.cancel' | transloco }}</button>
         <button mat-button type="submit" [disabled]="!name.trim()">{{ data.action }}</button>
       </mat-dialog-actions>
     </form>

@@ -6,7 +6,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { compileFormula, CONSTANTS, describeError, FUNCTIONS, LANGUAGE_VERSION, Role, templateOf } from '@boligmaskinen/engine';
+import { I18n } from '../i18n/i18n';
+import { Texts } from '../i18n/texts';
 
 export interface CodeDialogData {
   blockId: string;
@@ -18,7 +21,7 @@ const APPLY_AFTER_MS = 350;
 /** Read and change a block's code, with the values and functions it can use. */
 @Component({
   selector: 'app-code-dialog',
-  imports: [MatButtonModule, MatButtonToggleModule, MatDialogModule, MatIconModule, MatTooltipModule],
+  imports: [MatButtonModule, MatButtonToggleModule, MatDialogModule, MatIconModule, MatTooltipModule, TranslocoPipe],
   templateUrl: './code-dialog.html',
   styleUrl: './code-dialog.scss',
 })
@@ -26,6 +29,8 @@ export class CodeDialog {
   private readonly data = inject<CodeDialogData>(MAT_DIALOG_DATA);
   protected readonly store = inject(Store);
   private readonly heat = inject(HeatService);
+  private readonly i18n = inject(I18n);
+  protected readonly texts = inject(Texts);
   private readonly editor = viewChild<ElementRef<HTMLTextAreaElement>>('editor');
   private timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -39,7 +44,8 @@ export class CodeDialog {
     const groups = new Map<string, { name: string; label: string }[]>();
     for (const v of this.heat.values()) {
       const list = groups.get(v.group) ?? [];
-      list.push({ name: v.name, label: v.unit ? `${v.label} (${v.unit})` : v.label });
+      const label = this.texts.valueLabel(v, this.store.places());
+      list.push({ name: v.name, label: v.unit ? `${label} (${this.texts.word(v.unit)})` : label });
       groups.set(v.group, list);
     }
     return [...groups].map(([group, values]) => ({ group, values }));
@@ -54,8 +60,8 @@ export class CodeDialog {
     const issue = applied ? this.heat.issues().get(block!.id) : undefined;
     if (issue) return { ok: false, text: issue };
     const preview = applied ? this.heat.preview().get(block!.id) : undefined;
-    const kind = block?.role === 'must' ? 'Valid requirement' : 'Valid: gives a score from 0 to 1';
-    return { ok: true, text: preview ? `${kind} · ${preview}` : applied ? kind : 'Checking…' };
+    const kind = this.i18n.t(block?.role === 'must' ? 'code.validRequirement' : 'code.validPreference');
+    return { ok: true, text: preview ? `${kind} · ${preview}` : applied ? kind : this.i18n.t('code.checking') };
   });
 
   protected readonly canReset = computed(() => {

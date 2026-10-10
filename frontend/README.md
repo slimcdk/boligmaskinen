@@ -140,6 +140,30 @@ browser.
 - The heatmap ramp turns around in dark mode: more points are darker on the light map and
   brighter on the dark map. The legend and the histogram use the same ramp.
 
+## Danish and English
+
+- **The app speaks the browser's language:** a Danish browser gets Danish, any other English. The
+  footer's translate button switches, and the browser keeps the choice
+  (`boligmaskinen.language` in localStorage). `<html lang>` follows it.
+- **The texts are in `src/i18n/en.json` and `da.json`,** bundled with the app. Templates use
+  Transloco's `transloco` pipe, and code calls `I18n.t()` (`src/app/i18n/i18n.ts`). A key's
+  placeholders are written `{{ name }}`.
+- **The engine's names follow the language too:** predefined blocks, groups, values and the
+  labels in their code (`Texts` in `src/app/i18n/texts.ts`). A name the user gave stays as it is.
+  - Numbers and the engine's own phrases follow the language: "3,0 km" in Danish. The engine
+    takes them as a `Wording`, plain data that also reaches the heat worker.
+  - The heat worker returns numbers, not words: the page writes a block's preview and the
+    points of a spot (`heat.service.ts`, `map-view.ts`).
+- **What stays English:** the block language itself (the names of values and functions, code and
+  its comments), the engine's error messages, and the jobs' logs and results from the server.
+  - The sources in "About the data" and the jobs have their English in `about-dialog.ts` and on
+    the server; their Danish is in `da.json` (`about.sources`, `jobs.byId`).
+- **`npm test` first runs `tools/check-i18n.mjs`:** every key the code names is in `en.json`,
+  and `da.json` has the same keys with the same placeholders.
+- **The tests read English:** the unit tests get the app's texts in English
+  (`src/test-providers.ts`), and the end-to-end tests run in an en-US browser.
+  `e2e/language.spec.ts` runs the app in a da-DK browser and switches the language.
+
 ## Heatmap colours
 
 - **"Map settings" picks the colours:** Red to green (the default), Orange (the theme's tertiary
@@ -254,8 +278,10 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 | `src/app/sheet/` | The bottom sheet the weighting panel is in on a phone. |
 | `src/app/admin/` | The data-jobs dialog, its API client, the job model it shares with the backend, and the simulated preview. |
 | `src/app/theme/` | Light and dark mode: the viewer's choice and the footer button. |
+| `src/app/i18n/` | Danish and English: the language in use, the footer's menu, and the engine's names in the language. |
+| `src/i18n/` | The catalogues of texts, `en.json` and `da.json`. |
 | `e2e/` | Playwright end-to-end tests, and `e2e/data-pack/`, the test data pack. |
-| `tools/` | `build-info.mjs` (the version label) and `to_artifact.py` (publishing). |
+| `tools/` | `build-info.mjs` (the version label), `check-i18n.mjs` (the catalogues) and `to_artifact.py` (publishing). |
 
 ## Publishing as a Claude artifact
 

@@ -2,13 +2,13 @@
   <header class="head">
     <div class="title">
       <h1><svg class="logo" viewBox="0 -960 960 960" aria-hidden="true"><path [attr.d]="logo" /></svg>Boligmaskinen</h1>
-      <p>Pilot{{ region() ? ' · ' + region() : '' }} · {{ cells() }} from open data</p>
+      <p>{{ 'mapPanel.subtitle' | transloco: { region: region() ? ' · ' + region() : '', cells: cells() } }}</p>
     </div>
-    <button mat-icon-button (click)="closePanel.emit()" aria-label="Hide panel"><mat-icon>chevron_left</mat-icon></button>
+    <button mat-icon-button (click)="closePanel.emit()" [attr.aria-label]="'mapPanel.hide' | transloco"><mat-icon>chevron_left</mat-icon></button>
   </header>
 }
 @if (data.state() === 'loading') {
-  <mat-progress-bar mode="indeterminate" aria-label="Loading data"></mat-progress-bar>
+  <mat-progress-bar mode="indeterminate" [attr.aria-label]="'mapPanel.loading' | transloco"></mat-progress-bar>
 }
 
 <div class="body">
@@ -16,44 +16,44 @@
     <p class="error">{{ data.message() }}</p>
   }
 
-  <section class="result" aria-label="Result">
+  <section class="result" [attr.aria-label]="'mapPanel.result' | transloco">
     @if (stats()?.hasPreferences) {
-      <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().show" (change)="setView({ show: $event.value })" aria-label="Which cells to show">
-        <mat-button-toggle value="all">All</mat-button-toggle>
-        <mat-button-toggle value="top">Percentile</mat-button-toggle>
-        <mat-button-toggle value="abs">Min. points</mat-button-toggle>
+      <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().show" (change)="setView({ show: $event.value })" [attr.aria-label]="'mapPanel.which' | transloco">
+        <mat-button-toggle value="all">{{ 'mapPanel.all' | transloco }}</mat-button-toggle>
+        <mat-button-toggle value="top">{{ 'mapPanel.top' | transloco }}</mat-button-toggle>
+        <mat-button-toggle value="abs">{{ 'mapPanel.abs' | transloco }}</mat-button-toggle>
       </mat-button-toggle-group>
       @if (view().show === 'top') {
         <mat-slider discrete min="1" max="100" step="1" [displayWith]="best">
-          <input matSliderThumb [value]="view().top" (input)="onLimit($event)" aria-label="Show the best share of the cells">
+          <input matSliderThumb [value]="view().top" (input)="onLimit($event)" [attr.aria-label]="'mapPanel.bestShare' | transloco">
         </mat-slider>
       } @else if (view().show === 'abs') {
         <mat-slider discrete min="0" max="100" step="1">
-          <input matSliderThumb [value]="view().abs" (input)="onLimit($event)" aria-label="Lowest points to show">
+          <input matSliderThumb [value]="view().abs" (input)="onLimit($event)" [attr.aria-label]="'mapPanel.lowest' | transloco">
         </mat-slider>
       }
       <app-histogram [histogram]="stats()!.histogram" [limit]="stats()!.limit" [showLimit]="view().show !== 'all'" [lo]="stats()!.lo" [hi]="stats()!.hi"
                      [description]="resultDescription()" />
     } @else if (allOff()) {
       <div class="empty">
-        <h2>Everything is switched off</h2>
-        <p>Switch a group on, or give one of your preferences some weight, to colour the map.</p>
+        <h2>{{ 'mapPanel.allOffTitle' | transloco }}</h2>
+        <p>{{ 'mapPanel.allOffText' | transloco }}</p>
       </div>
     } @else {
-      <p class="hint">Choose what matters to you, and the map colours every {{ cell() }} m cell by how well it fits.</p>
+      <p class="hint">{{ 'mapPanel.hint' | transloco: { cell: cell() } }}</p>
     }
   </section>
 
   <mat-accordion displayMode="flat">
     <mat-expansion-panel class="settings-panel">
       <mat-expansion-panel-header>
-        <mat-panel-title>Map settings</mat-panel-title>
+        <mat-panel-title>{{ 'mapPanel.settings' | transloco }}</mat-panel-title>
         <mat-panel-description>{{ mapSummary() }}</mat-panel-description>
       </mat-expansion-panel-header>
       <div class="settings">
-        <span class="label">Colours</span>
+        <span class="label">{{ 'mapPanel.colours' | transloco }}</span>
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="palette">
-          <mat-select [value]="view().palette" (selectionChange)="setView({ palette: $event.value })" aria-label="Heatmap colours">
+          <mat-select [value]="view().palette" (selectionChange)="setView({ palette: $event.value })" [aria-label]="'mapPanel.heatmapColours' | transloco">
             <mat-select-trigger>
               <span class="choice"><span class="swatch" [style.background]="palette().swatch"></span>{{ palette().name }}</span>
             </mat-select-trigger>
@@ -67,25 +67,25 @@
             }
           </mat-select>
         </mat-form-field>
-        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().bands" (change)="setView({ bands: $event.value })" aria-label="Colour scale">
-          <mat-button-toggle value="smooth">Smooth</mat-button-toggle>
-          <mat-button-toggle value="steps">Steps</mat-button-toggle>
+        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().bands" (change)="setView({ bands: $event.value })" [attr.aria-label]="'mapPanel.scale' | transloco">
+          <mat-button-toggle value="smooth">{{ 'mapPanel.smooth' | transloco }}</mat-button-toggle>
+          <mat-button-toggle value="steps">{{ 'mapPanel.steps' | transloco }}</mat-button-toggle>
         </mat-button-toggle-group>
-        <span class="label">Smoothing</span>
-        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().smooth" (change)="setView({ smooth: $event.value })" aria-label="Smoothing">
-          <mat-button-toggle [value]="0">Off</mat-button-toggle>
-          <mat-button-toggle [value]="1">Light</mat-button-toggle>
-          <mat-button-toggle [value]="2">Strong</mat-button-toggle>
+        <span class="label">{{ 'mapPanel.smoothing' | transloco }}</span>
+        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().smooth" (change)="setView({ smooth: $event.value })" [attr.aria-label]="'mapPanel.smoothing' | transloco">
+          <mat-button-toggle [value]="0">{{ 'mapPanel.off' | transloco }}</mat-button-toggle>
+          <mat-button-toggle [value]="1">{{ 'mapPanel.light' | transloco }}</mat-button-toggle>
+          <mat-button-toggle [value]="2">{{ 'mapPanel.strong' | transloco }}</mat-button-toggle>
         </mat-button-toggle-group>
-        <span class="label">Cells</span>
-        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().cells" (change)="setView({ cells: $event.value })" aria-label="Cells">
-          <mat-button-toggle value="homes">Where homes are</mat-button-toggle>
-          <mat-button-toggle value="land">All land</mat-button-toggle>
+        <span class="label">{{ 'mapPanel.cellsLabel' | transloco }}</span>
+        <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().cells" (change)="setView({ cells: $event.value })" [attr.aria-label]="'mapPanel.cellsLabel' | transloco">
+          <mat-button-toggle value="homes">{{ 'mapPanel.homes' | transloco }}</mat-button-toggle>
+          <mat-button-toggle value="land">{{ 'mapPanel.land' | transloco }}</mat-button-toggle>
         </mat-button-toggle-group>
-        <mat-checkbox [checked]="view().showBelow" [disabled]="view().show === 'all'" (change)="setView({ showBelow: $event.checked })">Show cells below the limit in grey</mat-checkbox>
-        <span class="label">Opacity</span>
+        <mat-checkbox [checked]="view().showBelow" [disabled]="view().show === 'all'" (change)="setView({ showBelow: $event.checked })">{{ 'mapPanel.showBelow' | transloco }}</mat-checkbox>
+        <span class="label">{{ 'mapPanel.opacity' | transloco }}</span>
         <mat-slider discrete min="0.2" max="1" step="0.05" [displayWith]="percent">
-          <input matSliderThumb [value]="view().opacity" (input)="onOpacity($event)" aria-label="Heatmap opacity">
+          <input matSliderThumb [value]="view().opacity" (input)="onOpacity($event)" [attr.aria-label]="'mapPanel.heatmapOpacity' | transloco">
         </mat-slider>
       </div>
     </mat-expansion-panel>

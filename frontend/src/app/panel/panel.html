@@ -8,12 +8,12 @@
 <div class="body">
   @if (noPreferences()) {
     <div class="empty">
-      <h2>Where would you like to live?</h2>
-      <p>Pick what matters to you. The map colours every {{ cell() }} m cell by how well it fits.</p>
+      <h2>{{ 'panel.emptyTitle' | transloco }}</h2>
+      <p>{{ 'panel.emptyText' | transloco: { cell: cell() } }}</p>
       @if (suggestions().length) {
-        <mat-chip-set aria-label="Suggestions">
+        <mat-chip-set [attr.aria-label]="'panel.suggestions' | transloco">
           @for (c of suggestions(); track c.id) {
-            <mat-chip (click)="store.addTemplate(c.id)" (keydown.enter)="store.addTemplate(c.id)" tabindex="0"><mat-icon matChipAvatar>add</mat-icon>{{ c.name }}</mat-chip>
+            <mat-chip (click)="store.addTemplate(c.id)" (keydown.enter)="store.addTemplate(c.id)" tabindex="0"><mat-icon matChipAvatar>add</mat-icon>{{ texts.templateName(c) }}</mat-chip>
           }
         </mat-chip-set>
       }
@@ -22,58 +22,59 @@
 
   <section aria-labelledby="t-criteria">
     <div class="section-head">
-      <h2 id="t-criteria">What matters to you</h2>
-      <button mat-stroked-button (click)="openCatalog()"><mat-icon>add</mat-icon>Add</button>
+      <h2 id="t-criteria">{{ 'panel.whatMatters' | transloco }}</h2>
+      <button mat-stroked-button (click)="openCatalog()"><mat-icon>add</mat-icon>{{ 'common.add' | transloco }}</button>
     </div>
     <div class="groups">
       @for (g of grouped(); track g.group.id) {
         <app-group-section [group]="g.group" [blocks]="g.blocks" />
       } @empty {
-        <p class="hint">Nothing chosen yet. Add a predefined block, an example of code, or one of the suggestions above.</p>
+        <p class="hint">{{ 'panel.nothingChosen' | transloco }}</p>
       }
     </div>
   </section>
 
   <section aria-labelledby="t-places">
     <div class="section-head">
-      <h2 id="t-places">Your places</h2>
+      <h2 id="t-places">{{ 'panel.yourPlaces' | transloco }}</h2>
       <button mat-stroked-button (click)="togglePlacing()" [class.active]="store.placing()">
-        <mat-icon>{{ store.placing() ? 'close' : 'add_location_alt' }}</mat-icon>{{ store.placing() ? 'Cancel' : 'Add place' }}
+        <mat-icon>{{ store.placing() ? 'close' : 'add_location_alt' }}</mat-icon>{{ (store.placing() ? 'common.cancel' : 'panel.addPlace') | transloco }}
       </button>
     </div>
     @if (store.placing()) {
-      <p class="hint strong">Click or tap the map where the place is.</p>
+      <p class="hint strong">{{ 'panel.placingHint' | transloco }}</p>
     }
     @for (p of store.places(); track p.id; let i = $index) {
       <div class="place">
         <span class="pin" [style.background]="colour(i)" aria-hidden="true">{{ i + 1 }}</span>
         <div class="about">
-          <input class="name" [value]="p.name" (change)="rename(p.id, $event)" aria-label="Name of the place" maxlength="40" [attr.aria-describedby]="'route-' + p.id">
+          <input class="name" [value]="p.name" (change)="rename(p.id, $event)" [attr.aria-label]="'panel.placeName' | transloco" maxlength="40" [attr.aria-describedby]="'route-' + p.id">
           <!-- Said when it changes, as the travel times come a while after the place -->
-          <span class="route" [id]="'route-' + p.id" aria-live="polite">{{ routeText[routes().get(p.id) ?? 'working'] }}</span>
+          <span class="route" [id]="'route-' + p.id" aria-live="polite">{{ 'panel.route.' + (routes().get(p.id) ?? 'working') | transloco }}</span>
         </div>
-        <button mat-icon-button (click)="store.removePlace(p.id)" [attr.aria-label]="'Remove ' + p.name"><mat-icon>close</mat-icon></button>
+        <button mat-icon-button (click)="store.removePlace(p.id)" [attr.aria-label]="'panel.removePlace' | transloco: { name: p.name }"><mat-icon>close</mat-icon></button>
       </div>
     } @empty {
       @if (!store.placing()) {
-        <p class="hint">Add work, family, friends or anything else you want to be close to. Each place gets a block with the travel time to it, and your other maps can add it under Add. Drag a pin to move it.</p>
+        <p class="hint">{{ 'panel.placesHint' | transloco }}</p>
       }
     }
   </section>
 </div>
 
 <footer class="foot">
-  <button mat-button (click)="openAbout()"><mat-icon>info</mat-icon>About the data</button>
+  <button mat-button (click)="openAbout()"><mat-icon>info</mat-icon>{{ 'footer.about' | transloco }}</button>
   <span class="spacer"></span>
+  <app-language-menu />
   <app-theme-toggle />
-  <button mat-icon-button (click)="openJobs()" matTooltip="Data jobs" aria-label="Data jobs"><mat-icon>settings</mat-icon></button>
+  <button mat-icon-button (click)="openJobs()" [matTooltip]="'footer.jobs' | transloco" [attr.aria-label]="'footer.jobs' | transloco"><mat-icon>settings</mat-icon></button>
   @let v = version();
   @if (v.url) {
-    <a class="version" [href]="v.url" target="_blank" rel="noopener" [title]="v.title" [attr.aria-label]="'Boligmaskinen on GitHub, version ' + v.text">
+    <a class="version" [href]="v.url" target="_blank" rel="noopener" [title]="v.title" [attr.aria-label]="'footer.github' | transloco: { version: v.text }">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg><span class="text">{{ v.text }}</span>
     </a>
   } @else {
-    <span class="version" [title]="v.title" [attr.aria-label]="'Version ' + v.text">
+    <span class="version" [title]="v.title" [attr.aria-label]="'footer.version' | transloco: { version: v.text }">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path [attr.d]="githubMark" /></svg><span class="text">{{ v.text }}</span>
     </span>
   }

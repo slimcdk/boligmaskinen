@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { PilotData } from './data/pilot-data';
 import { MapView } from './map/map-view';
 import { MapPanel } from './panel/map-panel';
@@ -19,7 +20,7 @@ const PHONE = '(max-width: 700px)';
 
 @Component({
   selector: 'app-root',
-  imports: [MatButtonModule, MatIconModule, BottomSheet, MapPanel, MapView, Panel],
+  imports: [MatButtonModule, MatIconModule, TranslocoPipe, BottomSheet, MapPanel, MapView, Panel],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -90,14 +91,15 @@ export class App {
     afterNextRender(() => this.openButton()?.nativeElement.focus(), { injector: this.injector });
   }
 
-  @HostListener('document:keydown.escape')
-  protected escape(): void {
+  @HostListener('document:keydown.escape', ['$event'])
+  protected escape(event: Event): void {
     if (this.store.placing()) {
       this.store.placing.set(false);
       return;
     }
-    // Escape inside the floating panels closes them, as it did the side panel; menus and dialogs close first
+    // Escape inside the floating panels closes them, as it did the side panel. A menu or dialog
+    // closes on its own Escape, which leaves the panels open, though the focus is back in them by now
     const floating = this.floating()?.nativeElement;
-    if (!this.mobile() && this.panelOpen() && floating?.contains(document.activeElement)) this.closePanel();
+    if (!this.mobile() && this.panelOpen() && !event.defaultPrevented && floating?.contains(event.target as Node)) this.closePanel();
   }
 }

@@ -4,9 +4,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { BuildInfoService } from '../data/build-info';
 import { PilotData } from '../data/pilot-data';
-import { HeatService, RouteState } from '../map/heat.service';
+import { LanguageMenu } from '../i18n/language-menu';
+import { Texts } from '../i18n/texts';
+import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
 import { PLACE_COLOURS, SUGGESTED } from '@boligmaskinen/engine';
 import { AboutDialog } from './about-dialog';
@@ -22,7 +25,7 @@ import { SyncStatus } from './sync-status';
  */
 @Component({
   selector: 'app-panel',
-  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltipModule, GroupSection, MapSwitcher, SyncStatus, ThemeToggle],
+  imports: [MatButtonModule, MatChipsModule, MatIconModule, MatTooltipModule, TranslocoPipe, GroupSection, LanguageMenu, MapSwitcher, SyncStatus, ThemeToggle],
   templateUrl: './panel.html',
   styleUrl: './panel.scss',
 })
@@ -31,11 +34,8 @@ export class Panel {
   private readonly data = inject(PilotData);
   /** How each place's travel times are found. */
   protected readonly routes = inject(HeatService).routes;
-  protected readonly routeText: Record<RouteState, string> = {
-    routed: 'Travel times from the road network',
-    working: 'Finding the travel times on the roads…',
-    estimated: 'Travel times estimated from the distance',
-  };
+  /** The names of predefined blocks and groups in the language in use. */
+  protected readonly texts = inject(Texts);
   private readonly dialog = inject(MatDialog);
   protected readonly version = inject(BuildInfoService).label;
   /** GitHub's mark (Octicons, MIT). */

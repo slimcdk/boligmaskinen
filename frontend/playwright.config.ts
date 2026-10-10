@@ -26,6 +26,8 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${PORT}`,
     channel: env['PLAYWRIGHT_CHANNEL'] ?? 'chrome',
     viewport: { width: 1440, height: 900 },
+    // The app speaks the browser's language; the tests read English unless they ask for Danish
+    locale: 'en-US',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     // Without a GPU the map's WebGL is drawn in software by SwiftShader

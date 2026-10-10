@@ -1,10 +1,36 @@
+import { fill } from '@boligmaskinen/engine';
+
 /**
  * Just enough cron for the job list: five fields (minute hour day-of-month month day-of-week)
  * with numbers, "*", "*\/n" and comma lists, in local time.
  */
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+/** The words for schedules and times in a language: English here, Danish in da.json (time). */
+export interface TimeWords {
+  /** Writes the names of days and months, times ago and dates. */
+  locale: string;
+  everyMinutes: string;
+  everyDay: string;
+  everyWeekday: string;
+  monthly: string;
+  yearly: string;
+  justNow: string;
+  inAMoment: string;
+  /** The unit of hours in a duration. */
+  hours: string;
+}
+
+export const ENGLISH_TIME: TimeWords = {
+  locale: 'en-GB',
+  everyMinutes: 'Every {{ n }} minutes',
+  everyDay: 'Every day at {{ time }}',
+  everyWeekday: 'Every {{ day }} at {{ time }}',
+  monthly: 'Day {{ day }} of every month at {{ time }}',
+  yearly: 'Every year on {{ date }} at {{ time }}',
+  justNow: 'just now',
+  inAMoment: 'in a moment',
+  hours: 'h',
+};
 
 function matches(field: string, value: number): boolean {
   if (field === '*') return true;
@@ -17,16 +43,23 @@ function matches(field: string, value: number): boolean {
 const two = (n: number) => String(n).padStart(2, '0');
 
 /** "Every day at 03:00", "Every Monday at 05:00", "Every 30 minutes" … or the expression itself. */
-export function describeCron(cron: string): string {
+export function describeCron(cron: string, words: TimeWords = ENGLISH_TIME): string {
   const [minute, hour, day, month, weekday] = cron.trim().split(/\s+/);
   const every = /^\*\/(\d+)$/.exec(minute);
-  if (every && hour === '*' && day === '*' && month === '*' && weekday === '*') return `Every ${every[1]} minutes`;
+  if (every && hour === '*' && day === '*' && month === '*' && weekday === '*') return fill(words.everyMinutes, { n: every[1] });
   if (!/^\d+$/.test(minute) || !/^\d+$/.test(hour)) return cron;
-  const at = `at ${two(Number(hour))}:${two(Number(minute))}`;
-  if (day === '*' && month === '*' && weekday === '*') return `Every day ${at}`;
-  if (day === '*' && month === '*' && /^\d$/.test(weekday)) return `Every ${DAYS[Number(weekday) % 7]} ${at}`;
-  if (/^\d+$/.test(day) && month === '*' && weekday === '*') return `Day ${day} of every month ${at}`;
-  if (/^\d+$/.test(day) && /^\d+$/.test(month) && weekday === '*') return `Every year on ${day} ${MONTHS[Number(month) - 1]} ${at}`;
+  const time = `${two(Number(hour))}:${two(Number(minute))}`;
+  if (day === '*' && month === '*' && weekday === '*') return fill(words.everyDay, { time });
+  if (day === '*' && month === '*' && /^\d$/.test(weekday)) {
+    // 4 January 2026 was a Sunday, day 0
+    const name = new Date(2026, 0, 4 + (Number(weekday) % 7)).toLocaleDateString(words.locale, { weekday: 'long' });
+    return fill(words.everyWeekday, { day: name, time });
+  }
+  if (/^\d+$/.test(day) && month === '*' && weekday === '*') return fill(words.monthly, { day, time });
+  if (/^\d+$/.test(day) && /^\d+$/.test(month) && weekday === '*') {
+    const date = new Date(2026, Number(month) - 1, Number(day)).toLocaleDateString(words.locale, { day: 'numeric', month: 'long' });
+    return fill(words.yearly, { date, time });
+  }
   return cron;
 }
 
@@ -52,38 +85,36 @@ export function nextRun(cron: string, from: Date): Date | null {
 }
 
 /** "3 minutes ago", "in 5 hours", "yesterday", "in 4 days". */
-export function relativeTime(date: Date, now: Date): string {
+export function relativeTime(date: Date, now: Date, words: TimeWords = ENGLISH_TIME): string {
   const seconds = Math.round((date.getTime() - now.getTime()) / 1000);
   const ahead = seconds > 0;
   const size = Math.abs(seconds);
-  const say = (n: number, unit: string) => {
-    const text = `${n} ${unit}${n === 1 ? '' : 's'}`;
-    return ahead ? `in ${text}` : `${text} ago`;
-  };
-  if (size < 45) return ahead ? 'in a moment' : 'just now';
-  if (size < 3600) return say(Math.round(size / 60), 'minute');
-  if (size < 86_400) return say(Math.round(size / 3600), 'hour');
+  const sign = ahead ? 1 : -1;
+  const say = new Intl.RelativeTimeFormat(words.locale, { numeric: 'auto' });
+  if (size < 45) return ahead ? words.inAMoment : words.justNow;
+  if (size < 3600) return say.format(sign * Math.round(size / 60), 'minute');
+  if (size < 86_400) return say.format(sign * Math.round(size / 3600), 'hour');
   const days = Math.round(size / 86_400);
-  if (days === 1) return ahead ? 'tomorrow' : 'yesterday';
-  if (days < 45) return say(days, 'day');
-  return say(Math.round(days / 30), 'month');
+  if (days < 45) return say.format(sign * days, 'day');
+  return say.format(sign * Math.round(days / 30), 'month');
 }
 
 /** "2 min 38 s", "41 s". */
-export function formatDuration(milliseconds: number): string {
+export function formatDuration(milliseconds: number, words: TimeWords = ENGLISH_TIME): string {
   const seconds = Math.round(milliseconds / 1000);
   if (seconds < 60) return `${seconds} s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes} min${seconds % 60 ? ` ${seconds % 60} s` : ''}`;
-  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+  return `${Math.floor(minutes / 60)} ${words.hours} ${minutes % 60} min`;
 }
 
 /** "495 MB", "13 kB". */
-export function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number, words: TimeWords = ENGLISH_TIME): string {
   if (bytes < 1000) return `${bytes} B`;
   const units = ['kB', 'MB', 'GB', 'TB'];
   let value = bytes / 1000;
   let unit = 0;
   while (value >= 1000 && unit < units.length - 1) { value /= 1000; unit++; }
-  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+  const digits = value < 10 ? 1 : 0;
+  return `${value.toLocaleString(words.locale, { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false })} ${units[unit]}`;
 }

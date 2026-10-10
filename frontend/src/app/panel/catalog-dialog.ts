@@ -3,7 +3,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule, MatSelectionList } from '@angular/material/list';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { BlockTemplate, CRITERION_GROUPS, EXAMPLES, LIBRARY, Place } from '@boligmaskinen/engine';
+import { Texts } from '../i18n/texts';
 
 export interface CatalogData {
   /** Predefined blocks already in use on the open map, by template id (`place:…` for places). */
@@ -24,42 +26,42 @@ export interface CatalogResult {
 /** Pick the blocks of the weighting: predefined ones from the catalogue, or examples to start code from. */
 @Component({
   selector: 'app-catalog-dialog',
-  imports: [MatButtonModule, MatDialogModule, MatIconModule, MatListModule],
+  imports: [MatButtonModule, MatDialogModule, MatIconModule, MatListModule, TranslocoPipe],
   template: `
-    <h2 mat-dialog-title>What matters to you?</h2>
+    <h2 mat-dialog-title>{{ 'catalog.title' | transloco }}</h2>
     <mat-dialog-content>
-      <p class="intro">Every choice becomes a block. Blocks are code: their sliders are in the side panel, and you can read and change the code.</p>
-      <mat-selection-list #list multiple aria-label="Blocks">
+      <p class="intro">{{ 'catalog.intro' | transloco }}</p>
+      <mat-selection-list #list multiple [attr.aria-label]="'catalog.blocks' | transloco">
         @for (group of groups; track group) {
-          <div mat-subheader>{{ group }}</div>
+          <div mat-subheader>{{ texts.groupName(group) }}</div>
           @for (t of inGroup(group); track t.id) {
             <mat-list-option [value]="t.id" [selected]="data.inUse.includes(t.id)" togglePosition="before">
-              <span matListItemTitle>{{ t.name }}</span>
-              <span matListItemLine>{{ t.description }}</span>
+              <span matListItemTitle>{{ texts.templateName(t) }}</span>
+              <span matListItemLine>{{ texts.templateDescription(t) }}</span>
             </mat-list-option>
           }
         }
         @if (data.places.length) {
-          <div mat-subheader>Your places</div>
+          <div mat-subheader>{{ 'panel.yourPlaces' | transloco }}</div>
           @for (p of data.places; track p.id) {
             <mat-list-option [value]="'place:' + p.id" [selected]="data.inUse.includes('place:' + p.id)" togglePosition="before">
               <span matListItemTitle>{{ p.name }}</span>
-              <span matListItemLine>Travel time to {{ p.name }}</span>
+              <span matListItemLine>{{ 'catalog.travelTo' | transloco: { name: p.name } }}</span>
             </mat-list-option>
           }
         }
-        <div mat-subheader>Examples of code</div>
+        <div mat-subheader>{{ 'catalog.examples' | transloco }}</div>
         @for (t of examples; track t.id) {
           <mat-list-option [value]="'example:' + t.id" togglePosition="before">
-            <span matListItemTitle>{{ t.name }}</span>
-            <span matListItemLine>{{ t.description }}</span>
+            <span matListItemTitle>{{ texts.templateName(t) }}</span>
+            <span matListItemLine>{{ texts.templateDescription(t) }}</span>
           </mat-list-option>
         }
       </mat-selection-list>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
-      <button mat-flat-button (click)="done(list)">Done</button>
+      <button mat-button mat-dialog-close>{{ 'common.cancel' | transloco }}</button>
+      <button mat-flat-button (click)="done(list)">{{ 'common.done' | transloco }}</button>
     </mat-dialog-actions>
   `,
   styles: [`.intro { margin: 0 0 4px; color: var(--mat-sys-on-surface-variant); }`],
@@ -67,6 +69,7 @@ export interface CatalogResult {
 export class CatalogDialog {
   protected readonly data = inject<CatalogData>(MAT_DIALOG_DATA);
   private readonly ref = inject(MatDialogRef<CatalogDialog, CatalogResult>);
+  protected readonly texts = inject(Texts);
   protected readonly groups = CRITERION_GROUPS;
   protected readonly examples = EXAMPLES;
 

@@ -6,6 +6,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Store } from '../state/store';
 import { capitalise, formatWithUnit, FormulaParam } from '@boligmaskinen/engine';
+import { Texts } from '../i18n/texts';
 
 const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions_bike', walk: 'directions_walk', train: 'train' };
 
@@ -17,24 +18,24 @@ const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions
     @let p = param();
     @switch (p.kind) {
       @case ('number') {
-        <div class="label"><span>{{ p.label }}</span><strong>{{ format(p.value) }}</strong></div>
+        <div class="label"><span>{{ label() }}</span><strong>{{ format(p.value) }}</strong></div>
         @if (squared()) {
           <mat-slider discrete min="0" [max]="STEPS" step="1" [displayWith]="formatPosition">
-            <input matSliderThumb [value]="position(p.value)" (input)="onPosition($event)" [attr.aria-label]="p.label">
+            <input matSliderThumb [value]="position(p.value)" (input)="onPosition($event)" [attr.aria-label]="label()">
           </mat-slider>
         } @else {
           <mat-slider discrete [min]="p.min" [max]="p.max" [step]="p.step" [displayWith]="format">
-            <input matSliderThumb [value]="p.value" (input)="onSlider($event)" [attr.aria-label]="p.label">
+            <input matSliderThumb [value]="p.value" (input)="onSlider($event)" [attr.aria-label]="label()">
           </mat-slider>
         }
       }
       @case ('flag') {
-        <mat-checkbox [checked]="p.value === 1" (change)="set($event.checked ? 1 : 0)">{{ p.label }}</mat-checkbox>
+        <mat-checkbox [checked]="p.value === 1" (change)="set($event.checked ? 1 : 0)">{{ label() }}</mat-checkbox>
       }
       @case ('choice') {
         <div class="label choice">
-          <span>{{ p.label }}</span>
-          <mat-button-toggle-group class="toggles" hideSingleSelectionIndicator [value]="p.value" (change)="set($event.value)" [attr.aria-label]="p.label">
+          <span>{{ label() }}</span>
+          <mat-button-toggle-group class="toggles" hideSingleSelectionIndicator [value]="p.value" (change)="set($event.value)" [attr.aria-label]="label()">
             @for (option of p.options; track $index) {
               <mat-button-toggle [value]="$index + 1" [matTooltip]="title(option)" [aria-label]="title(option)">
                 @if (icon(option); as name) {
@@ -62,11 +63,14 @@ const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions
 })
 export class ParamControl {
   private readonly store = inject(Store);
+  private readonly texts = inject(Texts);
   readonly param = input.required<FormulaParam>();
   /** The block the value belongs to. */
   readonly block = input.required<string>();
 
-  protected readonly format = (value: number) => formatWithUnit(value, this.param().unit);
+  /** Its label from the code; a predefined block's in the language in use. */
+  protected readonly label = computed(() => this.texts.word(this.param().label));
+  protected readonly format = (value: number) => formatWithUnit(value, this.param().unit, this.texts.wording());
 
   /** Distances from 0 move on a square-root scale, so the short distances get most of the slider. */
   protected readonly squared = computed(() => this.param().unit === 'm' && this.param().min === 0 && this.param().max > 0);
@@ -92,7 +96,7 @@ export class ParamControl {
   }
 
   protected title(option: string): string {
-    return capitalise(option.replace(/_/g, ' '));
+    return capitalise(this.texts.word(option).replace(/_/g, ' '));
   }
 
   protected onSlider(event: Event): void {

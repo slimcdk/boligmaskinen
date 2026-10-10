@@ -1,0 +1,686 @@
+{
+  "footer": {
+    "language": "Sprog: {{ name }}",
+    "about": "Om data",
+    "jobs": "Datajob",
+    "github": "Boligmaskinen på GitHub, version {{ version }}",
+    "version": "Version {{ version }}"
+  },
+  "common": {
+    "add": "Tilføj",
+    "cancel": "Annullér",
+    "close": "Luk",
+    "done": "Færdig",
+    "ok": "OK"
+  },
+  "panel": {
+    "emptyTitle": "Hvor vil du gerne bo?",
+    "emptyText": "Vælg det, der betyder noget for dig. Kortet farver hver celle på {{ cell }} m efter, hvor godt den passer.",
+    "suggestions": "Forslag",
+    "whatMatters": "Det betyder noget for dig",
+    "nothingChosen": "Intet valgt endnu. Tilføj en færdig blok, et eksempel på kode eller et af forslagene ovenfor.",
+    "yourPlaces": "Dine steder",
+    "addPlace": "Tilføj sted",
+    "placingHint": "Klik eller tryk på kortet, hvor stedet er.",
+    "placeName": "Stedets navn",
+    "removePlace": "Fjern {{ name }}",
+    "placesHint": "Tilføj arbejde, familie, venner eller andet, du vil bo tæt på. Hvert sted får en blok med rejsetiden dertil, og dine andre kort kan tilføje den under Tilføj. Træk i en nål for at flytte den.",
+    "route": {
+      "routed": "Rejsetider fra vejnettet",
+      "working": "Finder rejsetiderne på vejene …",
+      "estimated": "Rejsetider anslået ud fra afstanden"
+    }
+  },
+  "groups": {
+    "Nature": "Natur",
+    "Peace and quiet": "Ro og fred",
+    "Everyday life": "Hverdagen",
+    "Area and economy": "Område og økonomi",
+    "Your places": "Dine steder",
+    "Examples": "Eksempler",
+    "My blocks": "Mine blokke"
+  },
+  "criteria": {
+    "forest": {
+      "name": "Skov",
+      "opposite": "Væk fra skov",
+      "note": "Nærmeste skov på mindst 5 ha."
+    },
+    "water": {
+      "name": "Sø eller hav",
+      "opposite": "Væk fra søer og hav",
+      "note": "Nærmeste sø på mindst 5 ha, eller kysten."
+    },
+    "beach": {
+      "name": "Strand",
+      "opposite": "Væk fra strande",
+      "note": "Nærmeste strand i OpenStreetMap."
+    },
+    "noise": {
+      "name": "Stille",
+      "opposite": "Støjende",
+      "note": "Støj fra veje, jernbaner, lufthavne og virksomheder, Lden i dB."
+    },
+    "supermarket": {
+      "name": "Supermarked",
+      "opposite": "Væk fra supermarkeder",
+      "note": "Nærmeste supermarked."
+    },
+    "school": {
+      "name": "Skole",
+      "opposite": "Væk fra skoler",
+      "note": "Nærmeste folkeskole, friskole eller privatskole."
+    },
+    "daycare": {
+      "name": "Dagtilbud",
+      "opposite": "Væk fra dagtilbud",
+      "note": "Nærmeste dagtilbud."
+    },
+    "station": {
+      "name": "Tog eller letbane",
+      "opposite": "Væk fra jernbaner",
+      "note": "Nærmeste station."
+    },
+    "no2": {
+      "name": "Ren luft",
+      "opposite": "Forurenet luft",
+      "note": "Kvælstofdioxid (NO₂), årsmiddel 2024 på et net af 1 km, fra DCE."
+    },
+    "pm25": {
+      "name": "Få fine partikler",
+      "opposite": "Mange fine partikler",
+      "note": "Fine partikler (PM2,5), årsmiddel 2024 på et net af 1 km, fra DCE."
+    },
+    "turbine": {
+      "name": "Væk fra vindmøller",
+      "opposite": "Tæt på vindmøller",
+      "note": "Nærmeste vindmølle i drift."
+    },
+    "turbine_heights": {
+      "name": "Væk fra vindmøller, efter højde",
+      "opposite": "Tæt på vindmøller, efter højde",
+      "note": "Afstanden til nærmeste mølle i dens totalhøjder; danske regler kræver 4 til en nabo."
+    },
+    "solar": {
+      "name": "Væk fra solcelleparker",
+      "opposite": "Tæt på solcelleparker",
+      "note": "Nærmeste solcellepark på mindst 1 ha, fra OpenStreetMap."
+    },
+    "density": {
+      "name": "Land frem for by",
+      "opposite": "By frem for land",
+      "note": "Antal adresser inden for 300 m."
+    },
+    "incomeTax": {
+      "name": "Lav kommuneskat",
+      "opposite": "Høj kommuneskat",
+      "note": "Indkomstskat pr. kommune, 2026."
+    },
+    "burglary": {
+      "name": "Få indbrud",
+      "opposite": "Mange indbrud",
+      "note": "Anmeldte pr. 1.000 indbyggere pr. kommune, 2025."
+    },
+    "zone": {
+      "name": "Planzone",
+      "note": "Boliger i et sommerhusområde må ikke bebos hele året."
+    }
+  },
+  "examples": {
+    "forest-or-water": {
+      "name": "Skov eller vand",
+      "description": "Fulde point nær den af skov og vand, der er nærmest."
+    },
+    "family": {
+      "name": "Skole og dagtilbud",
+      "description": "Både en skole og et dagtilbud inden for rækkevidde."
+    },
+    "quiet-and-green": {
+      "name": "Stille og grønt",
+      "description": "Kun point, hvor der både er stille og tæt på skov."
+    },
+    "empty": {
+      "name": "Ny blok",
+      "description": "Skriv din egen formel."
+    }
+  },
+  "values": {
+    "forest": "Afstand til en skov på mindst 5 ha",
+    "water": "Afstand til en sø på mindst 5 ha, eller havet",
+    "beach": "Afstand til en strand",
+    "noise": "Støj fra veje, jernbaner, lufthavne og virksomheder, Lden",
+    "no2": "Kvælstofdioxid (NO₂), årsmiddel 2024 (ingen data på havet)",
+    "pm25": "Fine partikler (PM2,5), årsmiddel 2024 (ingen data på havet)",
+    "turbine": "Afstand til en vindmølle i drift",
+    "turbine_heights": "Afstand til en vindmølle i drift, i dens totalhøjder (25,4 eller mere, hvor ingen er nær)",
+    "solar": "Afstand til en solcellepark på mindst 1 ha",
+    "density": "Adresser inden for 300 m",
+    "supermarket": "Afstand til et supermarked",
+    "school": "Afstand til en folkeskole, friskole eller privatskole",
+    "daycare": "Afstand til et dagtilbud",
+    "station": "Afstand til en tog- eller letbanestation",
+    "zone": "Planzone: BYZONE, LANDZONE eller SOMMERHUS",
+    "income_tax": "Kommunal indkomstskat, 2026",
+    "land_tax": "Grundskyld, 2026",
+    "burglaries": "Indbrud i beboelse pr. 1.000 indbyggere, 2025",
+    "population": "Indbyggere i kommunen"
+  },
+  "places": {
+    "car": "Minutter til {{ place }} i bil",
+    "bike": "Minutter til {{ place }} på cykel",
+    "walk": "Minutter til {{ place }} til fods",
+    "transit": "Minutter til {{ place }} med tog (anslået)",
+    "default": "Sted {{ n }}"
+  },
+  "words": {
+    "Full points at": "Fulde point ved",
+    "No points at": "Ingen point ved",
+    "Full points up to": "Fulde point op til",
+    "No points from": "Ingen point fra",
+    "Reach": "Rækkevidde",
+    "Travel by": "Transport",
+    "heights": "højder",
+    "addresses": "adresser",
+    "per 1,000": "pr. 1.000",
+    "car": "bil",
+    "bike": "cykel",
+    "walk": "gang",
+    "train": "tog"
+  },
+  "wording": {
+    "noData": "ingen data",
+    "hoursOrMore": "4 t eller mere",
+    "fullUpTo": "Fulde point op til {{ full }} · Ingen point fra {{ zero }}",
+    "noPointsBelow": "Ingen point under {{ zero }} · Fulde point fra {{ full }}",
+    "only": "Kun {{ list }}",
+    "nothingAllowed": "Intet tilladt",
+    "customCode": "Egen kode"
+  },
+  "mapPanel": {
+    "subtitle": "Pilot{{ region }} · {{ cells }} fra åbne data",
+    "cells": "celler på {{ size }} m",
+    "cellsUpClose": "celler på {{ size }} m, {{ close }} m tæt på",
+    "hide": "Skjul panelet",
+    "loading": "Henter data",
+    "result": "Resultat",
+    "which": "Hvilke celler der vises",
+    "all": "Alle",
+    "top": "Percentil",
+    "abs": "Min. point",
+    "bestShare": "Vis den bedste andel af cellerne",
+    "lowest": "Laveste point, der vises",
+    "allOffTitle": "Alt er slået fra",
+    "allOffText": "Slå en gruppe til, eller giv et af dine ønsker noget vægt, for at farve kortet.",
+    "hint": "Vælg det, der betyder noget for dig, så farver kortet hver celle på {{ cell }} m efter, hvor godt den passer.",
+    "settings": "Kortindstillinger",
+    "colours": "Farver",
+    "heatmapColours": "Farver på kortet",
+    "scale": "Farveskala",
+    "smooth": "Glidende",
+    "steps": "Trin",
+    "smoothing": "Udglatning",
+    "off": "Fra",
+    "light": "Let",
+    "strong": "Kraftig",
+    "cellsLabel": "Celler",
+    "homes": "Hvor der er boliger",
+    "land": "Al land",
+    "showBelow": "Vis celler under grænsen i gråt",
+    "opacity": "Gennemsigtighed",
+    "heatmapOpacity": "Kortets dækkevne",
+    "describeAll": "Point for de {{ considered }} celler, der opfylder dine krav, median {{ median }}",
+    "describeLimit": "{{ shown }} af de {{ considered }} celler, der opfylder dine krav, mindst {{ limit }} point",
+    "summaryCells": {
+      "homes": "Hvor der er boliger",
+      "land": "Al land"
+    },
+    "summarySmooth": {
+      "0": "ingen udglatning",
+      "1": "let udglatning",
+      "2": "kraftig udglatning"
+    },
+    "inSteps": "{{ palette }} i trin",
+    "topFormat": "Top {{ value }} %"
+  },
+  "palettes": {
+    "red-green": {
+      "name": "Rød til grøn",
+      "note": "Svær at læse med rød-grøn farveblindhed"
+    },
+    "orange": {
+      "name": "Orange"
+    },
+    "azure": {
+      "name": "Azurblå"
+    },
+    "violet": {
+      "name": "Violet"
+    },
+    "rose": {
+      "name": "Rosa"
+    }
+  },
+  "blockRow": {
+    "hideSettings": "Skjul indstillinger for {{ name }}",
+    "showSettings": "Vis indstillinger for {{ name }}",
+    "needsAttention": "Koden skal rettes",
+    "required": "Krav",
+    "requiredFor": "Krav: {{ name }}",
+    "weightTip": "Vægt i vægtningen (0 slår blokken fra)",
+    "weightOf": "Vægt for {{ name }}",
+    "turnAroundTip": "Vend om: fulde point i den anden ende",
+    "turnAround": "Vend om",
+    "codeTip": "Se og ret koden",
+    "code": "Kode",
+    "more": "Mere",
+    "moreFor": "Mere for {{ name }}",
+    "asPreference": "Brug som ønske",
+    "asRequirement": "Brug som krav",
+    "moveToGroup": "Flyt til gruppe",
+    "remove": "Fjern",
+    "newGroup": "Ny gruppe …",
+    "newGroupTitle": "Flyt til en ny gruppe",
+    "groupName": "Gruppens navn",
+    "newGroupName": "Ny gruppe",
+    "move": "Flyt"
+  },
+  "group": {
+    "show": "Vis blokkene i {{ name }}",
+    "hide": "Skjul blokkene i {{ name }}",
+    "name": "Gruppens navn",
+    "one": "1 blok",
+    "many": "{{ count }} blokke",
+    "off": ", slået fra",
+    "use": "Brug {{ name }}"
+  },
+  "maps": {
+    "first": "Mit kort",
+    "base": "Kort",
+    "copy": "{{ name }} (kopi)",
+    "switcher": "Kort: {{ name }}. Skift, tilføj eller ret kort",
+    "new": "Nyt kort",
+    "duplicateThis": "Kopiér dette kort",
+    "renameThis": "Omdøb dette kort",
+    "shareThis": "Del dette kort",
+    "deleteThis": "Slet dette kort",
+    "name": "Kortets navn",
+    "create": "Opret",
+    "duplicateTitle": "Kopiér kortet",
+    "duplicate": "Kopiér",
+    "renameTitle": "Omdøb kortet",
+    "rename": "Omdøb",
+    "deleteTitle": "Slet \"{{ name }}\"?",
+    "deleteText": "Dets blokke slettes med det. Dine steder og de andre kort bliver.",
+    "delete": "Slet"
+  },
+  "catalog": {
+    "title": "Hvad betyder noget for dig?",
+    "intro": "Hvert valg bliver en blok. Blokke er kode: deres skydere er i sidepanelet, og du kan læse og rette koden.",
+    "blocks": "Blokke",
+    "travelTo": "Rejsetid til {{ name }}",
+    "examples": "Eksempler på kode",
+    "travelTime": "Rejsetid til {{ place }}"
+  },
+  "code": {
+    "blockName": "Blokkens navn",
+    "useAs": "Brug blokken som",
+    "preference": "Ønske",
+    "requirement": "Krav",
+    "hint": "Et ønske giver en score fra 0 (dårligt) til 1 (godt) i hver celle; et krav fjerner de celler, hvor det er falsk eller 0.",
+    "sliderExample": "let reach = slider(3000, 0, 10000, 100)  // Rækkevidde (m)",
+    "becomesSlider": "bliver en skyder i sidepanelet,",
+    "aCheckbox": "et afkrydsningsfelt og",
+    "aChoice": "et valg.",
+    "reference": "Værdier og funktioner",
+    "values": "Værdier",
+    "valuesHint": "Klik på et navn for at sætte det ind i koden. Manglende data tæller som ingen data, ikke som 0.",
+    "functions": "Funktioner",
+    "constants": "Konstanter",
+    "reset": "Nulstil til originalen",
+    "validRequirement": "Gyldigt krav",
+    "validPreference": "Gyldig: giver en score fra 0 til 1",
+    "checking": "Tjekker …"
+  },
+  "functions": {
+    "ramp": "ramp(x, full, zero) er 1 ved full, 0 ved zero og lineær imellem, i begge retninger",
+    "clamp": "clamp(x) holder x mellem 0 og 1; clamp(x, lo, hi) mellem lo og hi",
+    "min": "min(a, b, …) er den mindste værdi",
+    "max": "max(a, b, …) er den største værdi",
+    "abs": "abs(x) uden fortegn",
+    "sqrt": "sqrt(x) kvadratrod",
+    "pow": "pow(x, y) er x i y'te potens, som x ** y",
+    "exp": "exp(x) er e i x'te potens",
+    "log": "log(x) naturlig logaritme",
+    "round": "round(x) til nærmeste hele tal",
+    "floor": "floor(x) runder ned",
+    "ceil": "ceil(x) runder op",
+    "known": "known(x) er sand, når x har data",
+    "fallback": "fallback(x, y) er y, hvor x ikke har data",
+    "slider": "let navn = slider(værdi, min, max, trin) laver en skyder",
+    "choice": "let navn = choice(1, a, b, …) vælger en af værdierne; sidepanelet viser valget"
+  },
+  "constants": {
+    "BYZONE": "zonekode for byzone",
+    "LANDZONE": "zonekode for landzone",
+    "SOMMERHUS": "zonekode for sommerhusområde"
+  },
+  "share": {
+    "title": "Del »{{ name }}«",
+    "text": "Den, der åbner linket, får en kopi af dette kort: dets blokke og hvordan kortet viser dem.",
+    "textPlace": "Den, der åbner linket, får en kopi af dette kort: dets blokke, hvordan kortet viser dem, og det sted, blokkene bruger: {{ places }}.",
+    "textPlaces": "Den, der åbner linket, får en kopi af dette kort: dets blokke, hvordan kortet viser dem, og de steder, blokkene bruger: {{ places }}.",
+    "othersStay": "Dine andre kort og steder bliver hos dig.",
+    "link": "Link",
+    "linkLabel": "Link til kortet",
+    "copy": "Kopiér link",
+    "copied": "Linket er kopieret.",
+    "selected": "Linket er markeret: kopiér det med Ctrl+C eller ⌘C.",
+    "addTitle": "Tilføj kortet »{{ name }}«?",
+    "addBlock": "Det har 1 blok",
+    "addBlocks": "Det har {{ n }} blokke",
+    "addPlace": " og stedet {{ places }}",
+    "addPlaces": " og stederne {{ places }}",
+    "addRest": ". Det føjes til dine kort og åbnes, som det blev delt; dine andre kort forbliver, som de er.",
+    "addAction": "Tilføj kort"
+  },
+  "sync": {
+    "saved": "Dine kort er gemt på serveren",
+    "saving": "Gemmer dine kort på serveren …",
+    "offline": "Serveren kan ikke nås. Dine ændringer gemmes i denne browser og på serveren, så snart den kan nås.",
+    "notSaved": "Ikke gemt på serveren",
+    "conflict": "»{{ name }}« blev også ændret på en anden enhed. Ændringerne herfra blev beholdt.",
+    "renamed": "»{{ name }}« fra denne browser hedder nu »{{ to }}«, ved siden af det, der allerede var gemt.",
+    "updated": "»{{ name }}« blev ændret på en anden enhed.",
+    "deleted": "»{{ name }}« blev slettet på en anden enhed."
+  },
+  "errors": {
+    "The link is broken: the map in it cannot be read": "Linket er i stykker: kortet i det kan ikke læses",
+    "The link is broken: it does not hold a map this app knows": "Linket er i stykker: det indeholder ikke et kort, som denne app kender",
+    "The backend cannot be reached": "Backenden kan ikke nås",
+    "Set DATA_DIR to let the jobs fetch and build the data": "Sæt DATA_DIR, så jobbene kan hente og bygge data",
+    "Needs a Datafordeleren API key": "Kræver en API-nøgle til Datafordeleren",
+    "Needs approval from Geodatastyrelsen": "Kræver godkendelse fra Geodatastyrelsen",
+    "Needs a licence for a listings feed": "Kræver en licens til et feed med boligannoncer"
+  },
+  "theme": {
+    "title": "Tema: {{ name }}",
+    "system": "System",
+    "light": "Lyst",
+    "dark": "Mørkt"
+  },
+  "sheet": {
+    "show": "Vis panelet",
+    "less": "Vis mindre af panelet"
+  },
+  "histogram": {
+    "label": "Fordelingen af point på de celler, der indgår",
+    "top": "100 point"
+  },
+  "heat": {
+    "noData": "Ingen data i det viste område",
+    "pass": "{{ percent }} % af cellerne opfylder kravet",
+    "median": "Medianscore {{ score }}"
+  },
+  "popup": {
+    "points": "{{ points }} point",
+    "noScore": "Ingen score endnu",
+    "addSomething": "Tilføj noget at vægte",
+    "leftOut": "Sorteret fra",
+    "notMet": "Et krav er ikke opfyldt",
+    "homes": "Celle med boliger",
+    "noHomes": "Ingen adressepunkter i denne celle",
+    "area": "området {{ points }} point",
+    "met": "✓ opfyldt",
+    "failed": "✕ ikke opfyldt",
+    "empty": "Vælg i panelet, hvad der betyder noget for dig, for at give dette sted point.",
+    "municipality": "{{ name }} Kommune"
+  },
+  "map": {
+    "problem": "Kortet kunne ikke indlæses: {{ problem }}"
+  },
+  "app": {
+    "placing": "Klik eller tryk på kortet, hvor stedet er",
+    "mapCard": "Kortet",
+    "weighting": "Din vægtning"
+  },
+  "version": {
+    "local": "lokalt build",
+    "localTitle": "Bygget lokalt, ikke fra git",
+    "release": "Udgivelse {{ version }}",
+    "commit": "Commit {{ commit }}",
+    "built": "{{ what }} · bygget {{ date }}"
+  },
+  "data": {
+    "loading": "Indlæser data …",
+    "loadingLayers": "Indlæser {{ n }} datalag …",
+    "loadedLayers": "Indlæser datalag … {{ done }} af {{ n }}",
+    "failed": "Kunne ikke indlæse data: {{ error }}"
+  },
+  "about": {
+    "how": "Sådan bliver kortet lavet",
+    "cells": "Danmark er delt op i celler på {{ cell }} m.",
+    "cellsDetail": "Danmark er delt op i celler på {{ cell }} m, og i celler på {{ detail }} m, når kortet er zoomet ind.",
+    "scores": "Hver celle får en værdi for hvert datalag, og hver blok i din vægtning gør de værdier til en score. Kortet viser gennemsnittet af blokkene, vægtet efter hvor vigtige de er.",
+    "homes": "Boliger er tilnærmet med adressepunkter fra OpenStreetMap, som er importeret fra Danmarks Adresseregister. Celler i industriområder er udeladt.",
+    "noise": "Støj kommer fra Miljøstyrelsens støjkortlægning 2022, hvor den findes: alle veje i København, Aarhus, Odense og Aalborg, de store veje og jernbaner i resten af landet, Københavns Lufthavn og industrien i de fire byer. En celle får den højeste af dem. Andre steder er støjen anslået ud fra vejtype og afstand.",
+    "rules": "Skove og søer tæller fra 5 ha. Skoler er folkeskoler, friskoler og privatskoler. Vindmøller er dem i drift; afstanden til dem gives også i møllens totalhøjde, og danske regler holder 4 totalhøjder fra en nabo. Skat og indbrud er pr. kommune, og luften pr. kvadratkilometer.",
+    "travel": "Rejsetider til dine steder i bil, på cykel og til fods findes på OpenStreetMaps veje, stier og færger, når serveren har bygget sit vejnet; hvert sted viser hvilken. Med tog, og indtil da, anslås de ud fra afstanden i fugleflugt.",
+    "colours": "Farverne strækkes over de point, der vises lige nu, så kortet altid viser de forskelle, der betyder noget. Uden for Danmark viser kortet Natural Earths verdenskort.",
+    "sourcesTitle": "Kilder",
+    "sourcesIntro": "Alle de kilder, kortet bruger: hvad de giver, deres licens, og hvordan de ønsker at blive krediteret.",
+    "libraries": "Selve appen er bygget med open source-biblioteker under",
+    "librariesLink": "deres licenser",
+    "licence": "Licens",
+    "credit": "Kreditering",
+    "tables": "Tabeller",
+    "licenceTexts": "Licenstekster",
+    "note": "Bemærk",
+    "meta": "Data bygget {{ built }} · app {{ version }}",
+    "unknown": "ukendt",
+    "sources": {
+      "osm": {
+        "uses": "Skove, søer, kysten, strande, solcelleparker, supermarkeder, stationer, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
+        "note": "Datalagene lavet ud fra det er også under ODbL."
+      },
+      "mst": {
+        "uses": "Støj fra veje, jernbaner, lufthavne og industri fra den strategiske støjkortlægning 2022 (Lden).",
+        "note": "Ændret: lagt på kortets celler på 100 m. Hvor den ikke har data, er støjen vores eget skøn."
+      },
+      "dce": {
+        "name": "DCE, via Danmarks Miljøportal",
+        "uses": "Kvælstofdioxid (NO₂) og fine partikler (PM2,5): årsmiddel for 2024 på et gitter på 1 km fra DCE's model af luften.",
+        "note": "Ændret: lagt på kortets celler på 100 m. En model, ikke en måling på adressen."
+      },
+      "plandata": {
+        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet.",
+        "note": "Ændret: lagt på kortets celler på 100 m."
+      },
+      "schools": {
+        "uses": "Folkeskoler, friskoler og privatskoler.",
+        "licence": "Ingen licens angivet; registret er offentligt",
+        "credit": "Kilde: Styrelsen for It og Læring, Institutionsregisteret"
+      },
+      "daycare": {
+        "uses": "Dagtilbudsenheder.",
+        "licence": "Ingen licens angivet; data er frie for alle, skriver STIL",
+        "credit": "Kilde: Styrelsen for It og Læring, Dagtilbudsregisteret"
+      },
+      "ens": {
+        "uses": "Vindmøller i drift med deres højde fra stamdataregistret.",
+        "licence": "Energistyrelsens vilkår: fri brug med kildeangivelse",
+        "credit": "Kilde: Energistyrelsen",
+        "note": "Afstanden til nærmeste mølle er vores egen beregning."
+      },
+      "dst": {
+        "uses": "Indkomstskat og grundskyld, befolkning og indbrud i beboelser pr. kommune.",
+        "licence": "Fri brug med kildeangivelse, som CC BY 4.0",
+        "credit": "Kilde: Egne beregninger på baggrund af tal fra Danmarks Statistik"
+      },
+      "protomaps": {
+        "uses": "Baggrundskortet over Danmark: fliser lavet ud fra OpenStreetMap og kortets stil.",
+        "licence": "Fliser: ODbL (OpenStreetMap). Stil: CC0. Kode: BSD-3-Clause"
+      },
+      "worldcover": {
+        "uses": "Arealdække i baggrundskortet, når kortet er zoomet ud, som del af Protomaps' fliser."
+      },
+      "mapFonts": {
+        "name": "Skrifttyper og ikoner",
+        "uses": "Kortets etiketter og ikoner.",
+        "licence": "Noto-skrifttyper: SIL Open Font License 1.1. Ikoner: MIT"
+      },
+      "appFonts": {
+        "name": "Roboto og Material Symbols",
+        "uses": "Appens egen tekst og ikoner, leveret af denne server, ikke af Google."
+      },
+      "naturalEarth": {
+        "uses": "Verdenskortet uden for Danmark.",
+        "licence": "Offentlig ejendom (public domain)"
+      }
+    }
+  },
+  "aboutLinks": {
+    "Noto fonts": "Noto-skrifttyper",
+    "Icons": "Ikoner"
+  },
+  "time": {
+    "everyMinutes": "Hvert {{ n }}. minut",
+    "everyDay": "Hver dag kl. {{ time }}",
+    "everyWeekday": "Hver {{ day }} kl. {{ time }}",
+    "monthly": "Den {{ day }}. i hver måned kl. {{ time }}",
+    "yearly": "Hvert år den {{ date }} kl. {{ time }}",
+    "justNow": "lige nu",
+    "inAMoment": "om et øjeblik",
+    "hours": "t"
+  },
+  "jobs": {
+    "subtitle": {
+      "loading": "Læser jobbene …",
+      "live": "Henter og bygger data på denne server",
+      "preview": "Forhåndsvisning uden backend: kørslerne er simulerede",
+      "unavailable": "Jobbene kan ikke vises"
+    },
+    "views": "Visninger",
+    "tasks": "Opgaver",
+    "recentRuns": "Seneste kørsler",
+    "filterLabel": "Vis kun de opgaver, der er",
+    "filter": {
+      "failing": "Fejler",
+      "running": "Kører",
+      "blocked": "Venter på adgang",
+      "planned": "Ikke bygget endnu"
+    },
+    "none": {
+      "failing": "Ingen opgave fejler.",
+      "running": "Ingen opgave kører.",
+      "blocked": "Ingen opgave venter på adgang.",
+      "planned": "Alle opgaver er bygget.",
+      "all": "Der er ingen opgaver."
+    },
+    "task": "Opgave",
+    "schedule": "Tidsplan",
+    "lastRun": "Seneste kørsel",
+    "nextRun": "Næste kørsel",
+    "actions": "Handlinger",
+    "running": "Kører",
+    "progress": "Fremskridt for {{ name }}",
+    "never": "Aldrig",
+    "scheduleToggle": "Planlæg {{ name }}",
+    "runNow": "Kør {{ name }} nu",
+    "runsHint": "De seneste kørsler med deres resultater. Vælg en for at læse dens log.",
+    "started": "Startet",
+    "duration": "Varighed",
+    "result": "Resultat",
+    "status": "Status",
+    "noRuns": "Intet job har kørt endnu.",
+    "logOf": "Log for {{ name }}",
+    "notBuilt": "Ikke bygget endnu",
+    "notScheduled": "Ikke planlagt",
+    "off": "Slået fra",
+    "statuses": {
+      "queued": "I kø",
+      "running": "Kører",
+      "succeeded": "Lykkedes",
+      "failed": "Fejlede",
+      "cancelled": "Annulleret"
+    },
+    "triggers": {
+      "schedule": "tidsplan",
+      "manual": "manuel",
+      "after": "efter"
+    },
+    "byId": {
+      "osm": {
+        "name": "OpenStreetMap",
+        "description": "Udtrækket for Danmark, og ud fra det skove, vand, strande, butikker, stationer, veje, adresser og kommuner."
+      },
+      "plandata": {
+        "name": "Planzoner",
+        "description": "Polygoner for byzone og sommerhusområde fra WFS'en."
+      },
+      "stil-schools": {
+        "name": "Skoler",
+        "description": "Folkeskoler, friskoler og privatskoler."
+      },
+      "stil-daycare": {
+        "name": "Dagtilbud",
+        "description": "Registrets CSV-eksport af aktive enheder."
+      },
+      "ens": {
+        "name": "Vindmøller",
+        "description": "Det månedlige stamdataregister; jobbet finder den nyeste udgave på dataoversigtssiden."
+      },
+      "dst": {
+        "name": "Kommunal statistik",
+        "description": "Skat (PSKAT), befolkning (FOLK1A) og indbrud (STRAF22), hver i sin nyeste periode."
+      },
+      "noise": {
+        "name": "Støj",
+        "description": "De strategiske støjkort for veje, jernbaner, lufthavne og industri, hentet ud af arkivet på 2 GB med range-forespørgsler. Nye kort hvert 5. år."
+      },
+      "air": {
+        "name": "Luftkvalitet",
+        "description": "Kvælstofdioxid og fine partikler: årsmiddel på et gitter på 1 km fra DCE's model."
+      },
+      "world": {
+        "name": "Verdenskort",
+        "description": "Land, søer, grænser og navne uden for Danmark."
+      },
+      "basemap": {
+        "name": "Baggrundskort",
+        "description": "Regionens fliser op til zoom 12, skåret ud af den nyeste planet-build, med skrifttyper, ikoner og stilarter."
+      },
+      "grid": {
+        "name": "Byg rasteret",
+        "description": "Alle datalag på rasteret, samplet til visningsrasteret."
+      },
+      "roads": {
+        "name": "Vejnet",
+        "description": "Veje, stier og færger fra OSM-udtrækket, som rejsetiderne til dine steder findes på."
+      },
+      "pack": {
+        "name": "Pak data",
+        "description": "Datapakken, kortet indlæser, bygget ved siden af den, der er i brug, og skiftet ind på én gang."
+      },
+      "data-pack": {
+        "name": "Tjek datapakken",
+        "description": "Læser datapakken, kortet indlæser, og tjekker, at alle lag, dele af baggrundskortet og verdensfiler er der."
+      },
+      "backup": {
+        "name": "Sikkerhedskopiér databasen",
+        "description": "Et dump af kort, steder og jobhistorik, gemt i en uge i DATA_DIR/backups; README.md fortæller, hvordan det genskabes."
+      },
+      "datafordeler": {
+        "name": "Adresser og bygninger",
+        "description": "Boliger pr. adresse og bygningsdata."
+      },
+      "ejf": {
+        "name": "Salgspriser",
+        "description": "Købesum pr. salg."
+      },
+      "listings": {
+        "name": "Boliger til salg",
+        "description": "Nye og ændrede annoncer."
+      }
+    }
+  }
+}

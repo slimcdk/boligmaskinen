@@ -13,6 +13,8 @@ the same points in the browser and on the server.
 | `src/profile.ts` | The maps and places as the server keeps them: the shapes of the backend's profile API, shared by both. |
 | `src/migrations.ts` | The language version, and the migrations that bring saved code up to it. |
 | `src/values.ts` | What a block can read: the data, and the travel times to the user's places. |
+| `src/wording.ts` | The phrases and number format the engine writes with, such as a block's summary; English unless the caller gives another language. |
+| `src/sql.ts` | Blocks compiled to SQL, so PostgreSQL can score homes as the browser scores cells. |
 | `src/engine.ts` | Decoding the data layers, lower limits, blur. |
 | `src/travel.ts` | Travel-time estimates. |
 | `src/types.ts` | The shared types. |

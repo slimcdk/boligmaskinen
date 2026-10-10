@@ -1,17 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { versionLabel } from '../data/build-info';
+import { I18n } from '../i18n/i18n';
 import { AboutDialog, SOURCES } from './about-dialog';
 
 describe('versionLabel', () => {
   const source = 'https://github.com/owner/boligmaskinen';
   it('shows the release, then the commit, then says it is a local build, and links to the repository', () => {
-    expect(versionLabel({ version: 'v1.2.0', revision: 'abcdef1234567', source, created: '2026-10-07T15:00:00Z' }))
+    const i18n = TestBed.inject(I18n);
+    const t = i18n.t.bind(i18n);
+    expect(versionLabel({ version: 'v1.2.0', revision: 'abcdef1234567', source, created: '2026-10-07T15:00:00Z' }, t))
       .toEqual({ text: 'v1.2.0', url: source, title: 'Release v1.2.0 · built 2026-10-07' });
-    expect(versionLabel({ version: '', revision: 'abcdef1234567', source, created: '' }))
+    expect(versionLabel({ version: '', revision: 'abcdef1234567', source, created: '' }, t))
       .toEqual({ text: 'abcdef1', url: source, title: 'Commit abcdef1' });
-    expect(versionLabel({ version: '', revision: '', source: '', created: '' }).text).toBe('local build');
-    expect(versionLabel(null)).toEqual({ text: 'local build', url: null, title: 'Built locally, not from git' });
+    expect(versionLabel({ version: '', revision: '', source: '', created: '' }, t).text).toBe('local build');
+    expect(versionLabel(null, t)).toEqual({ text: 'local build', url: null, title: 'Built locally, not from git' });
+    i18n.use('da');
+    expect(versionLabel(null, t)).toEqual({ text: 'lokalt build', url: null, title: 'Bygget lokalt, ikke fra git' });
+    i18n.use('en');
   });
 });
 

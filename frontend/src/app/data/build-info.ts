@@ -1,4 +1,5 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { I18n, TextParams } from '../i18n/i18n';
 
 /**
  * Which version of the app is running, named like the OCI image labels
@@ -27,13 +28,14 @@ export interface VersionLabel {
   title: string;
 }
 
-export function versionLabel(info: BuildInfo | null): VersionLabel {
+/** The version in words, in the language `t` translates to. */
+export function versionLabel(info: BuildInfo | null, t: (key: string, params?: TextParams) => string): VersionLabel {
   const short = info?.revision.slice(0, 7) ?? '';
-  const text = info?.version || short || 'local build';
-  if (!info) return { text, url: null, title: 'Built locally, not from git' };
+  const text = info?.version || short || t('version.local');
+  if (!info) return { text, url: null, title: t('version.localTitle') };
   const url = info.source || null;
-  const what = info.version ? `Release ${info.version}` : info.revision ? `Commit ${short}` : 'Built locally, not from git';
-  return { text, url, title: `${what}${info.created ? ` · built ${info.created.slice(0, 10)}` : ''}` };
+  const what = info.version ? t('version.release', { version: info.version }) : info.revision ? t('version.commit', { commit: short }) : t('version.localTitle');
+  return { text, url, title: info.created ? t('version.built', { what, date: info.created.slice(0, 10) }) : what };
 }
 
 /** JSON from a path next to the app, or null when it is missing or not JSON (e.g. a dev server's index page). */
@@ -50,7 +52,8 @@ async function json<T>(path: string): Promise<T | null> {
 @Injectable({ providedIn: 'root' })
 export class BuildInfoService {
   readonly info = signal<BuildInfo | null>(null);
-  readonly label = computed(() => versionLabel(this.info()));
+  private readonly i18n = inject(I18n);
+  readonly label = computed(() => versionLabel(this.info(), (key, params) => this.i18n.t(key, params)));
 
   constructor() {
     void this.load();

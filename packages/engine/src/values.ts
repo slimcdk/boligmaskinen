@@ -3,6 +3,7 @@
  * the travel times to the user's own places.
  */
 import { formatDistance } from './format.ts';
+import { ENGLISH, formatNumber, word, type Wording } from './wording.ts';
 import { toVariableName } from './formula.ts';
 import { type CriterionKind, type LayerName, type MunicipalField, type Place, type TravelMode } from './types.ts';
 
@@ -66,23 +67,24 @@ export function placeValues(places: Place[]): ValueInfo[] {
 const ZONES: Record<number, string> = { 1: 'Byzone', 2: 'Landzone', 3: 'Sommerhusområde' };
 
 /** A value for people, e.g. "520 m", "57 dB" or "Landzone". */
-export function formatValueOf(info: Pick<ValueInfo, 'kind' | 'unit' | 'field'>, value: number): string {
-  if (Number.isNaN(value)) return 'no data';
+export function formatValueOf(info: Pick<ValueInfo, 'kind' | 'unit' | 'field'>, value: number, wording: Wording = ENGLISH): string {
+  if (Number.isNaN(value)) return wording.noData;
+  const unit = word(wording, info.unit);
   switch (info.kind) {
-    case 'distance': return formatDistance(value);
+    case 'distance': return formatDistance(value, wording);
     case 'category': return ZONES[value] ?? String(value);
-    case 'minutes': return value >= 255 ? '4 h or more' : `${Math.round(value)} min`;
-    case 'scaled': return `${value.toFixed(1)} ${info.unit}`;
+    case 'minutes': return value >= 255 ? wording.hoursOrMore : `${Math.round(value)} min`;
+    case 'scaled': return `${formatNumber(value, wording, 1)} ${unit}`;
     case 'municipal':
-      if (info.field === 'population') return Math.round(value).toLocaleString('en-US');
-      return `${value.toFixed(info.field === 'incomeTax' ? 2 : 1)} ${info.unit}`;
-    default: return `${Math.round(value)} ${info.unit}`.trim();
+      if (info.field === 'population') return Math.round(value).toLocaleString(wording.locale);
+      return `${formatNumber(value, wording, info.field === 'incomeTax' ? 2 : 1)} ${unit}`;
+    default: return `${Math.round(value)} ${unit}`.trim();
   }
 }
 
 /** A control value with its unit: distances in m or km, the rest as written. */
-export function formatWithUnit(value: number, unit: string): string {
-  if (unit === 'm') return formatDistance(value);
-  const text = String(Math.round(value * 1000) / 1000);
-  return unit ? `${text} ${unit}` : text;
+export function formatWithUnit(value: number, unit: string, wording: Wording = ENGLISH): string {
+  if (unit === 'm') return formatDistance(value, wording);
+  const text = formatNumber(Math.round(value * 1000) / 1000, wording, 0, 3);
+  return unit ? `${text} ${word(wording, unit)}` : text;
 }

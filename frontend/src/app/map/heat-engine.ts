@@ -1,6 +1,6 @@
 import {
-  Block, BlockInputs, boxBlur, compileCached, DATA_VALUES, DecodeContext, decodeValue, evaluateBlocks, formatValueOf, Grid,
-  lowerLimit, mercatorFrame, MercatorFrame, minutesLayer, percentile, Place, placeValues, total, ValueInfo, ViewState,
+  Block, BlockInputs, boxBlur, compileCached, DATA_VALUES, DecodeContext, decodeValue, evaluateBlocks, Grid,
+  lowerLimit, mercatorFrame, MercatorFrame, minutesLayer, percentile, Place, placeValues, Role, total, ValueInfo, ViewState,
 } from '@boligmaskinen/engine';
 import type { Scheme } from '../theme/theme.service';
 import { BELOW_LIMIT, rampOf, Rgb, stepped } from './colours';
@@ -17,11 +17,36 @@ export interface HeatStats {
   histogram: Uint32Array;
 }
 
+/**
+ * The points of one cell and what they come from. The page puts it into words (map-view.ts), as
+ * the worker knows no language.
+ */
 export interface Breakdown {
-  title: string;
-  subtitle: string;
-  rows: { name: string; value: string; result: string; failed: boolean }[];
+  /** The cell's points, or null while nothing is weighed. */
+  points: number | null;
+  /** A requirement is not met, so the cell is left out. */
+  leftOut: boolean;
+  /** Whether the cell has address points. */
+  homes: boolean;
+  municipality: string;
+  /** The points of the area around the cell, when the map smooths. */
+  area: number | null;
+  rows: BreakdownRow[];
 }
+
+/** One block's part in a cell's points. */
+export interface BreakdownRow {
+  id: string;
+  role: Role;
+  /** The value the block reads, when it reads just one: its name, and its value in the cell. */
+  input: { name: string; value: number } | null;
+  /** The block's score in the cell, NaN without data; a requirement that is not met gives 0. */
+  score: number;
+  weight: number;
+}
+
+/** A block's result where the map looks, from an even sample of the cells; the page puts it into words. */
+export type Preview = { kind: 'noData' } | { kind: 'pass'; percent: number } | { kind: 'median'; score: number };
 
 /** What a heatmap is drawn from: the blocks, the places they read, and how the map shows them. */
 export interface HeatRequest {
@@ -46,8 +71,8 @@ export type HeatMessage =
 
 export interface HeatResult {
   stats: HeatStats;
-  /** Each block's result in words, e.g. "Median score 0.62" or "84 % of the cells pass". */
-  previews: [string, string][];
+  /** Each block's result, by its id. */
+  previews: [string, Preview][];
   /** Blocks that cannot run, with the reason. */
   issues: [string, string][];
 }
@@ -262,22 +287,22 @@ export class HeatEngine {
     };
   }
 
-  /** "Median score 0.62" for preferences and "84 % of the cells pass" for requirements, from an even sample. */
-  private previews(blocks: Block[], values: Map<string, Float32Array>): [string, string][] {
-    const out: [string, string][] = [];
+  /** The median score of preferences and the share of cells that pass requirements, from an even sample. */
+  private previews(blocks: Block[], values: Map<string, Float32Array>): [string, Preview][] {
+    const out: [string, Preview][] = [];
     for (const block of blocks) {
       const v = values.get(block.id);
       if (!v) continue;
       const stride = Math.max(1, Math.floor(v.length / 4000));
       const sample: number[] = [];
       for (let i = 0; i < v.length; i += stride) if (!Number.isNaN(v[i])) sample.push(v[i]);
-      if (!sample.length) { out.push([block.id, 'No data where the map looks']); continue; }
+      if (!sample.length) { out.push([block.id, { kind: 'noData' }]); continue; }
       if (block.role === 'must') {
-        out.push([block.id, `${Math.round((sample.filter((x) => x > 0).length / sample.length) * 100)} % of the cells pass`]);
+        out.push([block.id, { kind: 'pass', percent: Math.round((sample.filter((x) => x > 0).length / sample.length) * 100) }]);
         continue;
       }
       sample.sort((a, b) => a - b);
-      out.push([block.id, `Median score ${sample[Math.floor(sample.length / 2)].toFixed(2)}`]);
+      out.push([block.id, { kind: 'median', score: sample[Math.floor(sample.length / 2)] }]);
     }
     return out;
   }
@@ -286,42 +311,26 @@ export class HeatEngine {
   explain(cell: number, request: Pick<HeatRequest, 'blocks' | 'places'>): Breakdown | null {
     const grid = this.grid;
     if (cell < 0 || cell >= grid.width * grid.height || !(grid.layers.mask[cell] & 1)) return null;
-    const municipality = grid.municipalities[grid.layers.municipality[cell]];
-    const homes = (grid.layers.mask[cell] & 2) > 0 ? 'Cell with homes' : 'No address points in this cell';
+    const municipality = grid.municipalities[grid.layers.municipality[cell]]?.name ?? '';
+    const homes = (grid.layers.mask[cell] & 2) > 0;
     const area = this.lastRadius > 0 && this.buffers && this.buffers.mb[cell] > 0.015
-      ? ` · area ${Math.round(this.buffers.sb[cell] / this.buffers.mb[cell])} points` : '';
+      ? Math.round(this.buffers.sb[cell] / this.buffers.mb[cell]) : null;
 
     // Blocks that failed on the full set of cells give nothing here either
     const { blocks, places } = request;
     const inputs = this.inputs(Uint32Array.of(cell), places, null);
     const result = evaluateBlocks(blocks, 1, inputs, { skip: new Set(this.lastIssues.keys()) });
-    const infos = new Map(HeatEngine.values(places).map((v) => [v.name, v]));
-    const rows: Breakdown['rows'] = [];
-    let failed = false;
+    const rows: BreakdownRow[] = [];
     for (const block of blocks) {
-      const v = result.values.get(block.id)?.[0];
-      if (v === undefined || (block.role === 'want' && block.weight <= 0)) continue;
-      // Show the value a block reads when it reads one, e.g. "520 m"
+      const score = result.values.get(block.id)?.[0];
+      if (score === undefined || (block.role === 'want' && block.weight <= 0)) continue;
+      // The value a block reads when it reads one, e.g. 520 m
       const compiled = compileCached(block.code, inputs.names);
       const used = compiled.ok && compiled.formula.uses.length === 1 ? compiled.formula.uses[0] : null;
-      const input = used ? formatValueOf(infos.get(used)!, inputs.values(used)?.[0] ?? NaN) : '';
-      if (block.role === 'must') {
-        const ok = v !== 0;
-        failed ||= !ok;
-        rows.push({ name: block.name, value: input, result: ok ? '✓ met' : '✕ not met', failed: !ok });
-      } else {
-        const has = !Number.isNaN(v);
-        rows.push({
-          name: block.name,
-          value: input || (has ? v.toFixed(2) : 'no data'),
-          result: has ? `${(v * block.weight).toFixed(1)} / ${block.weight}` : `– / ${block.weight}`,
-          failed: false,
-        });
-      }
+      const input = used ? { name: used, value: inputs.values(used)?.[0] ?? NaN } : null;
+      rows.push({ id: block.id, role: block.role, input, score, weight: block.weight });
     }
-    const where = `${municipality?.name ?? ''} Kommune`;
-    if (!result.hasScore) return { title: 'No score yet', subtitle: `Add something to weigh · ${where}`, rows };
-    if (failed) return { title: 'Left out', subtitle: `A requirement is not met · ${where}`, rows };
-    return { title: `${Math.round(result.scores[0])} points`, subtitle: `${homes} · ${where}${area}`, rows };
+    const leftOut = rows.some((row) => row.role === 'must' && row.score === 0);
+    return { points: result.hasScore ? Math.round(result.scores[0]) : null, leftOut, homes, municipality, area, rows };
   }
 }

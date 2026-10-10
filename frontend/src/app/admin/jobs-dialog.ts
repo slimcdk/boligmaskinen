@@ -8,26 +8,16 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { describeCron, formatBytes, formatDuration, relativeTime } from './cron';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { I18n, TRANSLATIONS } from '../i18n/i18n';
+import { describeCron, ENGLISH_TIME, formatBytes, formatDuration, relativeTime, TimeWords } from './cron';
 import { Job, JobRun } from './jobs';
 import { JobsMode, JobsService } from './jobs.service';
 
-const SUBTITLE: Record<JobsMode, string> = {
-  loading: 'Reading the jobs…',
-  live: 'Fetching and building the data on this server',
-  preview: 'Preview without a backend: the runs are simulated',
-  unavailable: 'The jobs cannot be shown',
-};
-
-/** What the tasks can be filtered by. */
+/** What the tasks can be filtered by; their names are jobs.filter.<id> in the catalogues. */
 type TaskFilter = 'failing' | 'running' | 'blocked' | 'planned';
 
-const FILTERS: { id: TaskFilter; label: string; none: string }[] = [
-  { id: 'failing', label: 'Failing', none: 'No task is failing.' },
-  { id: 'running', label: 'Running', none: 'No task is running.' },
-  { id: 'blocked', label: 'Waiting for access', none: 'No task is waiting for access.' },
-  { id: 'planned', label: 'Not built yet', none: 'Every task is built.' },
-];
+const FILTERS: TaskFilter[] = ['failing', 'running', 'blocked', 'planned'];
 
 const STATUS_ICON: Record<JobRun['status'], string> = {
   queued: 'schedule', running: 'progress_activity', succeeded: 'check_circle', failed: 'error', cancelled: 'cancel',
@@ -41,24 +31,30 @@ const STATUS_ICON: Record<JobRun['status'], string> = {
   selector: 'app-jobs-dialog',
   imports: [
     MatButtonModule, MatChipsModule, MatDialogModule, MatIconModule, MatProgressBarModule, MatSlideToggleModule, MatTableModule,
-    MatTabsModule, MatTooltipModule,
+    MatTabsModule, MatTooltipModule, TranslocoPipe,
   ],
   templateUrl: './jobs-dialog.html',
   styleUrl: './jobs-dialog.scss',
 })
 export class JobsDialog {
   protected readonly jobs = inject(JobsService);
+  private readonly i18n = inject(I18n);
   protected readonly taskColumns = ['name', 'schedule', 'last', 'next', 'actions'];
   protected readonly runColumns = ['job', 'started', 'duration', 'result', 'status'];
   protected readonly selected = signal<string | null>(null);
-  protected readonly subtitle = computed(() => SUBTITLE[this.jobs.mode()]);
+  protected readonly subtitle = computed(() => this.i18n.t(`jobs.subtitle.${this.jobs.mode() satisfies JobsMode}`));
+  /** Schedules and times in the language in use. */
+  private readonly time = computed<TimeWords>(() => {
+    const language = this.i18n.language();
+    return language === 'en' ? ENGLISH_TIME : { ...ENGLISH_TIME, ...(TRANSLATIONS[language] as { time: Partial<TimeWords> }).time, locale: this.i18n.locale() };
+  });
 
   constructor() {
     void this.jobs.connect();
     inject(DestroyRef).onDestroy(() => this.jobs.disconnect());
   }
 
-  protected readonly names = computed(() => new Map(this.jobs.jobs().map((j) => [j.id, j.name])));
+  protected readonly names = computed(() => new Map(this.jobs.jobs().map((j) => [j.id, this.jobText(j, 'name')])));
   protected readonly history = computed(() => [...this.jobs.runs()].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 30));
   protected readonly selectedRun = computed(() => this.jobs.runs().find((r) => r.id === this.selected()) ?? null);
   /** "Tasks" or "Recent runs". */
@@ -80,49 +76,60 @@ export class JobsDialog {
     };
   });
 
-  protected readonly filters = computed(() => FILTERS.map((f) => ({ ...f, count: this.jobs.jobs().filter((job) => this.matches()(job, f.id)).length })));
+  protected readonly filters = computed(() => FILTERS.map((id) => ({ id, count: this.jobs.jobs().filter((job) => this.matches()(job, id)).length })));
 
   protected readonly shown = computed(() => {
     const filter = this.filter();
     return filter ? this.jobs.jobs().filter((job) => this.matches()(job, filter)) : this.jobs.jobs();
   });
 
-  protected readonly none = computed(() => FILTERS.find((f) => f.id === this.filter())?.none ?? 'There are no tasks.');
+  protected readonly none = computed(() => this.i18n.t(`jobs.none.${this.filter() ?? 'all'}`));
 
-  protected describe = describeCron;
-  protected bytes = formatBytes;
+  /** A job's name or description: the server's English, or its Danish in da.json by the job's id. */
+  protected jobText(job: Job, field: 'name' | 'description'): string {
+    return this.i18n.lookup(`jobs.byId.${job.id}.${field}`) ?? job[field];
+  }
+
+  /** A text the server wrote, such as why a job is blocked, in Danish when it is a known one. */
+  protected phrase(text: string): string {
+    return this.i18n.phrase('errors', text) ?? text;
+  }
+
+  protected describe(schedule: string): string {
+    return describeCron(schedule, this.time());
+  }
+
+  protected bytes(bytes: number): string {
+    return formatBytes(bytes, this.time());
+  }
 
   protected icon(status: JobRun['status']): string {
     return STATUS_ICON[status];
   }
 
-  protected statusLabel(status: JobRun['status']): string {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  }
-
   protected ago(iso: string | undefined): string {
-    return iso ? relativeTime(new Date(iso), this.jobs.now()) : '–';
+    return iso ? relativeTime(new Date(iso), this.jobs.now(), this.time()) : '–';
   }
 
   protected when(job: Job): string {
-    if (job.blocked) return job.planned ? 'Not built yet' : 'Not scheduled';
-    if (!job.enabled) return 'Off';
+    if (job.blocked) return this.i18n.t(job.planned ? 'jobs.notBuilt' : 'jobs.notScheduled');
+    if (!job.enabled) return this.i18n.t('jobs.off');
     const next = this.jobs.next(job);
-    return next ? relativeTime(next, this.jobs.now()) : '–';
+    return next ? relativeTime(next, this.jobs.now(), this.time()) : '–';
   }
 
   protected exact(iso: string | undefined): string {
-    return iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+    return iso ? new Date(iso).toLocaleString(this.time().locale, { dateStyle: 'medium', timeStyle: 'short' }) : '';
   }
 
   protected nextExact(job: Job): string {
     const next = this.jobs.next(job);
-    return next ? next.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+    return next ? next.toLocaleString(this.time().locale, { dateStyle: 'medium', timeStyle: 'short' }) : '';
   }
 
   protected duration(run: JobRun): string {
     if (!run.finishedAt) return run.status === 'running' ? `${Math.round((run.progress ?? 0) * 100)} %` : '–';
-    return formatDuration(new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime());
+    return formatDuration(new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime(), this.time());
   }
 
   protected select(run: JobRun): void {

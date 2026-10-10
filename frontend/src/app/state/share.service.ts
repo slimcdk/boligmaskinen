@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { I18n } from '../i18n/i18n';
+import { Texts } from '../i18n/texts';
 import { ConfirmDialog, ConfirmDialogData } from '../panel/confirm-dialog';
 import { ShareDialog, ShareDialogData } from '../panel/share-dialog';
 import { decodeShare, encodeShare, placesUsed } from './share';
@@ -14,6 +16,8 @@ export class ShareService {
   private readonly store = inject(Store);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly i18n = inject(I18n);
+  private readonly texts = inject(Texts);
 
   /** Shows the link to the open map, with the view the map shows it in. */
   async shareOpenMap(): Promise<void> {
@@ -22,7 +26,7 @@ export class ShareService {
     // The map's position goes along, as MapLibre keeps it in the address
     const position = /(?:^#|&)(map=[^&]*)/.exec(location.hash)?.[1];
     const link = `${location.origin}${location.pathname}#${position ? `${position}&` : ''}share=${code}`;
-    const data: ShareDialogData = { name: map.name, link, places: placesUsed(map, this.store.places()).map((p) => p.name) };
+    const data: ShareDialogData = { name: this.texts.mapName(map.name), link, places: placesUsed(map, this.store.places()).map((p) => p.name) };
     this.dialog.open(ShareDialog, { data, width: '560px', maxWidth: '92vw' });
   }
 
@@ -36,16 +40,17 @@ export class ShareService {
     try {
       shared = await decodeShare(code);
     } catch (error) {
-      this.snackBar.open((error as Error).message, 'OK', { duration: 8000 });
+      const message = (error as Error).message;
+      this.snackBar.open(this.i18n.phrase('errors', message) ?? message, this.i18n.t('common.ok'), { duration: 8000 });
       return;
     }
     const blocks = shared.blocks.length;
     const places = shared.places.map((p) => p.name);
+    const t = (key: string) => this.i18n.t(key, { n: blocks, places: places.join(', ') });
     const data: ConfirmDialogData = {
-      title: `Add the map “${shared.name}”?`,
-      text: `It has ${blocks} block${blocks === 1 ? '' : 's'}${places.length ? `, and ${places.length === 1 ? 'the place' : 'the places'} ${places.join(', ')}` : ''}. `
-        + 'It is added to your maps and opened as it was shared; your other maps stay as they are.',
-      action: 'Add map',
+      title: this.i18n.t('share.addTitle', { name: this.texts.mapName(shared.name) }),
+      text: t(blocks === 1 ? 'share.addBlock' : 'share.addBlocks') + (places.length ? t(places.length === 1 ? 'share.addPlace' : 'share.addPlaces') : '') + t('share.addRest'),
+      action: this.i18n.t('share.addAction'),
     };
     this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data, width: '440px', maxWidth: '92vw' })
       .afterClosed().subscribe((yes) => yes && this.store.addShared(shared));

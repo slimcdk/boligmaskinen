@@ -1,5 +1,7 @@
 import { DestroyRef, effect, inject, Injectable, InjectionToken, signal, untracked } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { I18n } from '../i18n/i18n';
+import { Texts } from '../i18n/texts';
 import { SavedMap } from '@boligmaskinen/engine';
 import { ProfileApi, ProfileApiError } from './profile-api';
 import { Store } from './store';
@@ -41,6 +43,8 @@ export class ProfileSync {
   private readonly store = inject(Store);
   private readonly api = inject(ProfileApi);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly i18n = inject(I18n);
+  private readonly texts = inject(Texts);
   private readonly timing = inject(SYNC_TIMING);
   readonly status = signal<SyncStatus>('loading');
 
@@ -171,13 +175,14 @@ export class ProfileSync {
   private tell(notices: SyncNotice[], open: SavedMap, first: boolean): void {
     const lines: string[] = [];
     for (const notice of notices) {
-      if (notice.type === 'conflict') lines.push(`“${notice.name}” was also changed on another device. The changes made here were kept.`);
-      else if (notice.type === 'renamed') lines.push(`“${notice.name}” from this browser is now “${notice.to}”, next to the one already saved.`);
+      const name = this.texts.mapName(notice.name);
+      if (notice.type === 'conflict') lines.push(this.i18n.t('sync.conflict', { name }));
+      else if (notice.type === 'renamed') lines.push(this.i18n.t('sync.renamed', { name, to: this.texts.mapName(notice.to) }));
       // Changes from other devices are only news for the map that is open
       else if (!first && notice.kind === 'map' && notice.id === open.id) {
-        lines.push(notice.type === 'updated' ? `“${notice.name}” was changed on another device.` : `“${notice.name}” was deleted on another device.`);
+        lines.push(this.i18n.t(notice.type === 'updated' ? 'sync.updated' : 'sync.deleted', { name }));
       }
     }
-    if (lines.length) this.snackBar.open(lines.join(' '), 'OK', { duration: 8000 });
+    if (lines.length) this.snackBar.open(lines.join(' '), this.i18n.t('common.ok'), { duration: 8000 });
   }
 }
