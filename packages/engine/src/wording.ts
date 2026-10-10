@@ -13,6 +13,9 @@ export interface Wording {
   /** A ramp, as `{{ full }}` and `{{ zero }}` with their units: for less is better, and for more. */
   fullUpTo: string;
   noPointsBelow: string;
+  /** A ramp of distances that starts at 0 m, as for an area: full points, or none, inside it. */
+  fullInside: string;
+  noPointsInside: string;
   /** A requirement's allowed categories, as `{{ list }}`. */
   only: string;
   nothingAllowed: string;
@@ -28,6 +31,8 @@ export const ENGLISH: Wording = {
   hoursOrMore: '4 h or more',
   fullUpTo: 'Full points up to {{ full }} · No points from {{ zero }}',
   noPointsBelow: 'No points below {{ zero }} · Full points from {{ full }}',
+  fullInside: 'Full points inside the area · No points from {{ zero }}',
+  noPointsInside: 'No points inside the area · Full points from {{ full }}',
   only: 'Only {{ list }}',
   nothingAllowed: 'Nothing allowed',
   customCode: 'Custom code',

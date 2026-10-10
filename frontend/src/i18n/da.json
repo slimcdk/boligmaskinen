@@ -269,6 +269,8 @@
     "hoursOrMore": "4 t eller mere",
     "fullUpTo": "Fulde point op til {{ full }} · Ingen point fra {{ zero }}",
     "noPointsBelow": "Ingen point under {{ zero }} · Fulde point fra {{ full }}",
+    "fullInside": "Fulde point inden for området · Ingen point fra {{ zero }}",
+    "noPointsInside": "Ingen point inden for området · Fulde point fra {{ full }}",
     "only": "Kun {{ list }}",
     "nothingAllowed": "Intet tilladt",
     "customCode": "Egen kode"
