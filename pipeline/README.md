@@ -144,6 +144,7 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 | Forest, lake/sea, beach, solar park, power line, airfield, supermarket, station, pharmacy, library, roads, address points, municipalities | OpenStreetMap (Geofabrik) | ODbL. Forests and lakes count from 5 ha, solar parks from 1 ha (plants, and panels on the ground, not on roofs). Power lines are those overhead at 132 kV or more. Airfields are every `aeroway=aerodrome`: an airport has an IATA code, an air station military tags |
 | Noise | Miljøstyrelsen, strategic noise maps 2022 (Lden) | Every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere (3 % of the land); the major railways, Copenhagen Airport and industry in the four cities, where their band is louder (0.2 % of the land). Elsewhere estimated from road class and distance |
 | Planning zone | Plandata.dk zone map | |
+| Planned roads and railways | Plandata.dk, the municipal plans' planned traffic | CC BY 4.0. Roads and railways, adopted or proposed; not the paths, corridors, stations, parking, ports and airports |
 | Protected areas, Natura 2000 | Miljøstyrelsen, through Danmarks Miljøportal | CC0. The fredninger of land in force (not the kirkefredninger), and the Natura 2000 areas for habitats and birds: the distance to them, 0 inside |
 | Schools | STIL Institutionsregisteret | Folkeskoler, friskoler and private schools |
 | Daycare | STIL Dagtilbudsregisteret | Active units |

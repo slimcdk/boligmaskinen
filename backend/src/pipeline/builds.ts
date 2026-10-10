@@ -74,6 +74,8 @@ const GRID_SOURCES: Record<string, [job: string, name: string]> = {
   protected_areas: ['protected', 'fredede_omr.geojson'],
   natura2000_habitats: ['protected', 'habitat_omr.geojson'],
   natura2000_birds: ['protected', 'fugle_bes_omr.geojson'],
+  planned_traffic: ['plans', 'planlagttrafikanlaeg_vedtaget.geojson'],
+  planned_traffic_proposed: ['plans', 'planlagttrafikanlaeg_forslag.geojson'],
 };
 /** Files the grid reads when they are there: an install fetched the noise archive before it took these out too. */
 const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {

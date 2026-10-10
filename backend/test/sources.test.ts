@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'protected', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -47,7 +47,7 @@ describeWithDatabase('the source jobs', () => {
     const urls: SourceUrls = {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
-      air: `${base}/wfs-air`, protected: `${base}/wfs-protected`,
+      air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -198,6 +198,20 @@ describeWithDatabase('the source jobs', () => {
       response.writeHead(200).end(JSON.stringify({ features: [{ geometry: null }] }));
     });
     await expect(run('protected')).rejects.toThrow(/did not give what it should: only 1 protected areas/);
+  });
+
+  it('Planned roads and railways: fetches the adopted and the proposed plans, of which there may be none', async () => {
+    server.on('GET /wfs-plans', (request, response) => {
+      const proposed = new URL(request.url, 'http://x').searchParams.get('typeNames')!.endsWith('_forslag');
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: proposed ? 0 : 1799 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
+    });
+    expect(await run('plans')).toMatchObject({ changed: true, result: '1,799 adopted, 0 proposed' });
+    expect(await run('plans')).toMatchObject({ changed: false });
+    server.on('GET /wfs-plans', (_request, response) => {
+      response.writeHead(200).end('<ows:ExceptionReport>Could not do it</ows:ExceptionReport>');
+    });
+    await expect(run('plans')).rejects.toThrow(/did not give what it should: not JSON/);
   });
 
   it('World map: builds the layers from Natural Earth when a file changed', async () => {

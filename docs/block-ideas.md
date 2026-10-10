@@ -273,7 +273,7 @@ Cell values to start with, each from the adopted (`_vedtaget`) or proposed (`_fo
 |---|---|
 | `planned_use` | The use the municipal plan's frame sets: housing, business, centre, recreation, technical, … |
 | `proposed_plan_500m` | A proposed local plan within 500 m |
-| `planned_road` | Distance to a planned road or railway |
+| `planned_road` | Distance to a planned road or railway (in use since 2026-10-10: the municipal plans' roads and railways, adopted or proposed) |
 | `in_noise_area` | The plan marks the area as noise-loaded |
 | `in_consequence_zone` | A consequence zone around a business or plant |
 | `forest_planned` | Forest planting is wanted here |

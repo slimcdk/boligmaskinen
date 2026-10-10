@@ -164,6 +164,11 @@
       "name": "Away from power lines",
       "opposite": "Close to power lines",
       "note": "Nearest overhead line of 132 to 400 kV, from OpenStreetMap."
+    },
+    "planned_road": {
+      "name": "Away from planned roads and railways",
+      "opposite": "Close to planned roads and railways",
+      "note": "Nearest road or railway the municipal plans lay out, adopted or proposed, from Plandata.dk."
     }
   },
   "examples": {
@@ -215,7 +220,8 @@
     "protected_area": "Distance to a protected area, a fredning of land in force (0 inside one)",
     "pharmacy": "Distance to a pharmacy",
     "library": "Distance to a public library",
-    "power_line": "Distance to an overhead power line of 132 kV or more"
+    "power_line": "Distance to an overhead power line of 132 kV or more",
+    "planned_road": "Distance to a road or railway the municipal plans lay out, adopted or proposed"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",

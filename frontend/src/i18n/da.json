@@ -164,6 +164,11 @@
       "name": "Væk fra højspændingsledninger",
       "opposite": "Tæt på højspændingsledninger",
       "note": "Nærmeste luftledning på 132 til 400 kV, fra OpenStreetMap."
+    },
+    "planned_road": {
+      "name": "Væk fra planlagte veje og baner",
+      "opposite": "Tæt på planlagte veje og baner",
+      "note": "Nærmeste vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået, fra Plandata.dk."
     }
   },
   "examples": {
@@ -215,7 +220,8 @@
     "protected_area": "Afstand til et fredet område, en gældende arealfredning (0 inden for et)",
     "pharmacy": "Afstand til et apotek",
     "library": "Afstand til et folkebibliotek",
-    "power_line": "Afstand til en luftledning på 132 kV eller mere"
+    "power_line": "Afstand til en luftledning på 132 kV eller mere",
+    "planned_road": "Afstand til en vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -543,7 +549,7 @@
         "note": "Ændret: lagt på kortets celler på 100 m. En model, ikke en måling på adressen."
       },
       "plandata": {
-        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet.",
+        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet; og de veje og baner, som kommuneplanerne lægger ud.",
         "note": "Ændret: lagt på kortets celler på 100 m."
       },
       "schools": {
@@ -740,6 +746,10 @@
       "protected": {
         "name": "Beskyttede områder",
         "description": "Fredninger og Natura 2000-områderne for naturtyper og fugle fra Danmarks Miljøportals WFS."
+      },
+      "plans": {
+        "name": "Planlagte veje og baner",
+        "description": "De veje og baner, som kommuneplanerne lægger ud, vedtaget eller foreslået, fra WFS'en."
       }
     }
   }
