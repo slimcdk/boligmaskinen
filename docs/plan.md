@@ -198,17 +198,18 @@ explanation.
 - **Danish interface.** Every text goes through translation keys. Transloco allows
   switching language in the app; choose before the texts multiply.
 - **Accessibility, WCAG 2.2 AA.** Keyboard use, labels, and contrast in both themes.
-  axe runs in Playwright.
-- **Security and upkeep:**
+  axe runs in Playwright. Done (2026-10-10).
+- **Security and upkeep:** done (2026-10-10).
   - Content Security Policy and security headers.
   - Dependabot for npm and Actions.
   - Image scanning.
   - Images for both amd64 and arm64.
-- **Backups.** A nightly PostGIS dump job, and restoring is documented.
-- **Running it.** Self-hosting guide, upgrade notes, and a changelog per release.
+- **Backups.** A nightly PostGIS dump job, and restoring is documented. Done (2026-10-10).
+- **Running it.** Self-hosting guide, upgrade notes, and a changelog per release. The guide
+  and the changelog are written (2026-10-10); the first release is still to come.
 - **Licences.** OSM-derived data is under ODbL, so check the share-alike duty for what we
   publish (see "Licences and credits" in `data-sources.md`). Every source is credited in "About the
-  data" already.
+  data", and the licence texts are served with the fonts and icons. Done (2026-10-10).
 
 **Done when:** a fresh install from the guide works on another machine, and a release has
 notes.

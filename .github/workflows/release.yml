@@ -1,9 +1,10 @@
 name: Release
 
-# A published release does not build anything. It takes the image CI built from the released commit
-# (sha-<commit>) and gives it the release's version: the version label and APP_VERSION, which the
-# backend reports at /api/version. The layers stay the same, so the release is exactly what was
-# tested. The result is tagged with the version and, unless it is a pre-release, latest.
+# A published release does not build anything. It takes the images CI built from the released commit
+# (sha-<commit>, for amd64 and arm64) and gives them the release's version: the version label and
+# APP_VERSION, which the backend reports at /api/version. The layers stay the same, so the release
+# is exactly what was tested. The result is tagged with the version and, unless it is a pre-release,
+# latest.
 
 on:
   release:
@@ -35,13 +36,22 @@ jobs:
             echo "::error::There is no image $built. Only commits on master that passed CI have one, so release one of those."
             exit 1
           fi
-          crane mutate "$built" --platform linux/amd64 \
-            --label "org.opencontainers.image.version=$VERSION" \
-            --env "APP_VERSION=$VERSION" \
-            --tag "$image:$VERSION"
+          # Each architecture's image gets the version and a tag of its own (1.2.0-amd64, 1.2.0-arm64),
+          # and an index puts them together under the version. Commits from before arm64 have amd64 only.
+          platforms=$(crane manifest "$built" | jq -r '.manifests[]?.platform | select(.os == "linux") | [.os, .architecture, .variant // empty] | join("/")')
+          manifests=()
+          for platform in ${platforms:-linux/amd64}; do
+            arch="${platform#linux/}"
+            crane mutate "$built" --platform "$platform" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              --env "APP_VERSION=$VERSION" \
+              --tag "$image:$VERSION-${arch//\//-}"
+            manifests+=(-m "$image:$VERSION-${arch//\//-}")
+          done
+          crane index append --tag "$image:$VERSION" "${manifests[@]}"
           tags="$VERSION"
           if [ "$PRERELEASE" != "true" ]; then
             crane tag "$image:$VERSION" latest
             tags="$tags and latest"
           fi
-          echo "Tagged $image with $tags, from $built" >> "$GITHUB_STEP_SUMMARY"
+          echo "Tagged $image with $tags for $(echo ${platforms:-linux/amd64}), from $built" >> "$GITHUB_STEP_SUMMARY"
