@@ -45,6 +45,8 @@ describe('the app server', () => {
     }
     const policy = (await server.inject('/')).headers['content-security-policy'] as string;
     expect(policy).toContain("frame-ancestors 'none'");
+    // The fonts are served from here too: nothing comes from elsewhere
+    expect(policy).not.toMatch(/https?:/);
     expect(policy).not.toContain('unsafe-eval');
     expect((await server.inject('/worker-F4FZG6EZ.js')).headers['content-security-policy']).toContain("script-src 'self' 'unsafe-eval';");
   });

@@ -82,6 +82,9 @@ describeWithDatabase('a new install', () => {
     const served = await meta();
     expect(served).toMatchObject({ pack: expect.stringMatching(/^\d{8}T\d{6}Z-run\d+$/), cellMetres: 200, region: { id: 'aarhus' } });
     expect(readlinkSync(join(dataDir, 'data-pack'))).toBe(`packs/${served.pack}`);
+    // The pack carries the licence texts of the fonts and icons it serves
+    expect((await app.inject('/data-pack/licences/noto-fonts-OFL.txt')).body).toContain('OPEN FONT LICENSE');
+    expect((await app.inject('/data-pack/licences/icons-MIT.md')).body).toContain('MIT');
     const current = await app.inject('/data-pack/data/meta.json');
     expect(current.headers['cache-control']).toBe('no-cache');
     // Every kept pack has a path of its own, which never changes

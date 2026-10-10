@@ -17,8 +17,10 @@ export interface DataSource {
   credit: string;
   /** What we changed, or anything else the licence wants said. */
   note?: string;
-  /** Further links, such as the tables a statistic comes from. */
+  /** Further links, such as the tables a statistic comes from; "pack:" links go to the data pack. */
   links?: { label: string; url: string }[];
+  /** What the links are, "Tables" by default. */
+  linksTitle?: string;
 }
 
 const CC_BY = { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/' };
@@ -103,6 +105,16 @@ export const SOURCES: DataSource[] = [
     uses: "The map's labels and icons.",
     licence: { name: 'Noto fonts: SIL Open Font License 1.1. Icons: MIT', url: 'https://openfontlicense.org' },
     credit: 'Noto fonts © 2022 The Noto Project Authors. Icons © 2017 Mapzen.',
+    linksTitle: 'Licence texts',
+    links: [{ label: 'Noto fonts', url: 'pack:licences/noto-fonts-OFL.txt' }, { label: 'Icons', url: 'pack:licences/icons-MIT.md' }],
+  },
+  {
+    name: 'Roboto and Material Symbols', url: 'https://fonts.google.com',
+    uses: "The app's own text and icons, served by this server, not by Google.",
+    licence: { name: 'Roboto: SIL Open Font License 1.1. Material Symbols: Apache License 2.0', url: 'https://openfontlicense.org' },
+    credit: 'Roboto © 2011 The Roboto Project Authors. Material Symbols © Google.',
+    linksTitle: 'Licence texts',
+    links: [{ label: 'Roboto', url: 'licences/roboto/LICENSE' }, { label: 'Material Symbols', url: 'licences/material-symbols/LICENSE' }],
   },
   {
     name: 'Natural Earth', url: 'https://www.naturalearthdata.com',
@@ -131,7 +143,7 @@ export const SOURCES: DataSource[] = [
       <mat-divider />
       <section aria-labelledby="about-sources">
         <h3 id="about-sources">Sources</h3>
-        <p>Every source the map uses: what it gives, its licence, and how it asks to be credited.</p>
+        <p>Every source the map uses: what it gives, its licence, and how it asks to be credited. The app itself is built with open-source libraries, under <a href="licences/third-party.txt" target="_blank" rel="noopener">their licences</a>.</p>
         <div class="sources">
           @for (s of sources; track s.name; let last = $last) {
             <section class="source" [attr.aria-label]="s.name">
@@ -151,10 +163,10 @@ export const SOURCES: DataSource[] = [
                 <dt>Credit</dt>
                 <dd class="credit">{{ s.credit }}</dd>
                 @if (s.links) {
-                  <dt>Tables</dt>
+                  <dt>{{ s.linksTitle ?? 'Tables' }}</dt>
                   <dd>
                     @for (link of s.links; track link.url; let last = $last) {
-                      <a [href]="link.url" target="_blank" rel="noopener">{{ link.label }}</a>{{ last ? '' : ', ' }}
+                      <a [href]="href(link.url)" target="_blank" rel="noopener">{{ link.label }}</a>{{ last ? '' : ', ' }}
                     }
                   </dd>
                 }
@@ -207,4 +219,9 @@ export class AboutDialog {
   /** The detail tiles' cell size, when the pack has them. */
   protected readonly detail = computed(() => this.data.grid()?.meta.tiles?.cellMetres ?? null);
   protected readonly built = computed(() => this.data.grid()?.meta.built ?? 'unknown');
+
+  /** A link as it is written, or in the data pack for "pack:". */
+  protected href(url: string): string {
+    return url.startsWith('pack:') ? `${this.data.base}${url.slice(5)}` : url;
+  }
 }

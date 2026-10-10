@@ -58,18 +58,24 @@ Checked on the providers' own pages on 2026-10-09.
 | DCE air quality 2024, through Danmarks Miljøportal | CC BY 4.0 (the dataset's licence in Miljøportal's catalogue) | "Luftkvalitet 2024: DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet", and that we changed it |
 | Protomaps | Tiles: ODbL produced work. Style: CC0. Code: BSD-3-Clause | "Protomaps © OpenStreetMap" (Protomaps' own credit is a request, not a duty) |
 | ESA WorldCover 2020, land cover in Protomaps' tiles up to zoom 7 | CC BY 4.0 | "© ESA WorldCover project 2020 / Contains modified Copernicus Sentinel data (2020) processed by ESA WorldCover consortium" |
-| Noto fonts and Mapzen icons (basemaps-assets) | SIL OFL 1.1 and MIT | Copyright notices; the licence texts must go with the copies we serve |
+| Noto fonts and Mapzen icons (basemaps-assets) | SIL OFL 1.1 and MIT | Copyright notices; the licence texts go with the copies we serve: the basemap job fetches them, and the data pack carries them in `licences/` |
+| Roboto and Material Symbols, the app's own fonts | SIL OFL 1.1 and Apache 2.0 | Served by the app itself (npm `@fontsource/roboto`, `@material-symbols/font-400`), not from Google Fonts, with their licence texts in `/licences/`. "About the data" credits them |
+| The frontend's libraries (Angular, MapLibre and the rest) | MIT, BSD and others | Angular's build lists them in `3rdpartylicenses.txt`, which the image serves as `/licences/third-party.txt`, linked from "About the data" |
 | Natural Earth | Public domain | None needed; "Made with Natural Earth" |
 
 - **Where OpenStreetMap's credit goes.** OSMF's [attribution guidelines](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines)
   ask for it on the map without a click. It may go away when the map is first used, or after five
   seconds, as long as it can be found again, such as under "About". So the map shows "© OpenStreetMap"
   until it is moved or for five seconds, and "About the data" has the rest.
-- **Open:**
-  - The data pack should carry the font and icon licence texts; the jobs that build it (milestone 2)
-    add them.
-  - Data layers made from OSM are a derived database. If an instance is ever public, it must offer
-    them or the way they are made (ODbL 4.6); publishing the pipeline does that (milestone 7).
+- **The data pack carries the licence texts** of the fonts and icons it serves (`licences/`), since
+  2026-10-10.
+- **No font comes from Google.** The app's fonts are served by the app, so a visit sends nothing to
+  Google; the Content Security Policy allows nothing from elsewhere.
+- **ODbL share-alike.** The data layers made from OpenStreetMap are a derived database under the
+  ODbL. An instance that is used only by its owner publishes nothing. One that is open to others
+  must offer that database, or the way it is made (ODbL 4.6): the data pack itself, or the pipeline's
+  source in `pipeline/` and the jobs in `backend/src/pipeline/`. "About the data" says the layers are
+  under the ODbL; README.md says what a public instance must do.
 
 ## Sources not used yet, and what they need
 

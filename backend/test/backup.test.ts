@@ -14,7 +14,8 @@ const PG_DUMP = process.env['PG_DUMP'] || 'pg_dump';
 const PG_RESTORE = process.env['PG_RESTORE'] || 'pg_restore';
 const hasClient = (() => {
   try {
-    return /\b(1[89]|[2-9]\d)\.\d+/.test(execFileSync(PG_DUMP, ['--version'], { encoding: 'utf8' }));
+    // "pg_dump (PostgreSQL) 18.6 (Ubuntu 18.6-1.pgdg24.04+2)": the major version after "(PostgreSQL)"
+    return Number(/\(PostgreSQL\) (\d+)/.exec(execFileSync(PG_DUMP, ['--version'], { encoding: 'utf8' }))?.[1] ?? 0) >= 18;
   } catch {
     return false;
   }

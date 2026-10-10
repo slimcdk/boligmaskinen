@@ -99,6 +99,8 @@ COPY backend/package.json backend/
 COPY backend/src backend/src
 COPY backend/migrations backend/migrations
 COPY --from=frontend /src/frontend/dist/frontend/browser frontend
+# The licences of the libraries in the frontend's bundles, which "About the data" links to
+COPY --from=frontend /src/frontend/dist/frontend/3rdpartylicenses.txt frontend/licences/third-party.txt
 USER node
 EXPOSE 8080
 VOLUME /data

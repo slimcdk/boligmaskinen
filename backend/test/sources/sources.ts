@@ -47,6 +47,8 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
   for (const sprite of ['light', 'dark'].flatMap((f) => [`${f}.json`, `${f}.png`, `${f}@2x.json`, `${f}@2x.png`])) {
     server.file(`/assets/sprites/v4/${sprite}`, { content: sprite });
   }
+  server.file('/assets/fonts/OFL.txt', { content: 'SIL OPEN FONT LICENSE Version 1.1' });
+  server.file('/icons/LICENSE.md', { content: 'The MIT License' });
   return {
     sources,
     urls: {
@@ -54,6 +56,6 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/air`,
     },
-    protomaps: { builds: `${base}/protomaps/builds.json`, tiles: `${base}/tiles`, assets: `${base}/assets` },
+    protomaps: { builds: `${base}/protomaps/builds.json`, tiles: `${base}/tiles`, assets: `${base}/assets`, iconsLicence: `${base}/icons/LICENSE.md` },
   };
 }

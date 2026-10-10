@@ -38,8 +38,8 @@ export type AppOptions = Pick<Config, 'staticDir' | 'dataPackDir' | 'databaseUrl
   protomapsUrls?: Partial<typeof PROTOMAPS_URLS>;
 };
 
-/** Angular's bundles have a hash in their name (main-V4FIJJ6A.js), so they never change. */
-const HASHED = /-[A-Z0-9]{8}\.(js|css)$/;
+/** Angular's bundles and fonts have a hash in their name (main-V4FIJJ6A.js), so they never change. */
+const HASHED = /-[A-Z0-9]{8}\.(js|css|woff2?)$/;
 
 /** The app: the frontend, its data pack and the API, all from one server. */
 export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
