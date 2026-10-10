@@ -112,6 +112,11 @@
       "opposite": "Urban rather than rural",
       "note": "Number of addresses within 300 m."
     },
+    "departures": {
+      "name": "Frequent public transport",
+      "opposite": "Little public transport",
+      "note": "Departures per hour between 7 and 9 on a weekday from the stops within 500 m, each trip once, from Rejseplanen."
+    },
     "incomeTax": {
       "name": "Low municipal tax",
       "opposite": "High municipal tax",
@@ -249,6 +254,7 @@
     "school": "Distance to a folkeskole, friskole or private school",
     "daycare": "Distance to a daycare unit",
     "station": "Distance to a train or light rail station",
+    "departures": "Departures per hour from the stops within 500 m, weekday 7–9",
     "zone": "Planning zone: BYZONE, LANDZONE or SOMMERHUS",
     "income_tax": "Municipal income tax, 2026",
     "land_tax": "Land tax, 2026",
@@ -290,6 +296,7 @@
     "heights": "heights",
     "addresses": "addresses",
     "per 1,000": "per 1,000",
+    "per hour": "per hour",
     "car": "car",
     "bike": "bike",
     "walk": "walk",

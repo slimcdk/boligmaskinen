@@ -180,16 +180,26 @@ def test_measures_the_distance_to_the_areas_kept_for_digging_later(aarhus: Built
     assert decode_distance(aarhus.at("extraction_interest", 571_500, 6_216_500)) > 6_000
 
 
+def test_counts_the_departures_near_every_cell(aarhus: Built):
+    # A bus every 10 minutes from 7 to 9 is 6 an hour by its first two stops, each trip once where both are near
+    assert aarhus.at("departures", 571_000, 6_219_500) == 6
+    assert aarhus.at("departures", 571_300, 6_219_500) == 6
+    # The last stop has none, and the booked service from it does not count; nor does a stop 600 m away
+    assert aarhus.at("departures", 575_000, 6_219_500) == 0
+    assert aarhus.at("departures", 572_300, 6_219_500) == 0
+
+
 def test_leaves_out_the_protected_areas_and_plans_without_their_sources(sources: Path, tmp_path: Path):
     named = json.loads(sources.read_text(encoding="utf-8"))
     left_out = ("protected_areas", "natura2000_habitats", "natura2000_birds", "planned_traffic", "planned_traffic_proposed",
-                "local_plans_proposed", "local_plans_adopted", "supply_areas", "consequence_zones", "consequence_zones_plants", "raw_material_areas")
+                "local_plans_proposed", "local_plans_adopted", "supply_areas", "consequence_zones", "consequence_zones_plants", "raw_material_areas",
+                "transit")
     kept = {key: str((sources.parent / value).resolve()) for key, value in named.items() if key not in left_out}
     (tmp_path / "inputs.json").write_text(json.dumps(kept), encoding="utf-8")
     meta = grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
     assert list(meta["files"]) == [name for name in grid.LAYERS
                                    if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating", "consequence_zone",
-                                                   "extraction_area", "extraction_interest")]
+                                                   "extraction_area", "extraction_interest", "departures")]
 
 
 def test_knows_the_zones_and_the_municipality(aarhus: Built):

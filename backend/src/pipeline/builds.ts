@@ -90,6 +90,8 @@ const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
   class_size: ['dst', 'kvotien.json'],
   // And the protected areas before the raw material areas came
   raw_material_areas: ['protected', 'raastofomr.geojson'],
+  // And had no timetables before the departures came
+  transit: ['transit', 'GTFS.zip'],
   noise_rail: ['noise', 'eu_2022_jernbane_4m.shp'],
   noise_air: ['noise', 'eu_2022_lufthavn_4m.shp'],
   noise_industry: ['noise', 'eu_2022_virksomhed_by_4m.shp'],

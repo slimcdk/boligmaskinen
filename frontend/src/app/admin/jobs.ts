@@ -54,7 +54,7 @@ export const JOBS: Job[] = [
     description: 'The extract of Denmark, and from it forests, water, beaches, shops, stations, roads, addresses and municipalities.',
   },
   {
-    id: 'transit', name: 'Public transport', kind: 'fetch', source: 'Rejseplanen', schedule: '50 3 * * *', enabled: true, then: ['roads'],
+    id: 'transit', name: 'Public transport', kind: 'fetch', source: 'Rejseplanen', schedule: '50 3 * * *', enabled: true, then: ['roads', 'grid'],
     description: 'The timetables of every bus, train, metro, light rail and ferry in Denmark, as a GTFS feed; new about every fortnight.',
   },
   { id: 'plandata', name: 'Planning zones', kind: 'fetch', source: 'Plandata.dk', schedule: '30 3 * * *', enabled: true, then: ['grid'], description: 'Byzone and sommerhusområde polygons from the WFS.' },

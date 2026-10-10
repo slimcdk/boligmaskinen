@@ -43,7 +43,7 @@ export const SOURCES: DataSource[] = [
   },
   {
     id: 'transit', name: 'Rejseplanen', url: 'https://www.rejseplanen.dk',
-    uses: 'The timetables of every bus, train, metro, light rail and ferry, as a GTFS feed, for the travel times to your places by public transport.',
+    uses: 'The timetables of every bus, train, metro, light rail and ferry, as a GTFS feed: for the travel times to your places by public transport, and the departures near every cell.',
     licence: CC_BY,
     credit: 'Køreplaner: Rejseplanen',
     note: 'Changed: travel times found on the timetable of a weekday.',

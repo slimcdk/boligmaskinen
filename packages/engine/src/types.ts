@@ -2,7 +2,7 @@
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
-  | 'station' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
+  | 'station' | 'departures' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
   | 'natura2000' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
@@ -191,6 +191,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'airfield', group: 'Infrastructure and plans', name: 'Away from airfields', opposite: 'Close to an airfield', note: 'Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.', kind: 'distance', layer: 'airfield', role: 'want', weight: 1, full: 3000, zero: 1000 },
   { id: 'air_station', group: 'Infrastructure and plans', name: 'Away from air stations', opposite: 'Close to an air station', note: "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup.", kind: 'distance', layer: 'air_station', role: 'want', weight: 1, full: 15000, zero: 5000 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
+  { id: 'departures', group: 'Everyday life', name: 'Frequent public transport', opposite: 'Little public transport', note: 'Departures per hour between 7 and 9 on a weekday from the stops within 500 m, each trip once, from Rejseplanen.', kind: 'count', layer: 'departures', unit: 'per hour', max: 100, step: 1, role: 'want', weight: 1, full: 12, zero: 2 },
   { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
   { id: 'income', group: 'Area and economy', name: 'High incomes', opposite: 'Low incomes', note: 'Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik.', kind: 'municipal', field: 'income', unit: 'kr.', min: 200000, max: 600000, step: 5000, role: 'want', weight: 1, full: 320000, zero: 260000 },
