@@ -3,14 +3,17 @@
 #   docker compose up -d       then open http://localhost:8080
 #
 # The app keeps its data in ./data: the jobs fetch the sources there and build the data pack at
-# the first start (see README.md). Set POSTGRES_PASSWORD in an .env file next to this one before
-# the first start. The database is only reachable from the app, not from outside.
+# the first start. Set POSTGRES_PASSWORD in an .env file next to this one before the first start,
+# and create ./data as the user the app runs as (docs/self-hosting.md). The database is only
+# reachable from the app, not from outside.
 name: boligmaskinen
 
 services:
   app:
     image: ${BOLIGMASKINEN_IMAGE:-ghcr.io/slimcdk/boligmaskinen}:${BOLIGMASKINEN_TAG:-master}
     restart: unless-stopped
+    # The user that owns ./data (docs/self-hosting.md)
+    user: "${BOLIGMASKINEN_UID:-1000}:${BOLIGMASKINEN_GID:-1000}"
     ports:
       - "${BOLIGMASKINEN_PORT:-8080}:8080"
     environment:

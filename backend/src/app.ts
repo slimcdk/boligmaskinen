@@ -1,7 +1,8 @@
 import compress from '@fastify/compress';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { stat } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type pg from 'pg';
 import type { Config, LogLevel } from './config.ts';
@@ -59,8 +60,14 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     revision: options.version?.revision || options.version?.version || 'dev', timeZone: options.timeZone,
     urls: options.sourceUrls, protomaps: options.protomapsUrls,
   }, { databaseUrl: options.databaseUrl, pgDump: options.pgDump ?? 'pg_dump' });
+  // The jobs write everything under DATA_DIR; a folder that belongs to another user stops them all
+  if (dataDir) {
+    await access(dataDir, constants.W_OK).catch((error: NodeJS.ErrnoException) => app.log.error(
+      `The data jobs cannot write to DATA_DIR ${dataDir} (${error.code}): it has to belong to the user the app runs as (uid ${process.getuid?.()}). See docs/self-hosting.md.`,
+    ));
+  }
   // What downloads left behind when the app stopped during one; no job runs yet
-  if (db && dataDir) await new Archive(db, dataDir).cleanTmp();
+  if (db && dataDir) await new Archive(db, dataDir).cleanTmp().catch(() => undefined);
   const runner = db && options.databaseUrl
     ? await JobRunner.start({
       db, databaseUrl: options.databaseUrl, definitions, timeZone: options.timeZone ?? 'Europe/Copenhagen',
