@@ -73,6 +73,10 @@ describe('helpers', () => {
     const zone = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'zone')!));
     expect(blockSummary(zone)).toBe('Only Byzone, Landzone');
     expect(blockSummary(block('// Close to the sea\nramp(water, 0, 1000)'))).toBe('Close to the sea');
+    // A ramp from 0 m is about being inside an area, in either direction
+    const heating = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'district_heating')!));
+    expect(blockSummary(heating)).toBe('Full points inside the area · No points from 200 m');
+    expect(blockSummary({ ...heating, code: turnAround(heating.code)! })).toBe('No points inside the area · Full points from 200 m');
   });
 
 });

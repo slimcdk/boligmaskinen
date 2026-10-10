@@ -180,8 +180,14 @@ export function blockSummary(block: Block, params: FormulaParam[] = formulaParam
     if (p.kind === 'choice') parts.push(capitalise(word(wording, p.options[p.value - 1] ?? '')));
   }
   if (ramp) {
-    const at = (p: FormulaParam) => formatWithUnit(p.value, p.unit || ramp.full.unit, wording);
-    parts.push(fill(ramp.full.value <= ramp.zero.value ? wording.fullUpTo : wording.noPointsBelow, { full: at(ramp.full), zero: at(ramp.zero) }));
+    const unit = ramp.full.unit || ramp.zero.unit;
+    const at = (p: FormulaParam) => formatWithUnit(p.value, p.unit || unit, wording);
+    // A distance of 0 m is inside the area a value measures to, such as a district heating area
+    const inside = (p: FormulaParam) => unit === 'm' && p.value === 0;
+    const template = ramp.full.value <= ramp.zero.value
+      ? (inside(ramp.full) ? wording.fullInside : wording.fullUpTo)
+      : (inside(ramp.zero) ? wording.noPointsInside : wording.noPointsBelow);
+    parts.push(fill(template, { full: at(ramp.full), zero: at(ramp.zero) }));
   }
   if (flags.length) {
     const on = flags.filter((p) => p.value).map((p) => word(wording, p.label));

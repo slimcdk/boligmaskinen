@@ -269,6 +269,8 @@
     "hoursOrMore": "4 h or more",
     "fullUpTo": "Full points up to {{ full }} · No points from {{ zero }}",
     "noPointsBelow": "No points below {{ zero }} · Full points from {{ full }}",
+    "fullInside": "Full points inside the area · No points from {{ zero }}",
+    "noPointsInside": "No points inside the area · Full points from {{ full }}",
     "only": "Only {{ list }}",
     "nothingAllowed": "Nothing allowed",
     "customCode": "Custom code"
