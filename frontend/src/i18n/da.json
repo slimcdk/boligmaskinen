@@ -149,6 +149,16 @@
       "name": "Nær et fredet område",
       "opposite": "Væk fra fredede områder",
       "note": "Nærmeste gældende arealfredning af landskab og natur, fra Miljøstyrelsen."
+    },
+    "pharmacy": {
+      "name": "Apotek",
+      "opposite": "Væk fra apoteker",
+      "note": "Nærmeste apotek, fra OpenStreetMap."
+    },
+    "library": {
+      "name": "Bibliotek",
+      "opposite": "Væk fra biblioteker",
+      "note": "Nærmeste folkebibliotek, fra OpenStreetMap."
     }
   },
   "examples": {
@@ -197,7 +207,9 @@
     "airfield": "Afstand til en flyveplads af enhver art, også svæveflyve- og ultralet-pladser",
     "air_station": "Afstand til en militær flyvestation",
     "natura2000": "Afstand til et Natura 2000-område for naturtyper eller fugle (0 inden for et)",
-    "protected_area": "Afstand til et fredet område, en gældende arealfredning (0 inden for et)"
+    "protected_area": "Afstand til et fredet område, en gældende arealfredning (0 inden for et)",
+    "pharmacy": "Afstand til et apotek",
+    "library": "Afstand til et folkebibliotek"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -512,7 +524,7 @@
     "unknown": "ukendt",
     "sources": {
       "osm": {
-        "uses": "Skove, søer, kysten, strande, solcelleparker, lufthavne og flyvepladser, supermarkeder, stationer, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
+        "uses": "Skove, søer, kysten, strande, solcelleparker, lufthavne og flyvepladser, supermarkeder, stationer, apoteker, biblioteker, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
         "note": "Datalagene lavet ud fra det er også under ODbL."
       },
       "mst": {

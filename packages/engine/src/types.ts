@@ -2,7 +2,7 @@
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
-  | 'station' | 'turbine' | 'turbine_heights' | 'solar' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
+  | 'station' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
   | 'natura2000' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
@@ -155,6 +155,8 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'school', group: 'Everyday life', name: 'School', opposite: 'Away from schools', note: 'Nearest folkeskole, friskole or private school.', kind: 'distance', layer: 'school', role: 'want', weight: 2, full: 1000, zero: 5000 },
   { id: 'daycare', group: 'Everyday life', name: 'Daycare', opposite: 'Away from daycare', note: 'Nearest daycare unit.', kind: 'distance', layer: 'daycare', role: 'want', weight: 2, full: 500, zero: 4000 },
   { id: 'station', group: 'Everyday life', name: 'Train or light rail', opposite: 'Away from railways', note: 'Nearest station.', kind: 'distance', layer: 'station', role: 'want', weight: 1, full: 1000, zero: 10000 },
+  { id: 'pharmacy', group: 'Everyday life', name: 'Pharmacy', opposite: 'Away from pharmacies', note: 'Nearest pharmacy, from OpenStreetMap.', kind: 'distance', layer: 'pharmacy', role: 'want', weight: 1, full: 1000, zero: 5000 },
+  { id: 'library', group: 'Everyday life', name: 'Library', opposite: 'Away from libraries', note: 'Nearest public library, from OpenStreetMap.', kind: 'distance', layer: 'library', role: 'want', weight: 1, full: 1000, zero: 5000 },
   {
     // Denmark ranges from about 3 to 13 µg/m³ (median 4.2); WHO's guideline is 10
     id: 'no2', group: 'Nature', name: 'Clean air', opposite: 'Polluted air', note: 'Nitrogen dioxide (NO₂), yearly mean 2024 on a 1 km grid, from DCE.',

@@ -6,7 +6,7 @@ run them: the jobs fetch the sources, and each step is one command,
 
 | Step | Reads | Writes |
 |---|---|---|
-| `osm` | The Geofabrik extract of Denmark | `layers.gpkg` with a layer per theme (forests, water, solar parks, airfields, roads, municipalities …) and `addresses.npy` |
+| `osm` | The Geofabrik extract of Denmark | `layers.gpkg` with a layer per theme (forests, water, solar parks, airfields, pharmacies, libraries, roads, municipalities …) and `addresses.npy` |
 | `grid` | `inputs.json`, naming the OSM extract and every other source | A gzipped 8-bit raster per layer, `meta.json`, the municipal outlines, the outline the basemap has to cover, and detail tiles where the display grid is coarser than the grid |
 | `world` | Natural Earth's five 1:50m zips | The world map outside Denmark: land, lakes, borders and names |
 | `pack` | The grid, the basemap, fonts, sprites, styles and the world map | The data pack |
@@ -141,7 +141,7 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 
 | Criterion | Source | Notes |
 |---|---|---|
-| Forest, lake/sea, beach, solar park, airfield, supermarket, station, roads, address points, municipalities | OpenStreetMap (Geofabrik) | ODbL. Forests and lakes count from 5 ha, solar parks from 1 ha (plants, and panels on the ground, not on roofs). Airfields are every `aeroway=aerodrome`: an airport has an IATA code, an air station military tags |
+| Forest, lake/sea, beach, solar park, airfield, supermarket, station, pharmacy, library, roads, address points, municipalities | OpenStreetMap (Geofabrik) | ODbL. Forests and lakes count from 5 ha, solar parks from 1 ha (plants, and panels on the ground, not on roofs). Airfields are every `aeroway=aerodrome`: an airport has an IATA code, an air station military tags |
 | Noise | Miljøstyrelsen, strategic noise maps 2022 (Lden) | Every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere (3 % of the land); the major railways, Copenhagen Airport and industry in the four cities, where their band is louder (0.2 % of the land). Elsewhere estimated from road class and distance |
 | Planning zone | Plandata.dk zone map | |
 | Protected areas, Natura 2000 | Miljøstyrelsen, through Danmarks Miljøportal | CC0. The fredninger of land in force (not the kirkefredninger), and the Natura 2000 areas for habitats and birds: the distance to them, 0 inside |

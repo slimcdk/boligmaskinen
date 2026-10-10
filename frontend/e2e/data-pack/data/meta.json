@@ -24,6 +24,8 @@
   "school": "school.png",
   "daycare": "daycare.png",
   "station": "station.png",
+  "pharmacy": "pharmacy.png",
+  "library": "library.png",
   "turbine": "turbine.png",
   "turbine_heights": "turbine_heights.png",
   "solar": "solar.png",
@@ -58,6 +60,8 @@
   "stations": 619,
   "schools": 1929,
   "daycare": 4886,
+  "pharmacies": 545,
+  "libraries": 463,
   "turbines": 4866,
   "mstShareOfRegion": 0.1238
  },
