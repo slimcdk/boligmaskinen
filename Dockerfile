@@ -33,7 +33,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 
-FROM base AS backend
+# The backend's packages are JavaScript only, so they are installed once, on the machine that builds
+FROM --platform=$BUILDPLATFORM node:24-trixie-slim AS backend
 WORKDIR /src/backend
 COPY packages/engine/ /src/packages/engine/
 COPY backend/package.json backend/package-lock.json ./

@@ -36,7 +36,8 @@ Everything so far: there is no release yet. The test instance follows `master`.
 
 ### Running it
 
-- One image: the app, its API, the data pack and the data pipeline. PostGIS runs beside it.
+- One image, for amd64 and arm64: the app, its API, the data pack and the data pipeline.
+  PostGIS runs beside it.
 - Security headers with a strict Content Security Policy; no fonts or scripts from elsewhere.
 - A nightly backup of the database, with a tested restore.
 - CI tests everything and scans the image; Dependabot proposes updates.

@@ -104,11 +104,14 @@ GitHub Actions (`.github/workflows/`):
   built with an older Go, which accounts for most of the high ones.)
 - **Dependabot** proposes updates weekly: npm, the pipeline's uv lock, the GitHub Actions and the
   Docker base images (`.github/dependabot.yml`). CI tests them like any other pull request.
-- **Every commit on master that passes:** the image is built once and pushed as
-  `ghcr.io/slimcdk/boligmaskinen:sha-<commit>`, also tagged `master`.
-- **A published release** (tag e.g. `v0.1.0`) builds nothing. It gives the image of the
-  released commit its version with crane: only the version label and `APP_VERSION` change,
-  the layers stay the ones that were tested. It is tagged with the version and, unless it
-  is a pre-release, `latest`. The footer then shows the version, which the running
+- **Every commit on master that passes:** the image is built once, for amd64 and arm64, and
+  pushed as `ghcr.io/slimcdk/boligmaskinen:sha-<commit>`, also tagged `master`. arm64 is built
+  under QEMU, so a pull request that changes what goes into the image (the Dockerfile, the
+  backend's or the pipeline's packages) also builds it for arm64 and starts it there
+  (`arm64.yml`).
+- **A published release** (tag e.g. `v0.1.0`) builds nothing. It gives the images of the
+  released commit their version with crane: only the version label and `APP_VERSION` change,
+  the layers stay the ones that were tested. They are tagged with the version (and
+  `<version>-amd64`, `<version>-arm64`) and, unless it is a pre-release, `latest`. The footer then shows the version, which the running
   container reports at `/api/version`.
 - **Changes to `.devcontainer/`** build the dev container and check its tools and database.
