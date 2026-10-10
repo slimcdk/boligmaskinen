@@ -100,7 +100,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
-          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "district_heating", "density", "zone",
+          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
@@ -111,9 +111,10 @@ AREA_FREDNING = 1
 # Of the traffic the municipal plans plan, the kinds that are roads (1) and railways (2); not the
 # paths, corridors, stations, parking, ports and airports
 PLANNED_ROADS = {"1", "2"}
-# The regions' raw material areas set aside for digging ("Råstofgraveområde"), not those kept for
-# digging later ("Råstofinteresseområde", 2)
+# The regions' raw material areas: set aside for digging ("Råstofgraveområde"), or kept for digging
+# later ("Råstofinteresseområde")
 EXTRACTION_AREA = 1
+EXTRACTION_INTEREST = 2
 # The heat plans' kind of supply area that is district heating ("Fjernvarme"); the others are
 # individual natural gas, other, and areas to be decided
 DISTRICT_HEATING = "1"
@@ -163,6 +164,9 @@ AREA_LAYERS = [
     AreaLayer("extraction_area", [AreaSource("raw_material_areas", ["Statuskode", "Omr_tkode"],
                                              lambda frame: in_force(frame) & (frame["Omr_tkode"] == EXTRACTION_AREA))],
               "Raw material extraction areas in force"),
+    AreaLayer("extraction_interest", [AreaSource("raw_material_areas", ["Statuskode", "Omr_tkode"],
+                                                 lambda frame: in_force(frame) & (frame["Omr_tkode"] == EXTRACTION_INTEREST))],
+              "Raw material areas kept for later, in force"),
 ]
 
 # The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)

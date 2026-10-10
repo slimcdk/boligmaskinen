@@ -10,8 +10,12 @@ async function open(page: Page): Promise<void> {
   await expect(page.locator('mat-progress-bar')).toHaveCount(0, { timeout: 60_000 });
 }
 
-/** What axe finds, one line per element, so a failure says where. */
+/**
+ * What axe finds, one line per element, so a failure says where. A dialog or menu first finishes
+ * opening: while it fades in, its colours are mixed with what is under it.
+ */
 async function problems(page: Page): Promise<string[]> {
+  await page.waitForFunction(() => (document.querySelector('.cdk-overlay-container')?.getAnimations({ subtree: true }) ?? []).every((a) => a.playState !== 'running'));
   const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
   return results.violations.flatMap((v) => v.nodes.map((n) => `${v.id} (${v.impact}): ${n.target.join(' ')} — ${n.failureSummary?.split('\n')[1]?.trim() ?? v.help}`));
 }

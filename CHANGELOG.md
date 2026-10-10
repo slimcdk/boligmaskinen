@@ -20,9 +20,9 @@ Everything so far: there is no release yet. The test instance follows `master`.
   the distance.
 - Maps and places are saved on the server, so every browser has them, and a map can be shared as
   a link.
-- 33 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,
+- 34 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,
   noise (of roads, railways, airports and industry), roads and railways to come, new local plans,
-  zones around businesses and plants, gravel pits, wind turbines (by distance, and by their height), solar
+  zones around businesses and plants, gravel pits (now and to come), wind turbines (by distance, and by their height), solar
   parks, overhead power lines, airports, airfields and air stations, address density, supermarkets,
   schools, daycare, stations, pharmacies, libraries, planning zones, district heating, municipal
   tax, land tax, burglaries, population, income, nursery rates and class sizes, and air quality

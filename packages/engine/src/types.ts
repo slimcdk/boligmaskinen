@@ -3,7 +3,7 @@
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
   | 'station' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
-  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
@@ -185,6 +185,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'new_local_plan', group: 'Infrastructure and plans', name: 'Away from new local plans', opposite: 'Close to new local plans', note: 'Nearest local plan of the last two years, proposed or adopted: building or change to come, from Plandata.dk.', kind: 'distance', layer: 'new_local_plan', role: 'want', weight: 1, full: 1000, zero: 200 },
   { id: 'consequence_zone', group: 'Infrastructure and plans', name: 'Away from consequence zones', opposite: 'Close to consequence zones', note: 'Nearest zone the plans draw around a business or plant that smells, makes noise or is a risk, from Plandata.dk.', kind: 'distance', layer: 'consequence_zone', role: 'want', weight: 1, full: 500, zero: 100 },
   { id: 'extraction_area', group: 'Infrastructure and plans', name: 'Away from gravel pits', opposite: 'Close to gravel pits', note: 'Nearest area the regions’ raw material plans set aside for digging sand, gravel or clay, from Danmarks Miljøportal.', kind: 'distance', layer: 'extraction_area', role: 'want', weight: 1, full: 1000, zero: 200 },
+  { id: 'extraction_interest', group: 'Infrastructure and plans', name: 'Away from gravel pits to come', opposite: 'Close to gravel pits to come', note: 'Nearest area the regions’ raw material plans keep for digging later, from Danmarks Miljøportal.', kind: 'distance', layer: 'extraction_interest', role: 'want', weight: 1, full: 1000, zero: 200 },
   { id: 'power_line', group: 'Infrastructure and plans', name: 'Away from power lines', opposite: 'Close to power lines', note: 'Nearest overhead line of 132 to 400 kV, from OpenStreetMap.', kind: 'distance', layer: 'power_line', role: 'want', weight: 1, full: 500, zero: 100 },
   { id: 'airport', group: 'Infrastructure and plans', name: 'Away from airports', opposite: 'Close to an airport', note: 'Nearest airport with an IATA code, such as Billund or Kastrup, from OpenStreetMap.', kind: 'distance', layer: 'airport', role: 'want', weight: 1, full: 10000, zero: 3000 },
   { id: 'airfield', group: 'Infrastructure and plans', name: 'Away from airfields', opposite: 'Close to an airfield', note: 'Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.', kind: 'distance', layer: 'airfield', role: 'want', weight: 1, full: 3000, zero: 1000 },

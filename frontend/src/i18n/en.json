@@ -190,6 +190,11 @@
       "opposite": "Close to gravel pits",
       "note": "Nearest area the regions’ raw material plans set aside for digging sand, gravel or clay, from Danmarks Miljøportal."
     },
+    "extraction_interest": {
+      "name": "Away from gravel pits to come",
+      "opposite": "Close to gravel pits to come",
+      "note": "Nearest area the regions’ raw material plans keep for digging later, from Danmarks Miljøportal."
+    },
     "income": {
       "name": "High incomes",
       "opposite": "Low incomes",
@@ -261,6 +266,7 @@
     "district_heating": "Distance to an area the heat plans give district heating (0 inside one)",
     "consequence_zone": "Distance to a zone the plans draw around a business or technical plant (0 inside one)",
     "extraction_area": "Distance to an area the regions’ raw material plans set aside for digging (0 inside one)",
+    "extraction_interest": "Distance to an area the regions’ raw material plans keep for digging later (0 inside one)",
     "income": "Mean disposable income per resident of the municipality, 2024",
     "nursery_price": "Yearly rate for a municipal nursery place (0–2 years), 2026",
     "class_size": "Pupils per class in the folkeskoler of the municipality, 2025"

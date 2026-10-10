@@ -4,7 +4,7 @@ A self-hosted, map-first home search for Denmark. A full-screen map shows how we
 fits what you care about. You say what that is with blocks: small formulas over open data, whose
 numbers become sliders.
 
-**Status:** prototype. It covers all of Denmark with 30 layers of open data on a 100 m grid, in
+**Status:** prototype. It covers all of Denmark with 31 layers of open data on a 100 m grid, in
 Danish and English, and keeps several maps of blocks. Its data jobs fetch the sources and build
 the data themselves, every night, and find the travel times to your places on OpenStreetMap's
 roads. Still to come: data about homes and homes for sale
