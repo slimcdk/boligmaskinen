@@ -28,12 +28,17 @@ def extract(tmp_path_factory):
         Node(id=20, location=(10.1002, 56.1), tags={"addr:street": "Vej", "addr:housenumber": "3"}),
         Node(id=21, location=(20.0, 60.0), tags={"addr:street": "Far", "addr:housenumber": "9"}),  # outside Denmark
         Node(id=22, location=(10.15, 56.15), tags={"amenity": "bench"}),  # nothing the map uses
+        Node(id=23, location=(10.12, 56.02)), Node(id=24, location=(10.14, 56.02)), Node(id=25, location=(10.14, 56.03)), Node(id=26, location=(10.12, 56.03)),
+        Node(id=27, location=(10.16, 56.02)), Node(id=28, location=(10.161, 56.02)), Node(id=29, location=(10.161, 56.021)), Node(id=30, location=(10.16, 56.021)),
     ]
     ways = [
         Way(id=100, nodes=[1, 2, 3, 4, 1]),
         Way(id=101, nodes=[5, 6, 7, 8, 5]),
         Way(id=102, nodes=[9, 10, 11, 12, 9], tags={"landuse": "forest"}),
         Way(id=103, nodes=[16, 17], tags={"highway": "motorway"}),
+        Way(id=104, nodes=[23, 24, 25, 26, 23], tags={"power": "plant", "plant:source": "solar"}),
+        # Panels on a roof are no solar park
+        Way(id=105, nodes=[27, 28, 29, 30, 27], tags={"power": "generator", "generator:source": "solar", "location": "roof"}),
     ]
     relations = [
         Relation(id=1000, members=[("w", 100, "outer")],
@@ -58,7 +63,7 @@ def test_extracts_a_layer_per_theme(extract):
     out, counts = extract
     assert [name for name, _ in pyogrio.list_layers(out / "layers.gpkg")] == list(osm.THEMES)
     assert {theme: counts[theme] for theme in osm.THEMES} == {
-        "forest": 1, "industrial": 0, "water": 0, "coastline": 0, "beach": 0,
+        "forest": 1, "industrial": 0, "water": 0, "coastline": 0, "beach": 0, "solar": 1,
         "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1,
     }
     municipality = pyogrio.read_dataframe(out / "layers.gpkg", layer="municipality")

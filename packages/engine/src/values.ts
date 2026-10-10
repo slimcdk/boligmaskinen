@@ -28,6 +28,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'no2', label: 'Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'concentration', layer: 'no2' },
   { name: 'pm25', label: 'Fine particles (PM2.5), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'concentration', layer: 'pm25' },
   { name: 'turbine', label: 'Distance to a wind turbine in operation', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'turbine' },
+  { name: 'solar', label: 'Distance to a solar park of at least 1 ha', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'solar' },
   { name: 'density', label: 'Addresses within 300 m', unit: 'addresses', group: 'Peace and quiet', kind: 'count', layer: 'density' },
   { name: 'supermarket', label: 'Distance to a supermarket', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'supermarket' },
   { name: 'school', label: 'Distance to a folkeskole, friskole or private school', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'school' },

@@ -2,7 +2,7 @@
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
-  | 'station' | 'turbine' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'station' | 'turbine' | 'solar' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'concentration';
@@ -160,6 +160,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
     kind: 'concentration', layer: 'pm25', unit: 'µg/m³', min: 0, max: 10, step: 0.1, role: 'want', weight: 1, full: 6, zero: 7.5,
   },
   { id: 'turbine', group: 'Peace and quiet', name: 'Away from wind turbines', opposite: 'Close to wind turbines', note: 'Nearest turbine in operation.', kind: 'distance', layer: 'turbine', role: 'want', weight: 1, full: 2000, zero: 500 },
+  { id: 'solar', group: 'Peace and quiet', name: 'Away from solar parks', opposite: 'Close to solar parks', note: 'Nearest solar park of at least 1 ha, from OpenStreetMap.', kind: 'distance', layer: 'solar', role: 'want', weight: 1, full: 1000, zero: 300 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
   { id: 'burglary', group: 'Area and economy', name: 'Few home burglaries', opposite: 'Many home burglaries', note: 'Reported per 1,000 residents per municipality, 2025.', kind: 'municipal', field: 'burglariesPer1000', unit: 'per 1,000', min: 1, max: 5, step: 0.1, role: 'want', weight: 1, full: 2.5, zero: 4.5 },

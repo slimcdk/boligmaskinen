@@ -87,6 +87,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `noise` | Noise, Lden in dB: the loudest of roads, railways, airports and industry where Miljøstyrelsen maps them, else an estimate from the roads (railways, airports and industry added 2026-10-10, which keeps the language version) |
 | `no2`, `pm25` | Nitrogen dioxide and fine particles, yearly means 2024 in µg/m³ on a 1 km grid (added 2026-10-10; additions keep the language version) |
 | `turbine` | Distance to a wind turbine in operation |
+| `solar` | Distance to a solar park of at least 1 ha: a plant, or panels on the ground (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `density` | Addresses within 300 m |
 | `supermarket`, `school`, `daycare`, `station` | Distance to the nearest one |
 | `zone` | Planning zone: `BYZONE`, `LANDZONE` or `SOMMERHUS` |

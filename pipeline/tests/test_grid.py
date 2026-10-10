@@ -81,6 +81,13 @@ def test_measures_distances_from_every_cell(aarhus: Built):
     assert decode_distance(aarhus.at("school", 575_500, 6_216_500)) > 2_000
 
 
+def test_measures_the_distance_to_solar_parks_of_at_least_1_ha(aarhus: Built):
+    assert aarhus.at("solar", 577_100, 6_216_100) == 0
+    assert decode_distance(aarhus.at("solar", 577_100, 6_218_100)) == pytest.approx(1_900, abs=150)
+    # The small one does not count
+    assert decode_distance(aarhus.at("solar", 571_530, 6_223_530)) > 5_000
+
+
 def test_knows_the_zones_and_the_municipality(aarhus: Built):
     assert aarhus.at("zone", 574_000, 6_219_000) == 1  # byzone
     assert aarhus.at("zone", 579_500, 6_215_500) == 3  # sommerhusområde
