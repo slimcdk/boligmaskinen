@@ -102,6 +102,8 @@ COPY backend/migrations backend/migrations
 COPY --from=frontend /src/frontend/dist/frontend/browser frontend
 # The licences of the libraries in the frontend's bundles, which "About the data" links to
 COPY --from=frontend /src/frontend/dist/frontend/3rdpartylicenses.txt frontend/licences/third-party.txt
+# A named volume starts as a copy of /data, so it belongs to the app's user (node, 1000) too
+RUN mkdir -p /data && chown node:node /data
 USER node
 EXPOSE 8080
 VOLUME /data
