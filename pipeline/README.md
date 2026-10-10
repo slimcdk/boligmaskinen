@@ -11,6 +11,8 @@ run them: the jobs fetch the sources, and each step is one command,
 | `world` | Natural Earth's five 1:50m zips | The world map outside Denmark: land, lakes, borders and names |
 | `pack` | The grid, the basemap, fonts, sprites, styles and the world map | The data pack |
 | `remote-zip` | A ZIP file on a web server | The members asked for, fetched with HTTP range requests |
+| `roads` | The Geofabrik extract of Denmark | The road network for travel times: per mode (car, bike, walk) a sparse matrix of seconds, turned around, and the nodes where trips can start |
+| `travel` | The road network, the data pack in use and a place | The minutes from every land cell of the pack's map to the place, by car, by bike and on foot |
 
 The grid is built in EPSG:25832, aligned to Det Danske Kvadratnet, with 100 m cells unless
 `--cell` says otherwise. It is then sampled onto a Web Mercator display grid, which the browser
@@ -40,6 +42,8 @@ image under a memory limit, with the real data:
 | `grid`, all of Denmark at 100 m | Under 0.8 GB; about 0.5 GB for a region |
 | `world` | 0.2 GB |
 | `pack` | 0.35 GB |
+| `roads` | 0.75 GB, and the same 0.9 GB file of node locations; it writes 370 MB |
+| `travel` | 0.55 GB, about 10 s for a place, 3 s once the pack's cells are matched to the network |
 | The basemap, cut out with `pmtiles extract` | 0.06 GB |
 
 What keeps them small (#69):
@@ -54,6 +58,34 @@ What keeps them small (#69):
     that matters, which gives the distances SciPy gives for the whole grid;
   - frees each source once its layer is built.
 - **Between their parts** the steps give freed memory back to the system (`memory.py`).
+
+## Travel times
+
+`roads` and `travel` find the travel times to the user's places by car, by bike and on foot on
+OpenStreetMap's roads, paths and ferries, instead of estimating them from the distance.
+
+- **The network** has a node for every OSM node on a way that a mode may use, 7.2 million for
+  Denmark, and an edge between each two next to each other.
+- **The speeds:**
+  - by car, 85 % of the posted limit (`maxspeed`, or `DK:urban` and `DK:rural`), else a typical
+    speed for the road's class, one way where the road is (`oneway`, roundabouts, motorways);
+  - by bike, 16 km/h on roads and 18 on cycleways, not on motorways, nor on footways unless they
+    allow bikes;
+  - on foot, 5 km/h, 2 on steps.
+
+  `access`, `motor_vehicle`, `bicycle` and `foot` say who may go where. A ferry takes its tagged
+  `duration`, or 25 km/h, and 15 minutes to board.
+- **The trip.** It starts at the best of the four nearest nodes the mode can use, at walking pace
+  (cycling, by bike), and ends the same way at the place. By car it takes 2 minutes more, to park.
+  Trips start only in networks of at least 1,000 nodes, so a footway inside a station that the
+  extract does not join to the streets cannot trap a place.
+- **The search.** `travel` runs Dijkstra (SciPy) from the place on the turned-around network, so
+  one search gives the times from every cell, up to 254 minutes.
+- **The layers** are 8-bit, like the pack's: minutes, and 255 for 254 minutes or more, or no way
+  there.
+- **Checked against the real data:** from Aarhus H by car, Randers is 35 minutes, Odense 95 and
+  Copenhagen 182. Samsø is 115, by the ferry. Bornholm is more than 254, as its ferry to Køge
+  takes five and a half hours.
 
 ## Running the steps by hand
 

@@ -11,7 +11,7 @@ empty folder to the map, and through updates and backups.
 | Software | Docker with Compose (Docker Engine 24 or newer, or Docker Desktop) |
 | Machine | 64-bit Intel/AMD (amd64) or ARM (arm64, such as a Raspberry Pi 5 with a 64-bit OS); Docker picks the image for the machine |
 | Memory | About 1 GB while the data is built (each night, for a few minutes); about 300 MB the rest of the time |
-| Disk | About 3 GB in `./data`: the raw downloads, the builds and the data packs. Reading the OpenStreetMap extract takes 1 GB more for a few minutes |
+| Disk | About 4 GB in `./data`: the raw downloads, the builds, the road network and the data packs. Reading the OpenStreetMap extract takes 1 GB more for a few minutes |
 | Network | About 1 GB of downloads the first time (OpenStreetMap is 500 MB of it), then a few hundred MB a night |
 | Time | About ten minutes for the first build of all of Denmark |
 

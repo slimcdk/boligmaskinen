@@ -4,6 +4,7 @@ import {
 } from '@boligmaskinen/engine';
 import type { Scheme } from '../theme/theme.service';
 import { BELOW_LIMIT, rampOf, Rgb, stepped } from './colours';
+import { positionOf, RoutedTimes } from './travel';
 
 export interface HeatStats {
   hasPreferences: boolean;
@@ -39,7 +40,9 @@ export type HeatMessage =
   /** The grid's own cells around the view (detail.ts), or none. */
   | { type: 'detail'; grid: Grid | null }
   | { type: 'render'; id: number; request: HeatRequest; buffer: ArrayBuffer; detail: ArrayBuffer | null }
-  | { type: 'explain'; id: number; cell: number; detail: boolean; request: Pick<HeatRequest, 'blocks' | 'places'> };
+  | { type: 'explain'; id: number; cell: number; detail: boolean; request: Pick<HeatRequest, 'blocks' | 'places'> }
+  /** A place's travel times on the road network (travel.service.ts), on the region's grid. */
+  | { type: 'travel'; position: string; times: RoutedTimes };
 
 export interface HeatResult {
   stats: HeatStats;
@@ -75,7 +78,7 @@ const SMOOTHING_METRES = [0, 200, 500] as const;
  * Angular, so it runs in the heat worker (heat.worker.ts), or in the page where there are no workers.
  */
 export class HeatEngine {
-  private readonly grid: Grid;
+  readonly grid: Grid;
   private readonly frame: MercatorFrame;
   private buffers: { s: Float32Array; m: Float32Array; sb: Float32Array; mb: Float32Array; tmp: Float32Array; col: Float32Array } | null = null;
   /** Per land cell: the value shown and how much of it is backed by shown cells (reused between renders). */
@@ -87,6 +90,8 @@ export class HeatEngine {
   private readonly valueCache = new Map<string, Float32Array>();
   /** Travel-time layers per place position and mode. */
   private readonly placeLayers = new Map<string, Uint8Array>();
+  /** Travel times found on the road network, per place position and mode; they replace the estimates. */
+  private readonly routed = new Map<string, Uint8Array>();
 
   constructor(grid: Grid) {
     this.grid = grid;
@@ -98,12 +103,23 @@ export class HeatEngine {
     return [...DATA_VALUES, ...placeValues(places)];
   }
 
+  /** The travel times to a place's position on the road network, which replace its estimates. */
+  setTravel(position: string, times: Partial<RoutedTimes>): void {
+    for (const [mode, layer] of Object.entries(times)) this.routed.set(`${position}|${mode}`, layer);
+    // The oldest positions go, as a place that moved is not coming back
+    while (this.routed.size > 48) this.routed.delete(this.routed.keys().next().value!);
+    for (const key of [...this.placeLayers.keys()]) if (key.startsWith(`${position}|`)) this.placeLayers.delete(key);
+    for (const key of [...this.valueCache.keys()]) if (key.endsWith(`|${position}`)) this.valueCache.delete(key);
+  }
+
   /** The 8-bit layer behind a value: a data layer, or the travel time to a place. */
   private layerOf(info: ValueInfo, places: Place[]): Uint8Array | null {
     if (!info.place) return this.grid.layers[info.kind === 'municipal' ? 'municipality' : info.layer!];
     const place = places.find((p) => p.id === info.place!.id);
     if (!place) return null;
-    const key = `${place.lng.toFixed(5)},${place.lat.toFixed(5)}|${info.place.mode}`;
+    const key = `${positionOf(place)}|${info.place.mode}`;
+    const routed = this.routed.get(key);
+    if (routed) return routed;
     let layer = this.placeLayers.get(key);
     if (!layer) {
       layer = minutesLayer(this.grid, this.frame, place.lng, place.lat, info.place.mode);

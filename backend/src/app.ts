@@ -12,11 +12,13 @@ import { defineJobs } from './jobs/definitions.ts';
 import { JobRunner } from './jobs/runner.ts';
 import type { JobDefinition } from './jobs/types.ts';
 import { Archive } from './pipeline/archive.ts';
-import { PROTOMAPS_URLS } from './pipeline/builds.ts';
+import { PROTOMAPS_URLS, roadVersions } from './pipeline/builds.ts';
 import { FETCH_JOBS, type SourceUrls } from './pipeline/sources.ts';
+import { TravelTimes } from './pipeline/travel.ts';
 import { dataPackRoutes } from './routes/data-pack.ts';
 import { jobRoutes } from './routes/jobs.ts';
 import { profileRoutes } from './routes/profile.ts';
+import { travelRoutes } from './routes/travel.ts';
 import { securityHeaders } from './security.ts';
 
 declare module 'fastify' {
@@ -85,6 +87,10 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
     } else if (fetched.size) {
       const fresh = Object.keys(FETCH_JOBS).filter((id) => !fetched.has(id));
       if (fresh.length) await runner.startAll(fresh, 'A source that has not been fetched yet, so it is fetched now');
+      // An install from before travel times has the extract, but no road network yet
+      if (fetched.has('osm') && !fresh.includes('osm') && !(await roadVersions(dataDir).current())) {
+        await runner.startAll(['roads'], 'There is no road network yet, so it is built now');
+      }
     }
   }
   app.addHook('onClose', async () => {
@@ -98,6 +104,9 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
   });
   await jobRoutes(app, runner);
   await profileRoutes(app, db);
+  await travelRoutes(app, dataDir && dataPackDir
+    ? new TravelTimes({ dataDir, dataPackDir, python: options.pipelinePython ?? 'python3', log: (text) => app.log.info(text) })
+    : null);
   app.get('/api/version', async (_request, reply) => {
     if (!options.version) return reply.code(404).send(apiError(404, 'This build does not know its version'));
     return reply.header('cache-control', 'no-store').send(options.version);

@@ -137,7 +137,7 @@ export const SOURCES: DataSource[] = [
         <p>Homes are approximated by address points from OpenStreetMap, which are imported from the national address register. Cells in industrial areas are left out.</p>
         <p>Road noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, and the major roads elsewhere. Other places are estimated from road type and distance.</p>
         <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation. Tax and burglaries are per municipality, and the air per square kilometre.</p>
-        <p>Travel times to your places are estimates from straight-line distance until a routing service is in place.</p>
+        <p>Travel times to your places by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries, once the server has built its road network; each place says which. By train, and until then, they are estimated from the straight-line distance.</p>
         <p>Colours are stretched over the points currently shown, so the map always shows the differences that matter. Outside Denmark the map shows Natural Earth's world map.</p>
       </section>
       <mat-divider />

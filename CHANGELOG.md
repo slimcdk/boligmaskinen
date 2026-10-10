@@ -14,8 +14,10 @@ Everything so far: there is no release yet. The test instance follows `master`.
 - A full-screen map of all of Denmark: 200 m cells, and the grid's own 100 m cells from zoom 10.
 - Blocks in a small, safe language score every cell. Predefined blocks are code too, and a block
   can be turned around. Blocks run as compiled JavaScript in a Web Worker.
-- Several maps, groups of blocks that switch on and off, and places with travel times (estimated
-  from the distance until routing comes).
+- Several maps, groups of blocks that switch on and off, and places with travel times.
+- Travel times by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries,
+  for every cell of the map; each place says when they are, and by train they are estimated from
+  the distance.
 - Maps and places are saved on the server, so every browser has them, and a map can be shared as
   a link.
 - 15 values of open data: forests, lakes and the sea, beaches, road noise, wind turbines, address

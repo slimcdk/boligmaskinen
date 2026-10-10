@@ -52,7 +52,8 @@ export function placeValueName(place: Pick<Place, 'name'>, mode: TravelMode): st
 export function placeValues(places: Place[]): ValueInfo[] {
   return places.flatMap((p) => MODES.map(({ mode, suffix }) => ({
     name: placeValueName(p, mode),
-    label: `Minutes to ${p.name} by ${suffix} (estimate)`,
+    // By train it is estimated from the distance; the others come from the road network where the server has one
+    label: `Minutes to ${p.name} by ${suffix}${mode === 'transit' ? ' (estimate)' : ''}`,
     unit: 'min',
     group: 'Your places' as const,
     kind: 'minutes' as const,

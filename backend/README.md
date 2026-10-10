@@ -60,8 +60,13 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
     quarter, a source has most likely broken: the job fails and says which count changed, and the
     map keeps its data. Running "Pack the data" by hand switches anyway. A new region or cell size
     is not compared.
+- **Road network** builds the network that travel times are found on from the OSM extract, with
+  the `roads` step, into `DATA_DIR/work/roads/<id>`, keeping two. It follows the OSM job, and its
+  nightly run builds it only when the extract changed. An install from before it builds it at
+  its next start.
 - **The order:** a fetch that found something new starts the grid, the grid starts the basemap,
-  and the basemap starts the pack. The world map starts the pack directly.
+  and the basemap starts the pack. The world map starts the pack directly, and the OSM extract
+  starts the road network too.
 - **A new install** has no data pack, so at its first start every fetch job runs, and the builds
   follow.
 - **"Back up the database"** (`src/jobs/backup.ts`) runs pg_dump of PostgreSQL 18 every night into
@@ -145,6 +150,8 @@ need the database say so.
 | `POST /api/runs/:id/cancel` | Cancels a waiting run at once and a running one at its next check. |
 | `GET /api/profile` | The maps and places: `{ epoch, revision, maps, places }`, each map and place with its `version`. With `If-None-Match` and an unchanged profile it answers 304. |
 | `POST /api/profile/changes` | Saves `{ changes: [{ kind, id, base, value }] }`: `kind` is `map` or `place`, `base` the version it was changed from (null for a new one), and a null `value` deletes. Answers `{ revision, saved }` with the new versions, or 409 with `conflicts` and nothing saved. |
+| `POST /api/travel` | `{ "lng", "lat" }` of a place: `{ id, state }`, where `state` is `ready`, `working` (ask again in a moment), `failed` or `unavailable`, with a `message` saying why. The first request for a position starts the `travel` step on the data pack and road network in use (`src/pipeline/travel.ts`), one step at a time with the jobs' steps. The results stay in `DATA_DIR/travel/<pack>--<network>/<id>`: the 200 newest places, and only for the pack and network in use. |
+| `GET /api/travel/:id/:mode` | One mode's minutes (`car`, `bike` or `walk`) as a byte container like the pack's layers. The id names the pack, the network and the position, so the file may be cached for good; an id of an older pack or network answers 404, and the frontend asks again. |
 | `/api/health` | `{"status":"ok","database":"ok"}`, for the image's health check. The database is `ok`, `not configured` or `unreachable`; unreachable answers 503. |
 
 ## Environment

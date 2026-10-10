@@ -17,6 +17,9 @@ function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
   return next;
 }
 
+/** What a step needs of whoever runs it: a job, or a request for travel times. */
+export type StepContext = Pick<JobContext, 'log' | 'progress' | 'signal'>;
+
 export interface StepOptions {
   /** The Python that has the pipeline installed (pipeline/.venv/bin/python). */
   python: string;
@@ -32,7 +35,7 @@ export interface StepOptions {
  * step that fails fails the job with the last line it wrote to stderr, which says why. Steps run
  * one at a time; cancelling the run stops the step.
  */
-export function runStep(context: JobContext, options: StepOptions, step: string, args: string[]): Promise<void> {
+export function runStep(context: StepContext, options: StepOptions, step: string, args: string[]): Promise<void> {
   if (pending++ > 0) void context.log(`Waiting for another step to finish before the ${step} step`).catch(() => undefined);
   const missing = `The pipeline's Python is missing: ${options.python}. Run "uv sync" in pipeline/, or set PIPELINE_PYTHON.`;
   return oneAtATime(() => runProgram(context, { ...options, program: options.python, missing }, ['-I', '-m', 'boligmaskinen_pipeline', step, ...args]))
@@ -55,7 +58,7 @@ export interface ProgramOptions {
  * Runs a program with its output in the job's log, as `runStep` describes; cancelling the run
  * stops it.
  */
-export async function runProgram(context: JobContext, options: ProgramOptions, args: string[]): Promise<void> {
+export async function runProgram(context: StepContext, options: ProgramOptions, args: string[]): Promise<void> {
   if (context.signal.aborted) throw new Error('Cancelled');
   const [from, to] = options.progress ?? [0, 1];
   const child = spawn(options.program, args, {

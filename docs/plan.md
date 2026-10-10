@@ -44,7 +44,7 @@ as jobs (milestone 2).**
 - The weighting is blocks in our own language ([`block-language.md`](block-language.md)), with
   versions and migrations. Predefined blocks are code too, and a block can be turned around.
 - Several maps, each with its own blocks in groups that can be switched off. The places, with
-  travel times estimated from the distance, are shared by the maps. The maps and places are saved
+  travel times by car, bike and on foot found on OSM's roads, are shared by the maps. The maps and places are saved
   on the server, so every browser has them (issue #34, done early, 2026-10-09).
 - Material 3 in light and dark mode, on desktops, tablets and phones.
 - One image: the Node backend serves the app, the data pack and the API, with PostGIS beside
@@ -130,9 +130,12 @@ what they took (#69).
    country. Done (2026-10-10) as two levels: the 200 m grid of the whole country, and 100 m
    detail tiles that the map loads around the view from zoom 10.
 4. **Real travel times.**
-   - Routing for car, bike and walk, with OSRM or Valhalla on OSM.
-   - Public transport from the Rejseplanen GTFS feed.
-   - When a place is added, a job computes its travel-time layer.
+   - Routing for car, bike and walk on OSM. Decided 2026-10-10: our own network and Dijkstra in
+     the pipeline (SciPy) rather than OSRM or Valhalla, which would be a service of their own. One
+     search from a place gives the times from every cell, in a few seconds.
+   - Public transport from the Rejseplanen GTFS feed (needs the key from Track A).
+   - When a place is added, the app finds its travel times (`POST /api/travel`). Done
+     (2026-10-10) for car, bike and walk; the place says whether its times come from the roads.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
    districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks (solar parks, turbine size, the designated areas to come) and
    drinking water quality (hardness per supply area, PFAS, nitrate); see

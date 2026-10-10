@@ -114,7 +114,7 @@ export function placeTemplate(place: Place, curve: { mode: TravelMode; full: num
     id: `place:${place.id}`, name: place.name, group: 'Your places', role: curve.role ?? 'want', weight: curve.weight ?? 4,
     description: `Travel time to ${place.name}`,
     code: [
-      `// Travel time to ${place.name}, estimated from the straight-line distance`,
+      `// Travel time to ${place.name}, on the roads once the server has found it, else estimated from the distance`,
       `let travel = choice(${index}, ${MODES.map((m) => placeValueName(place, m.mode)).join(', ')})  // Travel by`,
       `let full = slider(${curve.full}, 0, 120, 1)  // Full points at (min)`,
       `let zero = slider(${curve.zero}, 0, 180, 1)  // No points at (min)`,

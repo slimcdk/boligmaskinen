@@ -351,7 +351,7 @@ type SourceJob = Omit<JobDefinition, 'run' | 'kind' | 'enabledByDefault'> & { fe
 
 const SOURCES: SourceJob[] = [
   {
-    id: 'osm', name: 'OpenStreetMap', source: 'Geofabrik', schedule: '0 3 * * *', then: ['grid'], fetch: fetchOsm,
+    id: 'osm', name: 'OpenStreetMap', source: 'Geofabrik', schedule: '0 3 * * *', then: ['grid', 'roads'], fetch: fetchOsm,
     description: 'The extract of Denmark, and from it forests, water, beaches, shops, stations, roads, addresses and municipalities.',
   },
   { id: 'plandata', name: 'Planning zones', source: 'Plandata.dk', schedule: '30 3 * * *', then: ['grid'], fetch: fetchZones, description: 'Byzone and sommerhusområde polygons from the WFS.' },

@@ -1,13 +1,18 @@
-import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Grid, mercatorFrame, MercatorFrame, ValueInfo } from '@boligmaskinen/engine';
+import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Grid, mercatorFrame, MercatorFrame, Place, ValueInfo } from '@boligmaskinen/engine';
 import { loadByteContainer } from '../data/byte-container';
 import { PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
 import { ThemeService } from '../theme/theme.service';
 import { Bounds, corners, DETAIL_ZOOM, mosaic, sameRange, tileKeys, TileRange, tilesFor } from './detail';
 import { Breakdown, HeatEngine, HeatMessage, HeatRequest, HeatResult, HeatStats } from './heat-engine';
+import { positionOf, resample, RoutedTimes } from './travel';
+import { TravelService } from './travel.service';
 
 export type { Breakdown, HeatStats } from './heat-engine';
+
+/** How a place's travel times are found: on the road network, being found there, or estimated from the distance. */
+export type RouteState = 'routed' | 'working' | 'estimated';
 
 type WorkerReply =
   | { type: 'rendered'; id: number; result: HeatResult; buffer: ArrayBuffer; detail: ArrayBuffer | null }
@@ -27,6 +32,7 @@ export class HeatService {
   private readonly data = inject(PilotData);
   private readonly store = inject(Store);
   private readonly theme = inject(ThemeService);
+  private readonly travel = inject(TravelService);
 
   readonly canvas = document.createElement('canvas');
   /** Increments every time the canvas has new pixels. */
@@ -42,6 +48,13 @@ export class HeatService {
   readonly detail = signal<{ corners: ReturnType<typeof corners> } | null>(null);
   /** Increments every time the detail canvas has new pixels. */
   readonly detailFrame = signal(0);
+
+  /** How each place's travel times are found, by place id. */
+  readonly routes = computed<ReadonlyMap<string, RouteState>>(() => {
+    this.routeChanges();
+    const pack = this.packId();
+    return new Map(this.store.places().map((p) => [p.id, this.routeStates.get(`${pack}|${positionOf(p)}`) ?? 'working']));
+  });
 
   /** Every value a block can read: the data, and the travel times to the user's places. */
   readonly values = computed<ValueInfo[]>(() => HeatEngine.values(this.store.places()));
@@ -72,6 +85,16 @@ export class HeatService {
   private detailBuffer: ArrayBuffer | null = null;
   private readonly tiles = new Map<string, Uint8Array>();
 
+  /** By pack and place position. */
+  private readonly routeStates = new Map<string, RouteState>();
+  private readonly routeChanges = signal(0);
+  private readonly packId = computed(() => {
+    const meta = this.data.grid()?.meta;
+    return meta ? (meta.pack ?? meta.built) : '';
+  });
+  /** In the page, where there are no workers: the travel times found, for the detail grids. */
+  private readonly routed = new Map<string, RoutedTimes>();
+
   constructor() {
     effect(() => {
       const grid = this.data.grid();
@@ -81,7 +104,40 @@ export class HeatService {
       this.theme.scheme();
       if (grid) this.schedule(grid);
     });
+    effect(() => {
+      const grid = this.data.grid();
+      const places = this.store.places();
+      if (grid) untracked(() => this.route(grid, places));
+    });
     inject(DestroyRef).onDestroy(() => this.worker?.terminate());
+  }
+
+  /** Asks for the places' travel times on the road network; they replace the estimates as they come. */
+  private route(grid: Grid, places: Place[]): void {
+    const pack = this.packId();
+    for (const place of places) {
+      const position = positionOf(place);
+      const key = `${pack}|${position}`;
+      // An estimate is asked again with the next change: the road network may have been built since
+      const state = this.routeStates.get(key);
+      if (state === 'routed' || state === 'working') continue;
+      this.routeStates.set(key, 'working');
+      void this.travel.times(pack, place.lng, place.lat).then((times) => {
+        this.routeStates.set(key, times ? 'routed' : 'estimated');
+        this.routeChanges.update((n) => n + 1);
+        // Found for a pack the map has left since
+        if (!times || this.data.grid() !== grid) return;
+        if (this.worker) {
+          this.post({ type: 'travel', position, times });
+        } else {
+          this.routed.set(position, times);
+          this.engine?.setTravel(position, times);
+          if (this.detailEngine) this.detailEngine.setTravel(position, onDetail(grid, this.detailEngine.grid, times));
+        }
+        this.schedule(grid);
+      });
+    }
+    this.routeChanges.update((n) => n + 1);
   }
 
   private start(grid: Grid): void {
@@ -217,8 +273,12 @@ export class HeatService {
     this.detailCanvas.width = detail.width;
     this.detailCanvas.height = detail.height;
     this.detailBuffer = new ArrayBuffer(detail.width * detail.height * 4);
-    if (this.worker) this.post({ type: 'detail', grid: detail }, transfers(detail));
-    else this.detailEngine = new HeatEngine(detail);
+    if (this.worker) {
+      this.post({ type: 'detail', grid: detail }, transfers(detail));
+    } else {
+      this.detailEngine = new HeatEngine(detail);
+      for (const [position, times] of this.routed) this.detailEngine.setTravel(position, onDetail(grid, detail, times));
+    }
     this.schedule(grid);
   }
 
@@ -242,6 +302,11 @@ export class HeatService {
     const frame = this.mercator();
     return grid && frame ? cellOf(grid, frame, lng, lat) : -1;
   }
+}
+
+/** Travel times on the region's grid, put on a detail grid. */
+function onDetail(region: Grid, detail: Grid, times: RoutedTimes): Partial<RoutedTimes> {
+  return Object.fromEntries(Object.entries(times).map(([mode, layer]) => [mode, resample(region, detail, layer)]));
 }
 
 /** The buffers of a grid's layers and cell lists, which move to the worker. */

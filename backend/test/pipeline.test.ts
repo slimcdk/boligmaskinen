@@ -76,6 +76,8 @@ describeWithDatabase('a new install', () => {
     expect(outcome('grid').filter((o) => o.includes(' cells '))).toEqual(['succeeded: aarhus: 2 × 2 cells of 200 m, 459,924 with homes']);
     expect(outcome('basemap')).toEqual([expect.stringMatching(/^succeeded: Planet build 20261009 up to zoom 12, \d+ B$/)]);
     expect(outcome('pack').filter((o) => o.includes('Switched'))).toHaveLength(1);
+    // The road network follows the OSM extract
+    expect(outcome('roads')).toEqual(['succeeded: 7,200,839 nodes: 8,565,564 edges by car, 12,979,152 by bike, 15,345,026 on foot']);
     expect(runs.filter((r) => r.status === 'failed')).toEqual([]);
     expect(outcome('data-pack')).toEqual(['succeeded: 1 layer']);
 
@@ -182,7 +184,7 @@ describeWithDatabase('an install from before the jobs', () => {
 });
 
 describeWithDatabase('an install that fetches already', () => {
-  it('fetches a source that came with a new version at once, and nothing else', async () => {
+  it('fetches a source that came with a new version at once, builds the road network, and nothing else', async () => {
     const database = await createTestDatabase();
     const server = await TestServer.start();
     const served = serveSources(server);
@@ -204,7 +206,10 @@ describeWithDatabase('an install that fetches already', () => {
     });
     try {
       const runs = (await app.inject('/api/jobs')).json().runs as JobRun[];
-      expect(runs.map((r) => [r.jobId, r.log[0].text])).toEqual([['air', 'A source that has not been fetched yet, so it is fetched now']]);
+      expect(runs.map((r) => [r.jobId, r.log[0].text])).toEqual([
+        ['roads', 'There is no road network yet, so it is built now'],
+        ['air', 'A source that has not been fetched yet, so it is fetched now'],
+      ]);
     } finally {
       await app.close();
       await server.close();

@@ -47,7 +47,11 @@
     @for (p of store.places(); track p.id; let i = $index) {
       <div class="place">
         <span class="pin" [style.background]="colour(i)" aria-hidden="true">{{ i + 1 }}</span>
-        <input class="name" [value]="p.name" (change)="rename(p.id, $event)" aria-label="Name of the place" maxlength="40">
+        <div class="about">
+          <input class="name" [value]="p.name" (change)="rename(p.id, $event)" aria-label="Name of the place" maxlength="40" [attr.aria-describedby]="'route-' + p.id">
+          <!-- Said when it changes, as the travel times come a while after the place -->
+          <span class="route" [id]="'route-' + p.id" aria-live="polite">{{ routeText[routes().get(p.id) ?? 'working'] }}</span>
+        </div>
         <button mat-icon-button (click)="store.removePlace(p.id)" [attr.aria-label]="'Remove ' + p.name"><mat-icon>close</mat-icon></button>
       </div>
     } @empty {
