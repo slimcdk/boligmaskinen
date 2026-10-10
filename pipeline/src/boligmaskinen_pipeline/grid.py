@@ -41,7 +41,8 @@ import json
 import re
 import tempfile
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
@@ -99,9 +100,6 @@ LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare
           "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "district_heating", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
-# The areas of Miljøstyrelsen's layers each distance is to, by input; a layer whose sources are not all
-# there is left out, so a block that reads it says it has no data
-PROTECTED_LAYERS = {"protected_area": ["protected_areas"], "natura2000": ["natura2000_habitats", "natura2000_birds"]}
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
 IN_FORCE = 3
 # A fredning of land ("Arealfredning"): landscapes and nature. The other kind, a kirkefredning, keeps the
@@ -113,6 +111,50 @@ PLANNED_ROADS = {"1", "2"}
 # The heat plans' kind of supply area that is district heating ("Fjernvarme"); the others are
 # individual natural gas, other, and areas to be decided
 DISTRICT_HEATING = "1"
+
+
+@dataclass(frozen=True)
+class AreaSource:
+    """A GeoJSON file of areas, by its key in inputs.json, and the ones a layer takes from it."""
+    key: str
+    # The attributes `keep` reads
+    columns: list[str]
+    keep: Callable[[gpd.GeoDataFrame], object] = lambda frame: True
+
+
+@dataclass(frozen=True)
+class AreaLayer:
+    """A layer of the distance to areas, 0 inside one. Without all its sources it is left out, so a
+    block that reads it says it has no data."""
+    name: str
+    sources: list[AreaSource]
+    # What the log calls the areas
+    what: str
+    # Narrow areas, such as a planned road, count by every cell they touch; the others by the cells
+    # whose centres they cover, and one smaller than a cell by the cell of a point inside it
+    all_touched: bool = False
+
+
+def in_force(frame: gpd.GeoDataFrame):
+    return frame["Statuskode"] == IN_FORCE
+
+
+AREA_LAYERS = [
+    AreaLayer("protected_area", [AreaSource("protected_areas", ["Statuskode", "Fred_tkode"],
+                                            lambda frame: in_force(frame) & (frame["Fred_tkode"] == AREA_FREDNING))],
+              "Fredninger of land in force"),
+    AreaLayer("natura2000", [AreaSource("natura2000_habitats", ["Statuskode"], in_force), AreaSource("natura2000_birds", ["Statuskode"], in_force)],
+              "Natura 2000 areas in force"),
+    AreaLayer("planned_road", [AreaSource(key, ["temaspkode"], lambda frame: frame["temaspkode"].astype(str).isin(PLANNED_ROADS))
+                               for key in ("planned_traffic", "planned_traffic_proposed")],
+              "Roads and railways the municipal plans lay out", all_touched=True),
+    # The job fetches only those of the last two years
+    AreaLayer("new_local_plan", [AreaSource("local_plans_proposed", []), AreaSource("local_plans_adopted", [])], "Local plans of the last two years"),
+    AreaLayer("consequence_zone", [AreaSource("consequence_zones", []), AreaSource("consequence_zones_plants", [])],
+              "Zones around businesses and plants"),
+    AreaLayer("district_heating", [AreaSource("supply_areas", ["type1203"], lambda frame: frame["type1203"].astype(str) == DISTRICT_HEATING)],
+              "District heating areas"),
+]
 
 # The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)
 AERODROME_LAYERS = {"airport": {"airport"}, "air_station": {"air_station"}, "airfield": {"airport", "air_station", "airfield"}}
@@ -211,6 +253,19 @@ def jsonstat_values(path: Path) -> dict[str, float]:
     sizes = dataset["dimension"]["size"]
     stride = int(np.prod(sizes[1:]))
     return {code: values[index * stride] for code, index in areas.items()}
+
+
+def area_cells(grid: "Grid", source: Path, area: AreaSource, all_touched: bool) -> tuple[np.ndarray, int]:
+    """The cells of the areas of a file that `area` keeps, and how many it keeps."""
+    frame = gpd.read_file(source, columns=area.columns)
+    frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
+    kept = frame.geometry.notna() & ~frame.geometry.is_empty
+    frame = frame[kept & area.keep(frame)]
+    cells = grid.burn(frame.geometry, all_touched=all_touched).astype(bool)
+    if not all_touched:
+        inner = frame.geometry.representative_point()
+        cells |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
+    return cells, len(frame)
 
 
 def jsonstat_newest(path: Path) -> tuple[str, dict[str, float]]:
@@ -502,103 +557,19 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
          f"{counted['airfield']} other airfields", 0.43)
     del aerodromes, kinds, chosen, mask
 
-    # --- Protected areas and Natura 2000 (Miljøstyrelsen, through Danmarks Miljøportal) --------
-    # Inside one, the distance is 0. A cell is inside when its centre is, and an area smaller than a
-    # cell still has the cell of a point inside it
-    for name, keys in PROTECTED_LAYERS.items():
-        if not all(inputs.get(key) for key in keys):
-            warn(f"No source for {name}: the layer is left out")
+    # --- Areas: protected areas and Natura 2000, and what the plans and heat plans lay out --------
+    for layer in AREA_LAYERS:
+        if not all(inputs.get(area.key) for area in layer.sources):
+            warn(f"No source for {layer.name}: the layer is left out")
             continue
-        area = np.zeros(grid.shape, dtype=bool)
-        found[name] = 0
-        for key in keys:
-            frame = gpd.read_file(inputs[key], columns=["Statuskode", "Fred_tkode"] if key == "protected_areas" else ["Statuskode"])
-            frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
-            kept = frame["Statuskode"] == IN_FORCE
-            if key == "protected_areas":
-                kept &= frame["Fred_tkode"] == AREA_FREDNING
-            frame = frame[kept]
-            found[name] += len(frame)
-            area |= grid.burn(frame.geometry).astype(bool)
-            inner = frame.geometry.representative_point()
-            area |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
-            del frame, inner
-        layers[name] = encode_distance(grid.distance_to(area))
-        step(f"{name}: {found[name]:,} areas in force cover {area.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.44)
-        del area
-
-    # --- Roads and railways the municipal plans lay out, adopted or proposed (Plandata.dk) -------
-    keys = ["planned_traffic", "planned_traffic_proposed"]
-    if all(inputs.get(key) for key in keys):
-        planned = np.zeros(grid.shape, dtype=bool)
-        found["planned_road"] = 0
-        for key in keys:
-            frame = gpd.read_file(inputs[key], columns=["temaspkode"])
-            frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
-            frame = frame[frame["temaspkode"].astype(str).isin(PLANNED_ROADS)]
-            found["planned_road"] += len(frame)
-            planned |= grid.burn(frame.geometry, all_touched=True).astype(bool)
-            del frame
-        layers["planned_road"] = encode_distance(grid.distance_to(planned))
-        step(f"Planned roads and railways: {found['planned_road']:,} in the municipal plans", 0.445)
-        del planned
-    else:
-        warn("No source for planned_road: the layer is left out")
-
-    # --- Local plans of the last two years, proposed or adopted (Plandata.dk) ------------------
-    # The job fetches only those; a cell is inside one when its centre is, or a point inside it is
-    keys = ["local_plans_proposed", "local_plans_adopted"]
-    if all(inputs.get(key) for key in keys):
-        plans = np.zeros(grid.shape, dtype=bool)
-        found["new_local_plan"] = 0
-        for key in keys:
-            frame = gpd.read_file(inputs[key], columns=[])
-            frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
-            frame = frame[frame.geometry.notna() & ~frame.geometry.is_empty]
-            found["new_local_plan"] += len(frame)
-            plans |= grid.burn(frame.geometry).astype(bool)
-            inner = frame.geometry.representative_point()
-            plans |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
-            del frame, inner
-        layers["new_local_plan"] = encode_distance(grid.distance_to(plans))
-        step(f"New local plans: {found['new_local_plan']:,} of the last two years", 0.447)
-        del plans
-    else:
-        warn("No source for new_local_plan: the layer is left out")
-
-    # --- Zones around businesses and technical plants, where the plans keep homes out ----------
-    keys = ["consequence_zones", "consequence_zones_plants"]
-    if all(inputs.get(key) for key in keys):
-        zones_around = np.zeros(grid.shape, dtype=bool)
-        found["consequence_zone"] = 0
-        for key in keys:
-            frame = gpd.read_file(inputs[key], columns=[])
-            frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
-            frame = frame[frame.geometry.notna() & ~frame.geometry.is_empty]
-            found["consequence_zone"] += len(frame)
-            zones_around |= grid.burn(frame.geometry).astype(bool)
-            inner = frame.geometry.representative_point()
-            zones_around |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
-            del frame, inner
-        layers["consequence_zone"] = encode_distance(grid.distance_to(zones_around))
-        step(f"Consequence zones: {found['consequence_zone']:,} around businesses and plants", 0.4475)
-        del zones_around
-    else:
-        warn("No source for consequence_zone: the layer is left out")
-
-    # --- District heating: the heat plans' supply areas for it (Plandata.dk) -------------------
-    if inputs.get("supply_areas"):
-        frame = gpd.read_file(inputs["supply_areas"], columns=["type1203"])
-        frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
-        frame = frame[frame["type1203"].astype(str) == DISTRICT_HEATING]
-        heating = grid.burn(frame.geometry).astype(bool)
-        inner = frame.geometry.representative_point()
-        heating |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
-        layers["district_heating"] = encode_distance(grid.distance_to(heating))
-        step(f"District heating: {len(frame):,} supply areas cover {heating.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.448)
-        del frame, inner, heating
-    else:
-        warn("No source for district_heating: the layer is left out")
+        cells, count = np.zeros(grid.shape, dtype=bool), 0
+        for area in layer.sources:
+            kept, kept_count = area_cells(grid, inputs[area.key], area, layer.all_touched)
+            cells |= kept
+            count += kept_count
+        layers[layer.name] = encode_distance(grid.distance_to(cells))
+        step(f"{layer.what}: {count:,} cover {cells.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.44)
+        del cells, kept
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])
