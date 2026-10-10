@@ -28,6 +28,14 @@ export async function createTestDatabase(): Promise<{ url: string; drop: () => P
     drop: async () => {
       const client = new pg.Client({ connectionString: adminUrl });
       await client.connect();
+      // A pool's end() returns before its connections have closed, and a connection dropped by
+      // force while it closes gets an error its pool has no one to give to. So wait a few seconds
+      // for them; force is for those that stay.
+      for (let wait = 0; wait < 50; wait++) {
+        const { rowCount } = await client.query(`select 1 from pg_stat_activity where datname = $1 and backend_type = 'client backend'`, [name]);
+        if (!rowCount) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
       await client.query(`drop database if exists ${name} with (force)`);
       await client.end();
     },
