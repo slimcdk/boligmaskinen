@@ -49,6 +49,13 @@ export const SOURCES: DataSource[] = [
     note: 'Changed: travel times found on the timetable of a weekday.',
   },
   {
+    id: 'water', name: 'GEUS', url: 'https://doi.org/10.22008/FK2/5OZV7W',
+    uses: 'The hardness of the drinking water in the public waterworks’ supply areas, from the national borehole database Jupiter (samples up to 2023).',
+    licence: CC_BY,
+    credit: 'Drikkevandets hårdhed: GEUS',
+    note: "Changed: put on the map's 100 m cells.",
+  },
+  {
     id: 'mst', name: 'Miljøstyrelsen', url: 'https://miljoegis.mim.dk',
     uses: 'Noise from roads, railways, airports and industry, from the strategic noise mapping 2022 (Lden).',
     licence: CC_BY,

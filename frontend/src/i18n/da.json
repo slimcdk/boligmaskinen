@@ -117,6 +117,11 @@
       "opposite": "Lidt offentlig transport",
       "note": "Afgange i timen mellem 7 og 9 på en hverdag fra stoppestederne inden for 500 m, hver tur én gang, fra Rejseplanen."
     },
+    "water_hardness": {
+      "name": "Blødt vand",
+      "opposite": "Hårdt vand",
+      "note": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra GEUS (prøver til og med 2023). Ingen data, hvor boligerne har egen brønd."
+    },
     "incomeTax": {
       "name": "Lav kommuneskat",
       "opposite": "Høj kommuneskat",
@@ -246,6 +251,7 @@
     "noise": "Støj fra veje, jernbaner, lufthavne og virksomheder, Lden",
     "no2": "Kvælstofdioxid (NO₂), årsmiddel 2024 (ingen data på havet)",
     "pm25": "Fine partikler (PM2,5), årsmiddel 2024 (ingen data på havet)",
+    "water_hardness": "Drikkevandets hårdhed fra de almene vandværker (ingen data, hvor boligerne har egen brønd)",
     "turbine": "Afstand til en vindmølle i drift",
     "turbine_heights": "Afstand til en vindmølle i drift, i dens totalhøjder (25,4 eller mere, hvor ingen er nær)",
     "solar": "Afstand til en solcellepark på mindst 1 ha",
@@ -604,6 +610,10 @@
         "uses": "Køreplanerne for alle busser, tog, metro, letbaner og færger som GTFS-feed: til rejsetiderne til dine steder med offentlig transport og afgangene nær hver celle.",
         "note": "Ændret: rejsetider fundet på køreplanen for en hverdag."
       },
+      "water": {
+        "uses": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra den nationale boringsdatabase Jupiter (prøver til og med 2023).",
+        "note": "Ændret: lagt på kortets celler på 100 m."
+      },
       "mst": {
         "uses": "Støj fra veje, jernbaner, lufthavne og industri fra den strategiske støjkortlægning 2022 (Lden).",
         "note": "Ændret: lagt på kortets celler på 100 m. Hvor den ikke har data, er støjen vores eget skøn."
@@ -815,6 +825,10 @@
       "protected": {
         "name": "Beskyttede områder",
         "description": "Fredninger, Natura 2000-områderne for naturtyper og fugle og regionernes råstofområder fra Danmarks Miljøportals WFS."
+      },
+      "water": {
+        "name": "Drikkevand",
+        "description": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra GEUS' landsdækkende datasæt (Jupiter)."
       },
       "plans": {
         "name": "Planer",

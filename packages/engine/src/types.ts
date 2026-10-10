@@ -3,7 +3,7 @@
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
   | 'station' | 'departures' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
-  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'natura2000' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'water_hardness' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
@@ -12,7 +12,7 @@ export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'cate
  * Raw steps per unit of a scaled layer: raw 0 is no data, raw r is (r - 1) / steps. The air's are per
  * µg/m³; a turbine's distance is in its total heights.
  */
-export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10 };
+export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10, water_hardness: 5 };
 
 /** Numbers Danmarks Statistik gives per municipality. */
 export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population' | 'income' | 'nurseryPrice' | 'classSize';
@@ -192,6 +192,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'air_station', group: 'Infrastructure and plans', name: 'Away from air stations', opposite: 'Close to an air station', note: "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup.", kind: 'distance', layer: 'air_station', role: 'want', weight: 1, full: 15000, zero: 5000 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
   { id: 'departures', group: 'Everyday life', name: 'Frequent public transport', opposite: 'Little public transport', note: 'Departures per hour between 7 and 9 on a weekday from the stops within 500 m, each trip once, from Rejseplanen.', kind: 'count', layer: 'departures', unit: 'per hour', max: 100, step: 1, role: 'want', weight: 1, full: 12, zero: 2 },
+  { id: 'water_hardness', group: 'Everyday life', name: 'Soft water', opposite: 'Hard water', note: 'Hardness of the drinking water in the public waterworks’ supply areas, from GEUS (samples up to 2023). No data where homes have wells of their own.', kind: 'scaled', layer: 'water_hardness', unit: '°dH', min: 0, max: 30, step: 0.5, role: 'want', weight: 1, full: 8, zero: 18 },
   { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
   { id: 'income', group: 'Area and economy', name: 'High incomes', opposite: 'Low incomes', note: 'Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik.', kind: 'municipal', field: 'income', unit: 'kr.', min: 200000, max: 600000, step: 5000, role: 'want', weight: 1, full: 320000, zero: 260000 },

@@ -25,6 +25,8 @@ export const SOURCE_URLS = {
   plans: 'https://geoserver.plandata.dk/geoserver/wfs',
   /** Rejseplanen's timetables of all public transport in Denmark, as a GTFS feed: about 55 MB, new every fortnight. */
   transit: 'https://www.rejseplanen.info/labs/GTFS.zip',
+  /** GEUS's dataset of the drinking water's hardness per supply area, on its Dataverse: its files change with every version. */
+  water: 'https://dataverse.geus.dk/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -40,6 +42,7 @@ const LICENCES = {
   air: 'CC BY 4.0, DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet (Danmarks Miljøportal)',
   protected: 'CC0 1.0, Miljøstyrelsen and the regions (Danmarks Miljøportal)',
   transit: 'CC BY 4.0, Rejsekort & Rejseplan A/S (Rejseplanen)',
+  water: 'CC BY 4.0, GEUS',
 };
 
 /** What the data jobs need to fetch and build. */
@@ -163,6 +166,29 @@ async function fetchTransit(w: Work): Promise<JobOutcome> {
   const feed = await w.archive.download(w.context, { source: 'transit', name: 'GTFS.zip', url: w.urls.transit, licence: LICENCES.transit, check: gtfsCheck });
   await w.context.log(`The timetables: ${freshness(feed, w.day)}`);
   return outcome(w, feed);
+}
+
+/**
+ * GEUS's drinking water hardness per supply area: the dataset's newest version on its Dataverse
+ * names its files, of which the one for QGIS is a ZIP file with a GeoPackage.
+ */
+async function fetchWater(w: Work): Promise<JobOutcome> {
+  const answer = await fetch(w.urls.water, { headers: { 'user-agent': USER_AGENT, accept: 'application/json' }, signal: w.context.signal });
+  if (!answer.ok) throw new Error(`${w.urls.water} answered ${answer.status}`);
+  const dataset = (await answer.json()) as { data?: { latestVersion?: { versionNumber?: number; files?: { dataFile: { id: number; filename: string } }[] } } };
+  const version = dataset.data?.latestVersion;
+  const file = version?.files?.map((f) => f.dataFile).find((f) => /qgis.*\.zip$/i.test(f.filename));
+  if (!file) throw new Error(`Found no ZIP file for QGIS in the dataset at ${w.urls.water}; it may have changed`);
+  await w.context.log(`Version ${version!.versionNumber ?? '?'} of the dataset: ${file.filename}`);
+  const zipped = await w.archive.download(w.context, {
+    source: 'water', name: 'haardhed.zip', url: new URL(`/api/access/datafile/${file.id}`, w.urls.water).href, licence: LICENCES.water,
+    check: (content) => {
+      zipCheck(content);
+      if (!content.includes('.gpkg')) throw new Error('a ZIP file without a GeoPackage');
+      return formatBytes(content.length);
+    },
+  });
+  return outcome(w, zipped);
 }
 
 async function fetchZones(w: Work): Promise<JobOutcome> {
@@ -486,6 +512,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,
     description: 'Fredninger, the Natura 2000 areas for habitats and birds, and the regions’ raw material areas, from Danmarks Miljøportal’s WFS.',
+  },
+  {
+    id: 'water', name: 'Drinking water', source: 'GEUS', schedule: '0 5 5 * *', then: ['grid'], fetch: fetchWater,
+    description: 'The hardness of the drinking water in the public waterworks’ supply areas, from GEUS’s national dataset (Jupiter).',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];
