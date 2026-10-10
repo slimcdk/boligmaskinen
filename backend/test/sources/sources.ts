@@ -46,6 +46,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
     response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 1200 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
   });
   for (const path of NATURAL_EARTH) server.file(`/ne/${path}.zip`, { content: zip(path) });
+  server.file('/transit/GTFS.zip', { content: zip('agency.txt stops.txt trips.txt stop_times.txt'), etag: '"gtfs"' });
   server.on('GET /protomaps/builds.json', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify([{ key: '20261008.pmtiles' }, { key: sources.planetBuild }]));
   });
@@ -62,7 +63,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
     urls: {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
-      air: `${base}/air`, protected: `${base}/protected`, plans: `${base}/plans`,
+      air: `${base}/air`, protected: `${base}/protected`, plans: `${base}/plans`, transit: `${base}/transit/GTFS.zip`,
     },
     protomaps: { builds: `${base}/protomaps/builds.json`, tiles: `${base}/tiles`, assets: `${base}/assets`, iconsLicence: `${base}/icons/LICENSE.md` },
   };

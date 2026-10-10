@@ -5,7 +5,7 @@ import { pack } from './containers';
 
 const META = JSON.parse(readFileSync(join(__dirname, 'data-pack', 'data', 'meta.json'), 'utf8')) as { width: number; height: number };
 const ID = '0123456789abcdef01234567';
-const MINUTES = { car: 40, bike: 34, walk: 56 };
+const MINUTES = { car: 40, bike: 34, walk: 56, transit: 30 };
 
 async function open(page: Page): Promise<void> {
   await page.goto('/#map=12/56.1567/10.2108');
@@ -19,17 +19,17 @@ async function addPlace(page: Page): Promise<void> {
   await expect(page.locator('app-block-row .name', { hasText: /^Place 1$/ })).toBeVisible();
 }
 
-test('a place gets its travel times from the road network when the server has found them', async ({ page }) => {
+test('a place gets its travel times from the road network and the timetables when the server has found them', async ({ page }) => {
   // The server finds them for a moment, then serves every mode: the same minutes everywhere
   let asked = 0;
-  await page.route('**/api/travel', (route) => route.fulfill({ json: { id: ID, state: ++asked < 2 ? 'working' : 'ready' } }));
+  await page.route('**/api/travel', (route) => route.fulfill({ json: { id: ID, state: ++asked < 2 ? 'working' : 'ready', modes: ['car', 'bike', 'walk', 'transit'] } }));
   await page.route(`**/api/travel/${ID}/*`, (route) => {
     const mode = route.request().url().split('/').pop() as keyof typeof MINUTES;
     return route.fulfill({ body: pack(new Uint8Array(META.width * META.height).fill(MINUTES[mode])), contentType: 'image/png' });
   });
   await open(page);
   await addPlace(page);
-  await expect(page.locator('.place .route')).toHaveText('Travel times from the road network');
+  await expect(page.locator('.place .route')).toHaveText('Travel times from the road network and the timetables');
   expect(asked).toBeGreaterThanOrEqual(2);
 
   // The place's block reads them: by car 40 minutes from anywhere, where full points end at 15 and
@@ -37,6 +37,22 @@ test('a place gets its travel times from the road network when the server has fo
   await page.locator('.maplibregl-canvas').click({ position: { x: 760, y: 420 } });
   const popup = page.locator('.maplibregl-popup');
   await expect(popup.locator('tr', { hasText: 'Place 1' })).toContainText('0.17');
+
+  // By public transport, on the same ramp: 30 minutes is half way from 15 to 45
+  await page.locator('.maplibregl-popup-close-button').click();
+  const row = page.locator('app-block-row').filter({ has: page.locator('.name', { hasText: /^Place 1$/ }) });
+  await row.getByRole('button', { name: 'Show settings for Place 1' }).click();
+  await row.getByRole('radio', { name: 'Public transport' }).click();
+  await page.locator('.maplibregl-canvas').click({ position: { x: 760, y: 420 } });
+  await expect(popup.locator('tr', { hasText: 'Place 1' })).toContainText('0.50');
+});
+
+test('from a server without a timetable, travel by public transport is estimated', async ({ page }) => {
+  await page.route('**/api/travel', (route) => route.fulfill({ json: { id: ID, state: 'ready', modes: ['car', 'bike', 'walk'] } }));
+  await page.route(`**/api/travel/${ID}/*`, (route) => route.fulfill({ body: pack(new Uint8Array(META.width * META.height).fill(40)), contentType: 'image/png' }));
+  await open(page);
+  await addPlace(page);
+  await expect(page.locator('.place .route')).toHaveText('Travel times from the road network; by public transport estimated');
 });
 
 test('without a server that finds them, travel times are estimated from the distance', async ({ page }) => {

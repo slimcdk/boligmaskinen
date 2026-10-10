@@ -1,5 +1,6 @@
 import json
 import math
+import zipfile
 
 import numpy as np
 import osmium
@@ -7,7 +8,7 @@ import pytest
 from osmium.osm.mutable import Node, Way
 from pyproj import Transformer
 
-from boligmaskinen_pipeline import roads, travel
+from boligmaskinen_pipeline import roads, transit, travel
 from boligmaskinen_pipeline.pack import png_container, read_container
 
 TO_MERCATOR = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
@@ -156,3 +157,81 @@ def test_goes_one_way_where_the_road_does(town, pack, tmp_path):
     assert at(east["car"], pack, 10.0, 56.0) < at(west["car"], pack, 10.05, 56.0)
     # On foot it is the same both ways, but for where in its cell each end is
     assert at(west["walk"], pack, 10.05, 56.0) == pytest.approx(at(east["walk"], pack, 10.0, 56.0), abs=1)
+
+
+def connections(rows: list[tuple]) -> dict[str, np.ndarray]:
+    """A timetable from (trip, from stop, departure, to stop, arrival) in hours, the latest arrival first."""
+    rows = sorted(rows, key=lambda r: (-r[4], -r[2]))
+    seconds = lambda hours: int(round(hours * 3600))
+    return {"trip": np.array([r[0] for r in rows]), "dep-stop": np.array([r[1] for r in rows]), "dep": np.array([seconds(r[2]) for r in rows]),
+            "arr-stop": np.array([r[3] for r in rows]), "arr": np.array([seconds(r[4]) for r in rows])}
+
+
+def test_scans_the_timetable_back_from_the_time_to_be_there():
+    # A trip from stop 0 by stop 1 to stop 2, a footpath of 2 minutes from stop 2 to stop 3, and a
+    # trip from stop 3 to stop 4, by the place; one has to be at a stop a minute before it leaves
+    def scan(second_leaves: float) -> np.ndarray:
+        timetable = connections([(0, 0, 7.0, 1, 7 + 10 / 60), (0, 1, 7 + 10 / 60, 2, 7 + 20 / 60),
+                                 (1, 3, second_leaves, 4, second_leaves + 10 / 60)])
+        timetable |= {"buffer": np.full(5, 60), "foot-indptr": np.array([0, 0, 0, 0, 1, 1]), "foot-from": np.array([2]), "foot-seconds": np.array([120])}
+        egress = np.array([np.inf, np.inf, np.inf, np.inf, 0.0])
+        return transit.latest_departures(timetable, egress, 7 * 3600 + 45 * 60, 4 * 3600) / 60
+    # The change works: off at stop 2 at 7:20, 2 minutes on foot and a minute before 7:30
+    assert scan(7.5).tolist() == pytest.approx([7 * 60 - 1, 7 * 60 + 9, 7 * 60 + 27, 7 * 60 + 29, 7 * 60 + 45])
+    # ...but not when the second trip leaves at 7:22: the first trip is of no use then
+    assert scan(7 + 22 / 60).tolist()[:2] == [-np.inf, -np.inf]
+
+
+@pytest.fixture(scope="module")
+def timetable(town, tmp_path_factory):
+    """The town's network with a timetable: a bus along the main street every 20 minutes, which takes
+    5 minutes, and a booked service that would take one. The bus does not run on Tuesday and
+    Wednesday of the first week."""
+    _, out, _ = town
+    network = tmp_path_factory.mktemp("transit")
+    for path in out.iterdir():
+        (network / path.name).write_bytes(path.read_bytes())
+    feed = network / "GTFS.zip"
+    hhmm = lambda minutes: f"{minutes // 60}:{minutes % 60:02d}:00"
+    stop_times = ["trip_id,arrival_time,departure_time,stop_id,stop_sequence"]
+    trips = ["route_id,service_id,trip_id"]
+    for n, leaves in enumerate([7 * 60 + 18, 7 * 60 + 38, 7 * 60 + 58, 8 * 60 + 18]):
+        trips.append(f"1,WEEK,bus{n}")
+        stop_times += [f"bus{n},{hhmm(leaves)},{hhmm(leaves)},W,1", f"bus{n},{hhmm(leaves + 5)},{hhmm(leaves + 5)},E,2"]
+    for n, leaves in enumerate([7 * 60 + 28, 7 * 60 + 58, 8 * 60 + 28]):
+        trips.append(f"F,WEEK,flex{n}")
+        stop_times += [f"flex{n},{hhmm(leaves)},{hhmm(leaves)},W,1", f"flex{n},{hhmm(leaves + 1)},{hhmm(leaves + 1)},E,2"]
+    files = {
+        "agency.txt": "agency_id,agency_name,agency_url,agency_timezone\n1,Town buses,https://example.org,Europe/Copenhagen",
+        "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\nW,West end,56.0001,10.0002\nE,East end,56.0001,10.0498",
+        "routes.txt": "route_id,agency_id,route_short_name,route_type\n1,1,1,3\nF,1,F,715",
+        "trips.txt": "\n".join(trips),
+        "stop_times.txt": "\n".join(stop_times),
+        "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nWEEK,1,1,1,1,1,0,0,20261005,20261230",
+        "calendar_dates.txt": "service_id,date,exception_type\nWEEK,20261006,2\nWEEK,20261007,2",
+    }
+    with zipfile.ZipFile(feed, "w") as archive:
+        for name, text in files.items():
+            archive.writestr(name, text + "\n")
+    summary = transit.build(feed, network)
+    return network, summary
+
+
+def test_reads_the_timetable_of_a_busy_weekday(timetable):
+    network, summary = timetable
+    # Tuesday and Wednesday have no trips, so Thursday; the booked service is left out
+    assert summary == {"day": "2026-10-08", "until": "2026-12-30", "stops": 2, "trips": 4, "connections": 4, "footpaths": 0, "stopsOffFoot": 0}
+    arr = np.load(network / "transit-arr.npy")
+    assert arr.tolist() == sorted(arr.tolist(), reverse=True)
+
+
+def test_finds_the_minutes_by_public_transport(timetable, pack, tmp_path):
+    network, _ = timetable
+    travel.build(network, pack[0], 10.05, 56.0, tmp_path / "out", cache=tmp_path / "cache")
+    layers = {mode: np.frombuffer(read_container((tmp_path / "out" / f"{mode}.png").read_bytes()), dtype=np.uint8) for mode in [*travel.MODES, "transit"]}
+    # From the west end: to be at the place by 7:30, 7:45, 8:00, 8:15 and 8:30 one leaves 13, 8, 23,
+    # 18 and 13 minutes before, a minute before the bus; the median is 13
+    assert at(layers["transit"], pack, 10.0, 56.0) == pytest.approx(13, abs=1)
+    # ...far quicker than on foot, which counts where it is quicker: by the place itself
+    assert at(layers["walk"], pack, 10.0, 56.0) > 30
+    assert at(layers["transit"], pack, 10.05, 56.0) == at(layers["walk"], pack, 10.05, 56.0)

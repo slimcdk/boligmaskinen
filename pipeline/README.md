@@ -12,7 +12,8 @@ run them: the jobs fetch the sources, and each step is one command,
 | `pack` | The grid, the basemap, fonts, sprites, styles and the world map | The data pack |
 | `remote-zip` | A ZIP file on a web server | The members asked for, fetched with HTTP range requests |
 | `roads` | The Geofabrik extract of Denmark | The road network for travel times: per mode (car, bike, walk) a sparse matrix of seconds, turned around, and the nodes where trips can start |
-| `travel` | The road network, the data pack in use and a place | The minutes from every land cell of the pack's map to the place, by car, by bike and on foot |
+| `transit` | Rejseplanen's GTFS feed and a road network | The timetable of a weekday beside the network: its connections, the footpaths between stops and the stops' nearest walk nodes |
+| `travel` | The road network, the data pack in use and a place | The minutes from every land cell of the pack's map to the place, by car, by bike, on foot and, when the network has a timetable, by public transport |
 
 The grid is built in EPSG:25832, aligned to Det Danske Kvadratnet, with 100 m cells unless
 `--cell` says otherwise. It is then sampled onto a Web Mercator display grid, which the browser
@@ -89,6 +90,29 @@ OpenStreetMap's roads, paths and ferries, instead of estimating them from the di
 - **Checked against the real data:** from Aarhus H by car, Randers is 35 minutes, Odense 95 and
   Copenhagen 182. Samsø is 115, by the ferry. Bornholm is more than 254, as its ferry to Køge
   takes five and a half hours.
+
+### By public transport
+
+`transit` adds a weekday's timetable from Rejseplanen's GTFS feed to the road network, and
+`travel` finds the times on it as well.
+
+- **The day:** the busiest Tuesday, Wednesday or Thursday of the feed's first four weeks, so not
+  a school holiday: 2026-10-06 in the feed of 2026-10-05, with 42,935 trips and 1.17 million
+  connections, each from one stop to the next. Services one has to book (route type 715) are left out.
+- **Changes:** footpaths join stops within 300 m, and the feed's own transfers between stops. At
+  a stop one is there a minute before the departure, or the feed's time to change there (4 or 5
+  minutes at the big stations).
+- **The search:** the connection scan algorithm, run backwards from the time to be at the place:
+  the latest time to be at each stop, from the stops within 20 minutes' walk of the place. Then one
+  Dijkstra on the walk network, from a node joined to every stop at the time one leaves it before
+  that time, gives the walk to the best stop from every cell.
+- **The time** is from leaving the cell to the time to be there, waiting included: the median over
+  7:30, 7:45, 8:00, 8:15 and 8:30, so a line that runs seldom counts as slower. Where walking all
+  the way is quicker, it counts.
+- **Checked against the real data:** to Aarhus C, from Aarhus Universitet 16 minutes, Risskov 29,
+  Lystrup 38 (light rail), Randers 67, Horsens 68 and Silkeborg 83 (trains), Ebeltoft 97 (bus).
+  Copenhagen does not make 8:00 in Aarhus: the first trains leave too late. For all of Denmark the
+  step takes 13 s and 0.8 GB, and the times to a place about 7 s more than by car, bike and on foot.
 
 ## Running the steps by hand
 

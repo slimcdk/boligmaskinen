@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -47,7 +47,7 @@ describeWithDatabase('the source jobs', () => {
     const urls: SourceUrls = {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
-      air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`,
+      air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`, transit: `${base}/transit/GTFS.zip`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -81,6 +81,14 @@ describeWithDatabase('the source jobs', () => {
     expect(await run('osm')).toMatchObject({ changed: true });
     expect(calls()).toEqual(['osm', 'osm']);
     expect(server.to('/osm/denmark-latest.osm.pbf').map((r) => r.headers['if-none-match'] ?? null)).toEqual([null, '"osm-1"', '"osm-1"']);
+  });
+
+  it('Public transport: fetches the GTFS feed, and keeps no ZIP file without the timetable in it', async () => {
+    server.file('/transit/GTFS.zip', { content: zip('agency.txt stops.txt trips.txt stop_times.txt'), etag: '"gtfs-1"' });
+    expect(await run('transit')).toMatchObject({ changed: true, result: '49 B' });
+    expect(await run('transit')).toMatchObject({ changed: false, result: expect.stringMatching(/^Unchanged since \d{4}-\d\d-\d\d$/) });
+    server.file('/transit/GTFS.zip', { content: zip('agency.txt stops.txt'), etag: '"gtfs-2"' });
+    await expect(run('transit')).rejects.toThrow(/did not give what it should: a ZIP file without trips.txt, stop_times.txt/);
   });
 
   it('Planning zones: a new time stamp alone is no change, and an error page is not kept', async () => {

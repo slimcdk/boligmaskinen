@@ -155,24 +155,32 @@ async function buildGrid(w: Work, settings: GridSettings): Promise<JobOutcome> {
 
 // --- The road network ----------------------------------------------------------------------------
 
-/** The road network that travel times are found on: built from the OSM extract the archive has. */
+/**
+ * The road network that travel times are found on: built from the OSM extract the archive has,
+ * with the timetable of public transport beside it when Rejseplanen's feed has been fetched.
+ */
 async function buildRoads(w: Work): Promise<JobOutcome> {
   const pbf = await w.archive.newest('osm', 'denmark-latest.osm.pbf');
   if (!pbf || !(await w.archive.present(pbf))) return waiting('Waiting for OpenStreetMap: nothing fetched yet');
+  const newest = await w.archive.newest('transit', 'GTFS.zip');
+  const feed = newest && (await w.archive.present(newest)) ? newest : null;
   const networks = roadVersions(w.dataDir);
-  const wanted: MadeFrom = { revision: w.revision, inputs: { pbf: pbf.sha256 } };
+  const wanted: MadeFrom = { revision: w.revision, inputs: { pbf: pbf.sha256, ...(feed ? { gtfs: feed.sha256 } : {}) } };
   if (sameInputs(await readJson<MadeFrom>(join((await networks.current()) ?? '', 'made-from.json')), wanted)) {
     return waiting('Nothing changed since the last build');
   }
   const id = versionId(w.context);
   const stage = await networks.staging(id);
-  await runStep(w.context, w.step(), 'roads', [pbf.path, stage]);
+  await runStep(w.context, w.step(feed ? [0, 0.85] : [0, 1]), 'roads', [pbf.path, stage]);
+  if (feed) await runStep(w.context, w.step([0.85, 1]), 'transit', [feed.path, stage]);
   await writeFile(join(stage, 'made-from.json'), JSON.stringify(wanted));
   const dir = await networks.publish(stage, id);
   const counts = (await readJson<Record<string, number>>(join(dir, 'counts.json'))) ?? {};
+  const timetable = feed ? await readJson<{ day: string; connections: number }>(join(dir, 'transit.json')) : null;
   return {
     changed: true,
-    result: `${count(counts['nodes'] ?? 0, 'node')}: ${number(counts['carEdges'] ?? 0)} edges by car, ${number(counts['bikeEdges'] ?? 0)} by bike, ${number(counts['walkEdges'] ?? 0)} on foot`,
+    result: `${count(counts['nodes'] ?? 0, 'node')}: ${number(counts['carEdges'] ?? 0)} edges by car, ${number(counts['bikeEdges'] ?? 0)} by bike, ${number(counts['walkEdges'] ?? 0)} on foot`
+      + (timetable ? `; public transport of ${timetable.day}: ${number(timetable.connections)} connections` : ''),
   };
 }
 
@@ -361,8 +369,8 @@ export function buildJobs(options: BuildOptions): JobDefinition[] {
       build: (w) => buildGrid(w, options.grid),
     },
     {
-      id: 'roads', name: 'Road network', kind: 'build', source: 'OpenStreetMap', schedule: '15 6 * * *',
-      description: 'The roads, paths and ferries of the OSM extract, which the travel times to your places are found on.',
+      id: 'roads', name: 'Road network', kind: 'build', source: 'OpenStreetMap, Rejseplanen', schedule: '15 6 * * *',
+      description: 'The roads, paths and ferries of the OSM extract, and a weekday’s timetable of public transport, which the travel times to your places are found on.',
       build: (w) => buildRoads(w),
     },
     {

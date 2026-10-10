@@ -25,7 +25,8 @@
     "removePlace": "Fjern {{ name }}",
     "placesHint": "Tilføj arbejde, familie, venner eller andet, du vil bo tæt på. Hvert sted får en blok med rejsetiden dertil, og dine andre kort kan tilføje den under Tilføj. Træk i en nål for at flytte den.",
     "route": {
-      "routed": "Rejsetider fra vejnettet",
+      "routed": "Rejsetider fra vejnettet; med offentlig transport anslået",
+      "transit": "Rejsetider fra vejnettet og køreplanerne",
       "working": "Finder rejsetiderne på vejene …",
       "estimated": "Rejsetider anslået ud fra afstanden"
     }
@@ -269,7 +270,8 @@
     "extraction_interest": "Afstand til et område, som regionernes råstofplaner holder i reserve til senere gravning (0 inden for et)",
     "income": "Gennemsnitlig disponibel indkomst pr. indbygger i kommunen, 2024",
     "nursery_price": "Årlig takst for en kommunal vuggestueplads (0–2 år), 2026",
-    "class_size": "Elever pr. klasse i kommunens folkeskoler, 2025"
+    "class_size": "Elever pr. klasse i kommunens folkeskoler, 2025",
+    "transit": "Minutter til {{ place }} med offentlig transport"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -291,7 +293,7 @@
     "car": "bil",
     "bike": "cykel",
     "walk": "gang",
-    "train": "tog",
+    "train": "offentlig transport",
     "pupils": "elever"
   },
   "wording": {
@@ -572,7 +574,7 @@
     "homes": "Boliger er tilnærmet med adressepunkter fra OpenStreetMap, som er importeret fra Danmarks Adresseregister. Celler i industriområder er udeladt.",
     "noise": "Støj kommer fra Miljøstyrelsens støjkortlægning 2022, hvor den findes: alle veje i København, Aarhus, Odense og Aalborg, de store veje og jernbaner i resten af landet, Københavns Lufthavn og industrien i de fire byer. En celle får den højeste af dem. Andre steder er støjen anslået ud fra vejtype og afstand.",
     "rules": "Skove og søer tæller fra 5 ha. Skoler er folkeskoler, friskoler og privatskoler. Vindmøller er dem i drift; afstanden til dem gives også i møllens totalhøjde, og danske regler holder 4 totalhøjder fra en nabo. Skat og indbrud er pr. kommune, og luften pr. kvadratkilometer.",
-    "travel": "Rejsetider til dine steder i bil, på cykel og til fods findes på OpenStreetMaps veje, stier og færger, når serveren har bygget sit vejnet; hvert sted viser hvilken. Med tog, og indtil da, anslås de ud fra afstanden i fugleflugt.",
+    "travel": "Rejsetider til dine steder i bil, på cykel og til fods findes på OpenStreetMaps veje, stier og færger, og med offentlig transport på Rejseplanens køreplaner for en hverdag, når serveren har bygget sit vejnet; hvert sted viser hvilken. Med offentlig transport er det tiden for at være der mellem 7.30 og 8.30, ventetid medregnet. Indtil da anslås de ud fra afstanden i fugleflugt.",
     "colours": "Farverne strækkes over de point, der vises lige nu, så kortet altid viser de forskelle, der betyder noget. Uden for Danmark viser kortet Natural Earths verdenskort.",
     "sourcesTitle": "Kilder",
     "sourcesIntro": "Alle de kilder, kortet bruger: hvad de giver, deres licens, og hvordan de ønsker at blive krediteret.",
@@ -589,6 +591,11 @@
       "osm": {
         "uses": "Skove, søer, kysten, strande, solcelleparker, højspændingsledninger, lufthavne og flyvepladser, supermarkeder, stationer, apoteker, biblioteker, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
         "note": "Datalagene lavet ud fra det er også under ODbL."
+      },
+      "transit": {
+        "name": "Rejseplanen",
+        "uses": "Køreplanerne for alle busser, tog, metro, letbaner og færger som GTFS-feed til rejsetiderne til dine steder med offentlig transport.",
+        "note": "Ændret: rejsetider fundet på køreplanen for en hverdag."
       },
       "mst": {
         "uses": "Støj fra veje, jernbaner, lufthavne og industri fra den strategiske støjkortlægning 2022 (Lden).",
@@ -726,6 +733,10 @@
         "name": "OpenStreetMap",
         "description": "Udtrækket for Danmark, og ud fra det skove, vand, strande, butikker, stationer, veje, adresser og kommuner."
       },
+      "transit": {
+        "name": "Offentlig transport",
+        "description": "Køreplanerne for alle busser, tog, metro, letbaner og færger i Danmark som GTFS-feed; nye cirka hver fjortende dag."
+      },
       "plandata": {
         "name": "Planzoner",
         "description": "Polygoner for byzone og sommerhusområde fra WFS'en."
@@ -768,7 +779,7 @@
       },
       "roads": {
         "name": "Vejnet",
-        "description": "Veje, stier og færger fra OSM-udtrækket, som rejsetiderne til dine steder findes på."
+        "description": "Veje, stier og færger fra OSM-udtrækket og en hverdags køreplan for offentlig transport, som rejsetiderne til dine steder findes på."
       },
       "pack": {
         "name": "Pak data",

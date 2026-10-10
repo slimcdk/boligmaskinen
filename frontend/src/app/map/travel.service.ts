@@ -1,21 +1,26 @@
 import { Injectable } from '@angular/core';
 import { loadByteContainer } from '../data/byte-container';
-import { ROUTED_MODES, RoutedTimes } from './travel';
+import { ROUTED_MODES, RoutedMode, RoutedTimes } from './travel';
 
 /** What POST /api/travel answers (backend/src/pipeline/travel.ts). */
 interface TravelState {
   id: string;
   state: 'ready' | 'working' | 'failed' | 'unavailable';
   message?: string;
+  /** The modes it found them by; a server from before public transport names none, and has these. */
+  modes?: RoutedMode[];
 }
+
+const ROAD_MODES: RoutedMode[] = ['car', 'bike', 'walk'];
 
 /** How often to ask while the server finds them, and for how long: a night's build can hold it up. */
 const POLL_MS = 1_500;
 const GIVE_UP_MS = 10 * 60_000;
 
 /**
- * Travel times to a place on the road network, which the server finds (POST /api/travel). Until
- * they come, and where there is no server that finds them, the map estimates them from the distance.
+ * Travel times to a place on the road network and its timetable, which the server finds (POST
+ * /api/travel). Until they come, and where there is no server that finds them, or no timetable for
+ * public transport, the map estimates them from the distance.
  */
 @Injectable({ providedIn: 'root' })
 export class TravelService {
@@ -51,8 +56,9 @@ export class TravelService {
       const state = await this.ask(lng, lat);
       if (!state || state.state === 'unavailable' || state.state === 'failed') return null;
       if (state.state === 'ready') {
-        const layers = await Promise.all(ROUTED_MODES.map((mode) => this.load(new URL(`api/travel/${state.id}/${mode}`, document.baseURI).href)));
-        return Object.fromEntries(ROUTED_MODES.map((mode, i) => [mode, layers[i]])) as RoutedTimes;
+        const modes = (state.modes ?? ROAD_MODES).filter((mode) => ROUTED_MODES.includes(mode));
+        const layers = await Promise.all(modes.map((mode) => this.load(new URL(`api/travel/${state.id}/${mode}`, document.baseURI).href)));
+        return Object.fromEntries(modes.map((mode, i) => [mode, layers[i]])) as RoutedTimes;
       }
       if (Date.now() > end) return null;
       await new Promise((resolve) => setTimeout(resolve, this.pollMs));

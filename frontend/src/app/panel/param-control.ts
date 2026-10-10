@@ -8,7 +8,7 @@ import { Store } from '../state/store';
 import { capitalise, formatWithUnit, FormulaParam } from '@boligmaskinen/engine';
 import { Texts } from '../i18n/texts';
 
-const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions_bike', walk: 'directions_walk', train: 'train' };
+const ICONS: Record<string, string> = { car: 'directions_car', bike: 'directions_bike', walk: 'directions_walk', train: 'directions_transit' };
 
 /** One value a block's code exposes, as a slider, a checkbox or a choice. Changing it rewrites the code. */
 @Component({

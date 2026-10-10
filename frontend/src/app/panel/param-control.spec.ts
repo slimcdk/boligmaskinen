@@ -64,7 +64,7 @@ describe('ParamControl', () => {
     fixture.componentRef.setInput('block', block.id);
     fixture.detectChanges();
     const buttons = [...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('mat-button-toggle button')];
-    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Car', 'Bike', 'Walk', 'Train']);
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Car', 'Bike', 'Walk', 'Public transport']);
     buttons[3].click();
     expect(values(store.blocks().find((b) => b.id === block.id)!.code)['travel']).toBe(4);
   });

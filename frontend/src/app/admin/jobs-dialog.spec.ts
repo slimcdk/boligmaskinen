@@ -37,7 +37,7 @@ describe('JobsDialog without a backend', () => {
   it('lists the tasks with their schedule and last run', async () => {
     const { element } = await render();
     const rows = [...element.querySelectorAll('table.tasks tr.mat-mdc-row')];
-    expect(rows).toHaveLength(20);
+    expect(rows).toHaveLength(21);
     const osm = rows.find((r) => r.textContent!.includes('OpenStreetMap'))!;
     expect(osm.textContent).toContain('Every day at 03:00');
     expect(osm.textContent).toContain('2,615,038 address points');

@@ -61,12 +61,13 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
     map keeps its data. Running "Pack the data" by hand switches anyway. A new region or cell size
     is not compared.
 - **Road network** builds the network that travel times are found on from the OSM extract, with
-  the `roads` step, into `DATA_DIR/work/roads/<id>`, keeping two. It follows the OSM job, and its
-  nightly run builds it only when the extract changed. An install from before it builds it at
-  its next start.
+  the `roads` step, into `DATA_DIR/work/roads/<id>`, keeping two, and adds a weekday's timetable
+  of public transport from Rejseplanen's feed (the "Public transport" job) with the `transit`
+  step. It follows both jobs, and its nightly run builds it only when the extract or the feed
+  changed. An install from before it builds it at its next start.
 - **The order:** a fetch that found something new starts the grid, the grid starts the basemap,
   and the basemap starts the pack. The world map starts the pack directly, and the OSM extract
-  starts the road network too.
+  and the timetables start the road network.
 - **A new install** has no data pack, so at its first start every fetch job runs, and the builds
   follow.
 - **"Back up the database"** (`src/jobs/backup.ts`) runs pg_dump of PostgreSQL 18 every night into

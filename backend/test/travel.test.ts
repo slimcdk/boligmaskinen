@@ -10,20 +10,21 @@ const FAKE_PYTHON = fileURLToPath(new URL('./sources/fake-python.sh', import.met
 const version = { version: '', revision: 'abc1234', source: '', created: '' };
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** A DATA_DIR with a data pack and, unless `roads` is false, a road network. */
-function dataDir(options: { pack?: string; roads?: string | false } = {}): string {
+/** A DATA_DIR with a data pack and, unless `roads` is false, a road network: with a timetable when `transit` is true. */
+function dataDir(options: { pack?: string; roads?: string | false; transit?: boolean } = {}): string {
   const dir = mkdtempSync(join(tmpdir(), 'travel-'));
   const pack = options.pack ?? '20261010T030000Z-run1';
   mkdirSync(join(dir, 'packs', pack, 'data'), { recursive: true });
   writeFileSync(join(dir, 'packs', pack, 'data', 'meta.json'), JSON.stringify({ pack }));
   symlinkSync(`packs/${pack}`, join(dir, 'data-pack'));
-  if (options.roads !== false) network(dir, options.roads ?? '20261010T020000Z-run2');
+  if (options.roads !== false) network(dir, options.roads ?? '20261010T020000Z-run2', options.transit);
   return dir;
 }
 
-function network(dir: string, id: string): void {
+function network(dir: string, id: string, transit = false): void {
   mkdirSync(join(dir, 'work', 'roads', id), { recursive: true });
   writeFileSync(join(dir, 'work', 'roads', id, 'counts.json'), '{}');
+  if (transit) writeFileSync(join(dir, 'work', 'roads', id, 'transit.json'), '{"day": "2026-10-06"}');
   // Switched in as the jobs do it
   const link = join(dir, 'work', 'roads', 'current');
   rmSync(`${link}.new`, { force: true });
@@ -55,14 +56,23 @@ describe('travel times', () => {
     const first = await ask(10.2039, 56.15);
     expect(first).toEqual({ id: expect.stringMatching(/^[0-9a-f]{24}$/), state: 'working' });
     const done = await ready(10.2039, 56.15);
-    expect(done).toEqual({ id: first.id, state: 'ready' });
+    // A network without a timetable has none by public transport
+    expect(done).toEqual({ id: first.id, state: 'ready', modes: ['car', 'bike', 'walk'] });
     const car = await app!.inject(`/api/travel/${first.id}/car`);
     expect(car.statusCode).toBe(200);
     expect(car.body).toBe('car to 10.20390,56.15000 on 20261010T020000Z-run2');
     expect(car.headers['cache-control']).toBe('public, max-age=31536000, immutable');
     // The same place again is ready at once, under the same id; the step ran once
-    expect(await ask(10.20390001, 56.15)).toEqual({ id: first.id, state: 'ready' });
+    expect(await ask(10.20390001, 56.15)).toEqual({ id: first.id, state: 'ready', modes: ['car', 'bike', 'walk'] });
+    expect((await app!.inject(`/api/travel/${first.id}/transit`)).statusCode).toBe(404);
     expect(readdirSync(join(dir, 'travel'))).toEqual(['20261010T030000Z-run1--20261010T020000Z-run2']);
+  });
+
+  it('finds them by public transport too on a network with a timetable', async () => {
+    await start(dataDir({ transit: true }));
+    const done = await ready(10.2039, 56.15);
+    expect(done).toEqual({ id: expect.any(String), state: 'ready', modes: ['car', 'bike', 'walk', 'transit'] });
+    expect((await app!.inject(`/api/travel/${done.id}/transit`)).body).toBe('transit to 10.20390,56.15000 on 20261010T020000Z-run2');
   });
 
   it('finds them again on a new road network, and forgets the old ones', async () => {
