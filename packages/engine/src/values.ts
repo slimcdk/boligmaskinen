@@ -54,6 +54,8 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'burglaries', label: 'Home burglaries per 1,000 residents, 2025', unit: 'per 1,000', group: 'Area and economy', kind: 'municipal', field: 'burglariesPer1000' },
   { name: 'population', label: 'Residents of the municipality', unit: '', group: 'Area and economy', kind: 'municipal', field: 'population' },
   { name: 'income', label: 'Mean disposable income per resident of the municipality, 2024', unit: 'kr.', group: 'Area and economy', kind: 'municipal', field: 'income' },
+  { name: 'nursery_price', label: 'Yearly rate for a municipal nursery place (0–2 years), 2026', unit: 'kr.', group: 'Area and economy', kind: 'municipal', field: 'nurseryPrice' },
+  { name: 'class_size', label: 'Pupils per class in the folkeskoler of the municipality, 2025', unit: 'pupils', group: 'Everyday life', kind: 'municipal', field: 'classSize' },
 ];
 
 export const MODES: { mode: TravelMode; suffix: string }[] = [
@@ -90,7 +92,7 @@ export function formatValueOf(info: Pick<ValueInfo, 'kind' | 'unit' | 'field'>, 
     case 'scaled': return `${formatNumber(value, wording, 1)} ${unit}`;
     case 'municipal':
       if (info.field === 'population') return Math.round(value).toLocaleString(wording.locale);
-      if (info.field === 'income') return `${Math.round(value).toLocaleString(wording.locale)} ${unit}`;
+      if (info.field === 'income' || info.field === 'nurseryPrice') return `${Math.round(value).toLocaleString(wording.locale)} ${unit}`;
       return `${formatNumber(value, wording, info.field === 'incomeTax' ? 2 : 1)} ${unit}`;
     default: return `${Math.round(value)} ${unit}`.trim();
   }

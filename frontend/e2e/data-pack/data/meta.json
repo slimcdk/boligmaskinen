@@ -55,7 +55,9 @@
    "landTax": 6,
    "population": 378270,
    "burglariesPer1000": 3.43,
-   "income": 281588
+   "income": 281588,
+   "nurseryPrice": 47630,
+   "classSize": 21.8
   }
  ],
  "counts": {

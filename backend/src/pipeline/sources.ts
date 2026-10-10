@@ -227,6 +227,9 @@ const STATBANK_TABLES: { name: string; table: string; variables: Record<string, 
   // The mean disposable income of all residents. Its newest year comes with zeros before the
   // numbers, so the two newest come along, and the grid takes the newest with numbers
   { name: 'indkomst.json', table: 'INDKP101', variables: { ENHED: ['116'], KOEN: ['MOK'], INDKOMSTTYPE: ['100'] }, periods: ['(1)', '(2)'] },
+  // The yearly rate of a municipal nursery place (0-2 years), and the pupils per class in the folkeskole
+  { name: 'res88.json', table: 'RES88', variables: { INSTITUTION: ['F03'] }, periods: ['(1)', '(2)'] },
+  { name: 'kvotien.json', table: 'KVOTIEN', variables: { KLASSE: ['0000'], SKTPE: ['ANTAL1012'] }, periods: ['(1)', '(2)'] },
 ];
 
 async function fetchStatistics(w: Work): Promise<JobOutcome> {
@@ -441,7 +444,7 @@ const SOURCES: SourceJob[] = [
     id: 'ens', name: 'Wind turbines', source: 'Energistyrelsen', schedule: '0 4 2 * *', then: ['grid'], fetch: fetchTurbines,
     description: 'The monthly master data register; the job finds the newest upload on the data overview page.',
   },
-  { id: 'dst', name: 'Municipal statistics', source: 'Danmarks Statistik', schedule: '0 5 * * 1', then: ['grid'], fetch: fetchStatistics, description: 'Tax (PSKAT), population (FOLK1A), burglaries (STRAF22) and income (INDKP101), each in its newest period.' },
+  { id: 'dst', name: 'Municipal statistics', source: 'Danmarks Statistik', schedule: '0 5 * * 1', then: ['grid'], fetch: fetchStatistics, description: 'Tax (PSKAT), population (FOLK1A), burglaries (STRAF22), income (INDKP101), nursery rates (RES88) and class sizes (KVOTIEN), each in its newest period.' },
   {
     id: 'noise', name: 'Noise', source: 'Miljøstyrelsen', schedule: '0 4 1 * *', then: ['grid'], fetch: fetchNoise,
     description: 'The strategic noise maps of roads, railways, airports and industry, taken out of the 2 GB archive with range requests. New maps every 5 years.',

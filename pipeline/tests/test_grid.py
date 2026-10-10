@@ -184,7 +184,7 @@ def test_knows_the_zones_and_the_municipality(aarhus: Built):
     # The income is the newest year's with numbers: 2024, as 2025 is listed with zeros
     assert aarhus.meta["municipalities"] == [{
         "index": 1, "code": "751", "name": "Aarhus", "incomeTax": 24.52, "landTax": 6.0, "population": 378_270,
-        "burglariesPer1000": round(1300 / 378_270 * 1000, 2), "income": 281_588,
+        "burglariesPer1000": round(1300 / 378_270 * 1000, 2), "income": 281_588, "nurseryPrice": 47_630, "classSize": 21.8,
     }]
 
 
