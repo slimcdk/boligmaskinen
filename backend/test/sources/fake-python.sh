@@ -40,6 +40,20 @@ case "$step" in
     printf '{"addresses": 2615038, "road": 120000, "forest": 50000}' > "$2/counts.json"
     echo "@progress 1"
     ;;
+  roads)
+    # roads <pbf> <out>
+    mkdir -p "$2"
+    printf 'nodes of %s' "$(head -c 20 "$1")" > "$2/x.npy"
+    printf '{"nodes": 7200839, "edges": 7784925, "carEdges": 8565564, "bikeEdges": 12979152, "walkEdges": 15345026}' > "$2/counts.json"
+    echo "Built the network"
+    ;;
+  travel)
+    # travel <roads> <pack> <lng> <lat> <out> --cache <dir>: a layer that names where it is to, or a failure for (0, 0)
+    if [ "$3" = "0.00000" ]; then echo "There is no road near (0, 0)" >&2; exit 1; fi
+    mkdir -p "$5" "$7"
+    for mode in car bike walk; do printf '%s to %s,%s on %s' "$mode" "$3" "$4" "$(basename "$1")" > "$5/$mode.png"; done
+    echo "car: 1,035,599 of 1,051,319 land cells within 254 minutes"
+    ;;
   remote-zip)
     # remote-zip extract <url> <pattern> <out_dir>
     noise="$(cat "$TMPDIR/../noise.txt" 2>/dev/null || echo noise)"

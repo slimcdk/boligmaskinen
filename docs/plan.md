@@ -130,9 +130,11 @@ what they took (#69).
    country. Done (2026-10-10) as two levels: the 200 m grid of the whole country, and 100 m
    detail tiles that the map loads around the view from zoom 10.
 4. **Real travel times.**
-   - Routing for car, bike and walk, with OSRM or Valhalla on OSM.
-   - Public transport from the Rejseplanen GTFS feed.
-   - When a place is added, a job computes its travel-time layer.
+   - Routing for car, bike and walk on OSM. Decided 2026-10-10: our own network and Dijkstra in
+     the pipeline (SciPy) rather than OSRM or Valhalla, which would be a service of their own. One
+     search from a place gives the times from every cell, in a few seconds.
+   - Public transport from the Rejseplanen GTFS feed (needs the key from Track A).
+   - When a place is added, the app finds its travel times (`POST /api/travel`).
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
    districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks (solar parks, turbine size, the designated areas to come) and
    drinking water quality (hardness per supply area, PFAS, nitrate); see

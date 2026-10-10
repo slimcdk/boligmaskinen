@@ -5,14 +5,17 @@ Steps:
     grid        build every data layer on the grid of the region
     world       build the world map outside Denmark from Natural Earth
     pack        pack the grid, basemap, fonts, sprites, styles and world map into a data pack
+    roads       build the road network that travel times are found on
+    travel      find the travel times to a place by car, by bike and on foot
     remote-zip  list or extract members of a remote ZIP file with HTTP range requests
 """
 
 import sys
 
-from . import grid, osm, pack, remote_zip, world
+from . import grid, osm, pack, remote_zip, roads, travel, world
 
-STEPS = {"osm": osm.cli, "grid": grid.cli, "world": world.cli, "pack": pack.cli, "remote-zip": remote_zip.cli}
+STEPS = {"osm": osm.cli, "grid": grid.cli, "world": world.cli, "pack": pack.cli, "remote-zip": remote_zip.cli,
+         "roads": roads.cli, "travel": travel.cli}
 
 
 def main() -> None:

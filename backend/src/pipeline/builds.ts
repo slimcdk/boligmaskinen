@@ -44,7 +44,7 @@ function names(jobIds: string[]): string {
   return named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named.at(-1)}` : named[0];
 }
 
-const BUILD_NAMES: Record<string, string> = { grid: 'Build the grid', basemap: 'Basemap', world: 'World map', pack: 'Pack the data' };
+const BUILD_NAMES: Record<string, string> = { grid: 'Build the grid', basemap: 'Basemap', world: 'World map', pack: 'Pack the data', roads: 'Road network' };
 
 /** A result that says the job waits, and starts nothing after it. */
 function waiting(text: string): JobOutcome {
@@ -124,6 +124,32 @@ async function buildGrid(w: Work, settings: GridSettings): Promise<JobOutcome> {
     result: `${meta.region.name}: ${meta.width} × ${meta.height} cells of ${meta.cellMetres} m, ${number(meta.counts['homeCells'] ?? 0)} with homes`,
   };
 }
+
+// --- The road network ----------------------------------------------------------------------------
+
+/** The road network that travel times are found on: built from the OSM extract the archive has. */
+async function buildRoads(w: Work): Promise<JobOutcome> {
+  const pbf = await w.archive.newest('osm', 'denmark-latest.osm.pbf');
+  if (!pbf || !(await w.archive.present(pbf))) return waiting('Waiting for OpenStreetMap: nothing fetched yet');
+  const networks = roadVersions(w.dataDir);
+  const wanted: MadeFrom = { revision: w.revision, inputs: { pbf: pbf.sha256 } };
+  if (sameInputs(await readJson<MadeFrom>(join((await networks.current()) ?? '', 'made-from.json')), wanted)) {
+    return waiting('Nothing changed since the last build');
+  }
+  const id = versionId(w.context);
+  const stage = await networks.staging(id);
+  await runStep(w.context, w.step(), 'roads', [pbf.path, stage]);
+  await writeFile(join(stage, 'made-from.json'), JSON.stringify(wanted));
+  const dir = await networks.publish(stage, id);
+  const counts = (await readJson<Record<string, number>>(join(dir, 'counts.json'))) ?? {};
+  return {
+    changed: true,
+    result: `${count(counts['nodes'] ?? 0, 'node')}: ${number(counts['carEdges'] ?? 0)} edges by car, ${number(counts['bikeEdges'] ?? 0)} by bike, ${number(counts['walkEdges'] ?? 0)} on foot`,
+  };
+}
+
+/** The versions of the road network: the newest two, as each is about 400 MB for Denmark. */
+export const roadVersions = (dataDir: string) => new Versions(join(dataDir, 'work', 'roads'), { keep: 2 });
 
 // --- The basemap ---------------------------------------------------------------------------------
 
@@ -305,6 +331,11 @@ export function buildJobs(options: BuildOptions): JobDefinition[] {
       id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', then: ['basemap'],
       description: `Every data layer on ${describeGrid(options.grid)}, sampled to the display grid.`,
       build: (w) => buildGrid(w, options.grid),
+    },
+    {
+      id: 'roads', name: 'Road network', kind: 'build', source: 'OpenStreetMap', schedule: '15 6 * * *',
+      description: 'The roads, paths and ferries of the OSM extract, which the travel times to your places are found on.',
+      build: (w) => buildRoads(w),
     },
     {
       id: 'pack', name: 'Pack the data', kind: 'build', source: 'Boligmaskinen', schedule: '30 6 * * *', then: ['data-pack'],

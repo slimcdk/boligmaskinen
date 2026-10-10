@@ -51,7 +51,7 @@ docker compose up -d                 # http://localhost:8080
   ten minutes. The data jobs (the gear in the panel) show how far they are.
 - **What it needs:**
   - about 1 GB of downloads the first time;
-  - 3 GB of disk in `./data`;
+  - 4 GB of disk in `./data`;
   - about 1 GB of memory while the data is built, for a few minutes a night.
 - **Settings:** `REGION` and `GRID_CELL_METRES` choose the area and the cell size (see
   `backend/README.md`).
