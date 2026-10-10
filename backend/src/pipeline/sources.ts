@@ -19,7 +19,7 @@ export const SOURCE_URLS = {
   naturalEarth: 'https://naciscdn.org/naturalearth/50m',
   /** DCE's air quality through Danmarks Miljøportal's WFS: 90,162 squares of 1 km per layer. */
   air: 'https://arld-extgeo.miljoeportal.dk/geoserver/wfs',
-  /** Miljøstyrelsen's protected areas and Natura 2000 through Danmarks Miljøportal's Arealinformation WFS. */
+  /** Miljøstyrelsen's protected areas, Natura 2000 and the raw material areas, through Danmarks Miljøportal's Arealinformation WFS. */
   protected: 'https://arealeditering-dist-geo.miljoeportal.dk/geoserver/wfs',
   /** Plandata.dk's WFS, for the roads and railways the municipal plans plan. */
   plans: 'https://geoserver.plandata.dk/geoserver/wfs',
@@ -36,7 +36,7 @@ const LICENCES = {
   noise: 'CC BY 4.0, Miljøstyrelsen',
   naturalEarth: 'Public domain, Natural Earth',
   air: 'CC BY 4.0, DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet (Danmarks Miljøportal)',
-  protected: 'CC0 1.0, Miljøstyrelsen (Danmarks Miljøportal)',
+  protected: 'CC0 1.0, Miljøstyrelsen and the regions (Danmarks Miljøportal)',
 };
 
 /** What the data jobs need to fetch and build. */
@@ -353,11 +353,15 @@ const fetchAir = (w: Work) => fetchWfs(w, 'air', w.urls.air, LICENCES.air, AIR_L
   },
 })), 200_000);
 
-/** Miljøstyrelsen's protected areas (fredninger) and the Natura 2000 areas for habitats and birds. */
+/**
+ * Miljøstyrelsen's protected areas (fredninger), the Natura 2000 areas for habitats and birds, and
+ * the regions' raw material areas: for digging now, or kept for later.
+ */
 const PROTECTED_LAYERS: WfsLayer[] = [
   { name: 'fredede_omr.geojson', layer: 'dai:fredede_omr', check: areas('protected areas', 1000) },
   { name: 'habitat_omr.geojson', layer: 'dai:habitat_omr', check: areas('habitat areas', 100) },
   { name: 'fugle_bes_omr.geojson', layer: 'dai:fugle_bes_omr', check: areas('bird protection areas', 50) },
+  { name: 'raastofomr.geojson', layer: 'dai:raastofomr', check: areas('raw material areas', 500) },
 ];
 
 const fetchProtected = (w: Work) => fetchWfs(w, 'protected', w.urls.protected, LICENCES.protected, PROTECTED_LAYERS, 100_000);
@@ -459,7 +463,7 @@ const SOURCES: SourceJob[] = [
   },
   {
     id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,
-    description: 'Fredninger, and the Natura 2000 areas for habitats and birds, from Danmarks Miljøportal’s WFS.',
+    description: 'Fredninger, the Natura 2000 areas for habitats and birds, and the regions’ raw material areas, from Danmarks Miljøportal’s WFS.',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];

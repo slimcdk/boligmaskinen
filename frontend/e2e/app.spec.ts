@@ -168,22 +168,23 @@ test('protected areas and Natura 2000 score the map, and "Free to build" leaves 
   await expect.poll(() => cellsShown(page)).toBeLessThan(before);
 });
 
-test('pharmacies, libraries, power lines, plans and district heating score the map', async ({ page }) => {
+test('pharmacies, libraries, power lines, plans, gravel pits and district heating score the map', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
   for (const name of [/^Pharmacy/, /^Library/, /^Away from power lines/, /^Away from planned roads and railways/, /^Away from new local plans/, /^District heating/,
-    /^Away from consequence zones/, /^High incomes/, /^Low nursery prices/, /^Small classes/]) {
+    /^Away from consequence zones/, /^Away from gravel pits/, /^High incomes/, /^Low nursery prices/, /^Small classes/]) {
     await page.getByRole('option', { name }).click();
   }
   await page.getByRole('button', { name: 'Done' }).click();
   await expect(block(page, 'Away from power lines').locator('.rule')).toHaveText('No points below 100 m · Full points from 500 m');
   await expect(block(page, 'High incomes').locator('.rule')).toHaveText('No points below 260,000 kr. · Full points from 320,000 kr.');
   for (const name of ['Pharmacy', 'Library', 'Away from power lines', 'Away from planned roads and railways', 'Away from new local plans', 'District heating',
-    'Away from consequence zones', 'High incomes', 'Low nursery prices', 'Small classes']) {
+    'Away from consequence zones', 'Away from gravel pits', 'High incomes', 'Low nursery prices', 'Small classes']) {
     // Each reads a layer of the test data pack, so none says it has no data
     await expect(block(page, name).locator('.rule')).not.toHaveClass(/error/);
   }
   await expect(block(page, 'Pharmacy').locator('.rule')).toHaveText('Full points up to 1.0 km · No points from 5.0 km');
+  await expect(block(page, 'Away from gravel pits').locator('.rule')).toHaveText('No points below 200 m · Full points from 1.0 km');
   await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
 });
 

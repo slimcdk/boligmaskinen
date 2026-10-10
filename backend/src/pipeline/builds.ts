@@ -88,6 +88,8 @@ const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
   income: ['dst', 'indkomst.json'],
   nursery_price: ['dst', 'res88.json'],
   class_size: ['dst', 'kvotien.json'],
+  // And the protected areas before the raw material areas came
+  raw_material_areas: ['protected', 'raastofomr.geojson'],
   noise_rail: ['noise', 'eu_2022_jernbane_4m.shp'],
   noise_air: ['noise', 'eu_2022_lufthavn_4m.shp'],
   noise_industry: ['noise', 'eu_2022_virksomhed_by_4m.shp'],

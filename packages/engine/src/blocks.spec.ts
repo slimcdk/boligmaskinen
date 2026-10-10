@@ -82,6 +82,8 @@ describe('helpers', () => {
     expect(blockSummary(nursery)).toBe('Full points up to 40,000 kr. · No points from 55,000 kr.');
     const classes = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'classSize')!));
     expect(blockSummary(classes)).toBe('Full points up to 18 pupils · No points from 23 pupils');
+    const pits = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'extraction_area')!));
+    expect(blockSummary(pits)).toBe('No points below 200 m · Full points from 1.0 km');
     // A ramp from 0 m is about being inside an area, in either direction
     const heating = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'district_heating')!));
     expect(blockSummary(heating)).toBe('Full points inside the area · No points from 200 m');

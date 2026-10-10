@@ -194,6 +194,12 @@ def sources(tmp_path_factory) -> Path:
     # --- The plans' zones around a business in the east and a sewage plant in the north-west ---
     planned([("0", box(578_500, 6_219_500, 579_500, 6_220_500))]).to_file(root / "konsekvensomraade_vedtaget.geojson", driver="GeoJSON")
     planned([("0", box(570_500, 6_222_000, 571_000, 6_222_500))]).to_file(root / "tekniskanlaegkonsekvensomraade_vedtaget.geojson", driver="GeoJSON")
+    # --- The regions' raw material areas: a gravel pit in the south-west, an area kept for later in
+    # the north-east, which does not count, and a pit that has gone out of the plan ---
+    gpd.GeoDataFrame([{"Statuskode": 3, "Omr_tkode": 1, "geometry": box(571_000, 6_216_000, 572_000, 6_217_000)},
+                      {"Statuskode": 3, "Omr_tkode": 2, "geometry": box(578_000, 6_223_000, 579_000, 6_224_000)},
+                      {"Statuskode": 1, "Omr_tkode": 1, "geometry": box(578_000, 6_217_000, 578_500, 6_217_500)}],
+                     geometry="geometry", crs="EPSG:25832").to_file(root / "raastofomr.geojson", driver="GeoJSON")
 
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
@@ -202,6 +208,7 @@ def sources(tmp_path_factory) -> Path:
         "supply_areas": "forsyningomraade_vedtaget.geojson",
         "consequence_zones": "konsekvensomraade_vedtaget.geojson", "consequence_zones_plants": "tekniskanlaegkonsekvensomraade_vedtaget.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
+        "raw_material_areas": "raastofomr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",

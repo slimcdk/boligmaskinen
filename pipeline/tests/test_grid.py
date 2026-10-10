@@ -165,15 +165,24 @@ def test_measures_the_distance_to_zones_around_businesses_and_plants(aarhus: Bui
     assert decode_distance(aarhus.at("consequence_zone", 576_500, 6_220_000)) == pytest.approx(2_000, abs=150)
 
 
+def test_measures_the_distance_to_the_gravel_pits(aarhus: Built):
+    assert aarhus.at("extraction_area", 571_500, 6_216_500) == 0
+    assert decode_distance(aarhus.at("extraction_area", 574_500, 6_216_500)) == pytest.approx(2_500, abs=150)
+    # An area kept for digging later is no pit yet, and one out of the plan no longer is
+    assert decode_distance(aarhus.at("extraction_area", 578_500, 6_223_500)) > 6_000
+    assert decode_distance(aarhus.at("extraction_area", 578_250, 6_217_250)) > 6_000
+
+
 def test_leaves_out_the_protected_areas_and_plans_without_their_sources(sources: Path, tmp_path: Path):
     named = json.loads(sources.read_text(encoding="utf-8"))
     left_out = ("protected_areas", "natura2000_habitats", "natura2000_birds", "planned_traffic", "planned_traffic_proposed",
-                "local_plans_proposed", "local_plans_adopted", "supply_areas", "consequence_zones", "consequence_zones_plants")
+                "local_plans_proposed", "local_plans_adopted", "supply_areas", "consequence_zones", "consequence_zones_plants", "raw_material_areas")
     kept = {key: str((sources.parent / value).resolve()) for key, value in named.items() if key not in left_out}
     (tmp_path / "inputs.json").write_text(json.dumps(kept), encoding="utf-8")
     meta = grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
     assert list(meta["files"]) == [name for name in grid.LAYERS
-                                   if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating", "consequence_zone")]
+                                   if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating", "consequence_zone",
+                                                   "extraction_area")]
 
 
 def test_knows_the_zones_and_the_municipality(aarhus: Built):
