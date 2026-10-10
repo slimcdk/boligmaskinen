@@ -38,7 +38,7 @@ export interface Curve {
   zero: number;
 }
 
-export type CriterionGroup = 'Nature' | 'Peace and quiet' | 'Everyday life' | 'Area and economy';
+export type CriterionGroup = 'Nature' | 'Peace and quiet' | 'Infrastructure and plans' | 'Everyday life' | 'Area and economy';
 
 export interface Criterion extends Curve {
   id: string;
@@ -167,19 +167,19 @@ export const DEFAULT_CRITERIA: Criterion[] = [
     id: 'pm25', group: 'Nature', name: 'Few fine particles', opposite: 'Many fine particles', note: 'Fine particles (PM2.5), yearly mean 2024 on a 1 km grid, from DCE.',
     kind: 'scaled', layer: 'pm25', unit: 'µg/m³', min: 0, max: 10, step: 0.1, role: 'want', weight: 1, full: 6, zero: 7.5,
   },
-  { id: 'turbine', group: 'Peace and quiet', name: 'Away from wind turbines', opposite: 'Close to wind turbines', note: 'Nearest turbine in operation.', kind: 'distance', layer: 'turbine', role: 'want', weight: 1, full: 2000, zero: 500 },
+  { id: 'turbine', group: 'Infrastructure and plans', name: 'Away from wind turbines', opposite: 'Close to wind turbines', note: 'Nearest turbine in operation.', kind: 'distance', layer: 'turbine', role: 'want', weight: 1, full: 2000, zero: 500 },
   {
-    id: 'turbine_heights', group: 'Peace and quiet', name: 'Away from wind turbines, by height', opposite: 'Close to wind turbines, by height',
+    id: 'turbine_heights', group: 'Infrastructure and plans', name: 'Away from wind turbines, by height', opposite: 'Close to wind turbines, by height',
     note: 'Distance to the nearest turbine in its total heights; Danish rules keep 4 from a neighbour.',
     kind: 'scaled', layer: 'turbine_heights', unit: 'heights', min: 0, max: 25, step: 0.5, role: 'want', weight: 1, full: 10, zero: 4,
   },
-  { id: 'solar', group: 'Peace and quiet', name: 'Away from solar parks', opposite: 'Close to solar parks', note: 'Nearest solar park of at least 1 ha, from OpenStreetMap.', kind: 'distance', layer: 'solar', role: 'want', weight: 1, full: 1000, zero: 300 },
-  { id: 'planned_road', group: 'Peace and quiet', name: 'Away from planned roads and railways', opposite: 'Close to planned roads and railways', note: 'Nearest road or railway the municipal plans lay out, adopted or proposed, from Plandata.dk.', kind: 'distance', layer: 'planned_road', role: 'want', weight: 1, full: 1000, zero: 200 },
-  { id: 'new_local_plan', group: 'Peace and quiet', name: 'Away from new local plans', opposite: 'Close to new local plans', note: 'Nearest local plan of the last two years, proposed or adopted: building or change to come, from Plandata.dk.', kind: 'distance', layer: 'new_local_plan', role: 'want', weight: 1, full: 1000, zero: 200 },
-  { id: 'power_line', group: 'Peace and quiet', name: 'Away from power lines', opposite: 'Close to power lines', note: 'Nearest overhead line of 132 to 400 kV, from OpenStreetMap.', kind: 'distance', layer: 'power_line', role: 'want', weight: 1, full: 500, zero: 100 },
-  { id: 'airport', group: 'Peace and quiet', name: 'Away from airports', opposite: 'Close to an airport', note: 'Nearest airport with an IATA code, such as Billund or Kastrup, from OpenStreetMap.', kind: 'distance', layer: 'airport', role: 'want', weight: 1, full: 10000, zero: 3000 },
-  { id: 'airfield', group: 'Peace and quiet', name: 'Away from airfields', opposite: 'Close to an airfield', note: 'Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.', kind: 'distance', layer: 'airfield', role: 'want', weight: 1, full: 3000, zero: 1000 },
-  { id: 'air_station', group: 'Peace and quiet', name: 'Away from air stations', opposite: 'Close to an air station', note: "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup.", kind: 'distance', layer: 'air_station', role: 'want', weight: 1, full: 15000, zero: 5000 },
+  { id: 'solar', group: 'Infrastructure and plans', name: 'Away from solar parks', opposite: 'Close to solar parks', note: 'Nearest solar park of at least 1 ha, from OpenStreetMap.', kind: 'distance', layer: 'solar', role: 'want', weight: 1, full: 1000, zero: 300 },
+  { id: 'planned_road', group: 'Infrastructure and plans', name: 'Away from planned roads and railways', opposite: 'Close to planned roads and railways', note: 'Nearest road or railway the municipal plans lay out, adopted or proposed, from Plandata.dk.', kind: 'distance', layer: 'planned_road', role: 'want', weight: 1, full: 1000, zero: 200 },
+  { id: 'new_local_plan', group: 'Infrastructure and plans', name: 'Away from new local plans', opposite: 'Close to new local plans', note: 'Nearest local plan of the last two years, proposed or adopted: building or change to come, from Plandata.dk.', kind: 'distance', layer: 'new_local_plan', role: 'want', weight: 1, full: 1000, zero: 200 },
+  { id: 'power_line', group: 'Infrastructure and plans', name: 'Away from power lines', opposite: 'Close to power lines', note: 'Nearest overhead line of 132 to 400 kV, from OpenStreetMap.', kind: 'distance', layer: 'power_line', role: 'want', weight: 1, full: 500, zero: 100 },
+  { id: 'airport', group: 'Infrastructure and plans', name: 'Away from airports', opposite: 'Close to an airport', note: 'Nearest airport with an IATA code, such as Billund or Kastrup, from OpenStreetMap.', kind: 'distance', layer: 'airport', role: 'want', weight: 1, full: 10000, zero: 3000 },
+  { id: 'airfield', group: 'Infrastructure and plans', name: 'Away from airfields', opposite: 'Close to an airfield', note: 'Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.', kind: 'distance', layer: 'airfield', role: 'want', weight: 1, full: 3000, zero: 1000 },
+  { id: 'air_station', group: 'Infrastructure and plans', name: 'Away from air stations', opposite: 'Close to an air station', note: "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup.", kind: 'distance', layer: 'air_station', role: 'want', weight: 1, full: 15000, zero: 5000 },
   { id: 'density', group: 'Peace and quiet', name: 'Rural rather than urban', opposite: 'Urban rather than rural', note: 'Number of addresses within 300 m.', kind: 'count', layer: 'density', role: 'want', weight: 1, full: 20, zero: 250 },
   { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
@@ -197,7 +197,7 @@ export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 
 /** The places' pins; white reads on each at 4.5:1 or more. */
 export const PLACE_COLOURS = ['#1f6feb', '#8a3ffc', '#007d79', '#d12771', '#946f00'];
 
-export const CRITERION_GROUPS: CriterionGroup[] = ['Nature', 'Peace and quiet', 'Everyday life', 'Area and economy'];
+export const CRITERION_GROUPS: CriterionGroup[] = ['Nature', 'Peace and quiet', 'Infrastructure and plans', 'Everyday life', 'Area and economy'];
 
 /** Quick picks offered while nothing has been chosen yet. */
 export const SUGGESTED = ['forest', 'noise', 'supermarket', 'school', 'station'];
