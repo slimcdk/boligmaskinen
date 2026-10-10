@@ -10,7 +10,7 @@ let queue: Promise<unknown> = Promise.resolve();
 /** Steps that run or wait to. */
 let pending = 0;
 
-/** One step at a time: building the grid of all of Denmark alone takes several GB of memory. */
+/** One step at a time, so the memory they need does not add up. */
 function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
   const next = queue.then(work, work);
   queue = next.catch(() => undefined);
@@ -92,7 +92,7 @@ export async function runProgram(context: JobContext, options: ProgramOptions, a
   if (context.signal.aborted) throw new Error('Cancelled');
   if (signal === 'SIGKILL') {
     // Nothing here kills it, so the system did: in a container, mostly because its memory ran out
-    throw new Error(`${basename(options.program)} was killed, most likely because the memory ran out. The steps need up to about 4 GB.`);
+    throw new Error(`${basename(options.program)} was killed, most likely because the memory ran out. The steps need about 1 GB (docs/self-hosting.md).`);
   }
   if (code !== 0) {
     for (const line of errors.slice(0, -1)) await context.log(line, 'warn');

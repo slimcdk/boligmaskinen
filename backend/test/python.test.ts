@@ -58,7 +58,7 @@ describe('running a step of the pipeline', () => {
 
   it('says when the system killed the step, as it does when the memory runs out', async () => {
     const { context: c } = context();
-    await expect(runStep(c, options(), 'hungry', [])).rejects.toThrow('fake-python.sh was killed, most likely because the memory ran out. The steps need up to about 4 GB.');
+    await expect(runStep(c, options(), 'hungry', [])).rejects.toThrow('fake-python.sh was killed, most likely because the memory ran out. The steps need about 1 GB (docs/self-hosting.md).');
   });
 
   it('says how to set up Python when it is missing', async () => {
