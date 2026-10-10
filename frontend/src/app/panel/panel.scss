@@ -92,7 +92,7 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    color: #fff;
+    color: var(--app-on-place);
     font: var(--mat-sys-label-medium);
     display: grid;
     place-items: center;
@@ -118,6 +118,10 @@
     color: var(--mat-sys-on-surface);
     font: var(--mat-sys-title-small);
     padding: 2px 0;
+
+    @media (pointer: coarse) {
+      min-height: 48px;
+    }
   }
 
   .name:hover {
@@ -154,10 +158,17 @@
     gap: 8px;
     margin-left: 4px;
     padding: 8px 10px;
-    border-radius: 999px;
-    font: 500 12px/1 ui-monospace, 'Roboto Mono', monospace;
+    border-radius: var(--mat-sys-corner-full);
+    font: var(--mat-sys-label-medium);
     color: var(--mat-sys-on-surface-variant);
     text-decoration: none;
+
+    @media (pointer: coarse) {
+      box-sizing: border-box;
+      min-width: 48px;
+      min-height: 48px;
+      justify-content: center;
+    }
 
     svg {
       width: 16px;

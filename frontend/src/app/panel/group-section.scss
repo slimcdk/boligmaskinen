@@ -35,6 +35,10 @@
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-title-medium);
 
+  @media (pointer: coarse) {
+    min-height: 48px;
+  }
+
   &:hover {
     border-bottom-color: var(--mat-sys-outline);
   }
