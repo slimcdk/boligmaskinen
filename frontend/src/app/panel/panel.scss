@@ -98,8 +98,19 @@
     place-items: center;
   }
 
-  .name {
+  .about {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .route {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .name {
     min-width: 0;
     border: 0;
     border-bottom: 1px dashed transparent;

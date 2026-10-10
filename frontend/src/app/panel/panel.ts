@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BuildInfoService } from '../data/build-info';
 import { PilotData } from '../data/pilot-data';
+import { HeatService, RouteState } from '../map/heat.service';
 import { Store } from '../state/store';
 import { PLACE_COLOURS, SUGGESTED } from '@boligmaskinen/engine';
 import { AboutDialog } from './about-dialog';
@@ -28,6 +29,13 @@ import { SyncStatus } from './sync-status';
 export class Panel {
   protected readonly store = inject(Store);
   private readonly data = inject(PilotData);
+  /** How each place's travel times are found. */
+  protected readonly routes = inject(HeatService).routes;
+  protected readonly routeText: Record<RouteState, string> = {
+    routed: 'Travel times from the road network',
+    working: 'Finding the travel times on the roads…',
+    estimated: 'Travel times estimated from the distance',
+  };
   private readonly dialog = inject(MatDialog);
   protected readonly version = inject(BuildInfoService).label;
   /** GitHub's mark (Octicons, MIT). */

@@ -95,4 +95,17 @@ describe('the heat engine', () => {
     expect(engine.explain(6, { blocks, places: [] })).toBeNull();
     expect(engine.explain(-1, { blocks, places: [] })).toBeNull();
   });
+
+  it('takes the travel times to a place from the road network once they come', () => {
+    const engine = new HeatEngine(grid());
+    const place = { id: 'p1', name: 'Work', lng: 10.002, lat: 56.001 };
+    const blocks = [block('work_car <= 10', { id: 'near', role: 'must' }), block('ramp(forest, 300, 3000)', { id: 'forest' })];
+    const ask = () => engine.render({ ...request(blocks), places: [place] }, new Uint32Array(8)).previews.find(([id]) => id === 'near')![1];
+    // Estimated from the distance, every cell is a few minutes away by car
+    expect(ask()).toBe('100 % of the cells pass');
+    engine.setTravel('10.00200,56.00100', { car: Uint8Array.of(5, 8, 12, 40, 5, 5, 255, 255) });
+    expect(ask()).toBe('50 % of the cells pass');
+    expect(engine.explain(2, { blocks, places: [place] })!.rows.find((r) => r.name === 'Test')).toBeTruthy();
+  });
 });
+
