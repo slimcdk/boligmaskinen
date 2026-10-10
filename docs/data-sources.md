@@ -65,7 +65,7 @@ Checked on the providers' own pages on 2026-10-09.
 | Protomaps | Tiles: ODbL produced work. Style: CC0. Code: BSD-3-Clause | "Protomaps © OpenStreetMap" (Protomaps' own credit is a request, not a duty) |
 | ESA WorldCover 2020, land cover in Protomaps' tiles up to zoom 7 | CC BY 4.0 | "© ESA WorldCover project 2020 / Contains modified Copernicus Sentinel data (2020) processed by ESA WorldCover consortium" |
 | Noto fonts and Mapzen icons (basemaps-assets) | SIL OFL 1.1 and MIT | Copyright notices; the licence texts go with the copies we serve: the basemap job fetches them, and the data pack carries them in `licences/` |
-| Roboto and Material Symbols, the app's own fonts | SIL OFL 1.1 and Apache 2.0 | Served by the app itself (npm `@fontsource/roboto`, `@material-symbols/font-400`), not from Google Fonts, with their licence texts in `/licences/`. "About the data" credits them |
+| Roboto and Material Symbols, the app's own fonts | SIL OFL 1.1 and Apache 2.0 | Served by the app itself (npm `@fontsource/roboto`, and `material-symbols` for the variable icon font, whose strokes follow the size), not from Google Fonts, with their licence texts in `/licences/`. "About the data" credits them |
 | The frontend's libraries (Angular, MapLibre and the rest) | MIT, BSD and others | Angular's build lists them in `3rdpartylicenses.txt`, which the image serves as `/licences/third-party.txt`, linked from "About the data" |
 | Natural Earth | Public domain | None needed; "Made with Natural Earth" |
 
