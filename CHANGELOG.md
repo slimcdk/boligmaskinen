@@ -20,11 +20,12 @@ Everything so far: there is no release yet. The test instance follows `master`.
   the distance.
 - Maps and places are saved on the server, so every browser has them, and a map can be shared as
   a link.
-- 27 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,
-  noise (of roads, railways, airports and industry), roads and railways to come, new local plans, wind turbines
-  (by distance, and by their height), solar parks, overhead power lines, airports, airfields and air stations, address density, supermarkets,
-  schools, daycare, stations, pharmacies, libraries, planning zones, municipal tax, land tax,
-  burglaries and population, and air quality (NO₂ and PM2.5).
+- 28 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,
+  noise (of roads, railways, airports and industry), roads and railways to come, new local plans,
+  wind turbines (by distance, and by their height), solar parks, overhead power lines, airports,
+  airfields and air stations, address density, supermarkets, schools, daycare, stations,
+  pharmacies, libraries, planning zones, district heating, municipal tax, land tax, burglaries and
+  population, and air quality (NO₂ and PM2.5).
 - Material 3 in light and dark mode, on desktops, tablets and phones. axe finds no WCAG 2.2 AA
   violations in the main views.
 - In Danish or English: the app follows the browser's language, and the footer switches it.

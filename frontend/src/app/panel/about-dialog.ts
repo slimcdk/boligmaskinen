@@ -64,9 +64,9 @@ export const SOURCES: DataSource[] = [
   },
   {
     id: 'plandata', name: 'Plandata.dk', url: 'https://www.plandata.dk',
-    uses: 'Planning zones: byzone, landzone and sommerhusområde, from the zone map; the roads and railways the municipal plans lay out; and the local plans of the last two years.',
+    uses: 'Planning zones: byzone, landzone and sommerhusområde, from the zone map; the roads and railways the municipal plans lay out; the local plans of the last two years; and the district heating areas of the heat plans.',
     licence: CC_BY,
-    credit: 'Zonekort, planlagte trafikanlæg og lokalplaner: Plan- og Landdistriktsstyrelsen, Plandata.dk',
+    credit: 'Zonekort, planlagte trafikanlæg, lokalplaner og forsyningsområder: Plan- og Landdistriktsstyrelsen, Plandata.dk',
     note: "Changed: put on the map's 100 m cells.",
   },
   {

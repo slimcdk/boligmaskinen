@@ -174,6 +174,11 @@
       "name": "Væk fra nye lokalplaner",
       "opposite": "Tæt på nye lokalplaner",
       "note": "Nærmeste lokalplan fra de seneste to år, foreslået eller vedtaget: byggeri eller ændringer på vej, fra Plandata.dk."
+    },
+    "district_heating": {
+      "name": "Fjernvarme",
+      "opposite": "Uden for fjernvarme",
+      "note": "Inden for et område, som varmeplanerne giver fjernvarme, fra Plandata.dk."
     }
   },
   "examples": {
@@ -227,7 +232,8 @@
     "library": "Afstand til et folkebibliotek",
     "power_line": "Afstand til en luftledning på 132 kV eller mere",
     "planned_road": "Afstand til en vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået",
-    "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)"
+    "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
+    "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -555,7 +561,7 @@
         "note": "Ændret: lagt på kortets celler på 100 m. En model, ikke en måling på adressen."
       },
       "plandata": {
-        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet; de veje og baner, som kommuneplanerne lægger ud; og lokalplanerne fra de seneste to år.",
+        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet; de veje og baner, som kommuneplanerne lægger ud; lokalplanerne fra de seneste to år; og varmeplanernes fjernvarmeområder.",
         "note": "Ændret: lagt på kortets celler på 100 m."
       },
       "schools": {
@@ -755,7 +761,7 @@
       },
       "plans": {
         "name": "Planer",
-        "description": "De veje og baner, som kommuneplanerne lægger ud, og lokalplanerne fra de seneste to år, vedtaget eller foreslået, fra WFS'en."
+        "description": "De veje og baner, som kommuneplanerne lægger ud, lokalplanerne fra de seneste to år, vedtaget eller foreslået, og varmeplanernes forsyningsområder, fra WFS'en."
       }
     }
   }

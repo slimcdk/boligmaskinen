@@ -47,6 +47,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'pharmacy', label: 'Distance to a pharmacy', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'pharmacy' },
   { name: 'library', label: 'Distance to a public library', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'library' },
   { name: 'zone', label: 'Planning zone: BYZONE, LANDZONE or SOMMERHUS', unit: '', group: 'Area and economy', kind: 'category', layer: 'zone' },
+  { name: 'district_heating', label: 'Distance to an area the heat plans give district heating (0 inside one)', unit: 'm', group: 'Area and economy', kind: 'distance', layer: 'district_heating' },
   { name: 'income_tax', label: 'Municipal income tax, 2026', unit: '%', group: 'Area and economy', kind: 'municipal', field: 'incomeTax' },
   { name: 'land_tax', label: 'Land tax, 2026', unit: '‰', group: 'Area and economy', kind: 'municipal', field: 'landTax' },
   { name: 'burglaries', label: 'Home burglaries per 1,000 residents, 2025', unit: 'per 1,000', group: 'Area and economy', kind: 'municipal', field: 'burglariesPer1000' },

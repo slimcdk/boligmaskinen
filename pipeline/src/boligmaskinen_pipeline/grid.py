@@ -25,6 +25,7 @@ Usage:
                   the traffic the municipal plans plan, adopted and proposed, from Plandata.dk (optional)
     local_plans_proposed, local_plans_adopted
                   the local plans of the last two years, proposed and adopted, from Plandata.dk (optional)
+    supply_areas  the heat plans' supply areas, from Plandata.dk (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -77,7 +78,7 @@ CODES = re.compile(r"^\d{3}(,\d{3})*$")
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
 # Sources a build can do without: their layers have no data then
 OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
-                   "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted"]
+                   "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -92,7 +93,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
-          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "density", "zone",
+          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
 # The areas of Miljøstyrelsen's layers each distance is to, by input; a layer whose sources are not all
@@ -106,6 +107,9 @@ AREA_FREDNING = 1
 # Of the traffic the municipal plans plan, the kinds that are roads (1) and railways (2); not the
 # paths, corridors, stations, parking, ports and airports
 PLANNED_ROADS = {"1", "2"}
+# The heat plans' kind of supply area that is district heating ("Fjernvarme"); the others are
+# individual natural gas, other, and areas to be decided
+DISTRICT_HEATING = "1"
 
 # The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)
 AERODROME_LAYERS = {"airport": {"airport"}, "air_station": {"air_station"}, "airfield": {"airport", "air_station", "airfield"}}
@@ -541,6 +545,20 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         del plans
     else:
         warn("No source for new_local_plan: the layer is left out")
+
+    # --- District heating: the heat plans' supply areas for it (Plandata.dk) -------------------
+    if inputs.get("supply_areas"):
+        frame = gpd.read_file(inputs["supply_areas"], columns=["type1203"])
+        frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
+        frame = frame[frame["type1203"].astype(str) == DISTRICT_HEATING]
+        heating = grid.burn(frame.geometry).astype(bool)
+        inner = frame.geometry.representative_point()
+        heating |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
+        layers["district_heating"] = encode_distance(grid.distance_to(heating))
+        step(f"District heating: {len(frame):,} supply areas cover {heating.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.448)
+        del frame, inner, heating
+    else:
+        warn("No source for district_heating: the layer is left out")
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])

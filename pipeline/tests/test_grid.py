@@ -153,14 +153,21 @@ def test_measures_the_distance_to_the_local_plans_of_the_last_two_years(aarhus: 
     assert decode_distance(aarhus.at("new_local_plan", 578_200, 6_219_400)) == pytest.approx(3_000, abs=150)
 
 
+def test_knows_where_the_heat_plans_give_district_heating(aarhus: Built):
+    assert aarhus.at("district_heating", 574_500, 6_219_500) == 0
+    # Natural gas is no district heating
+    assert decode_distance(aarhus.at("district_heating", 574_500, 6_215_500)) == pytest.approx(2_500, abs=150)
+
+
 def test_leaves_out_the_protected_areas_and_plans_without_their_sources(sources: Path, tmp_path: Path):
     named = json.loads(sources.read_text(encoding="utf-8"))
     left_out = ("protected_areas", "natura2000_habitats", "natura2000_birds", "planned_traffic", "planned_traffic_proposed",
-                "local_plans_proposed", "local_plans_adopted")
+                "local_plans_proposed", "local_plans_adopted", "supply_areas")
     kept = {key: str((sources.parent / value).resolve()) for key, value in named.items() if key not in left_out}
     (tmp_path / "inputs.json").write_text(json.dumps(kept), encoding="utf-8")
     meta = grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
-    assert list(meta["files"]) == [name for name in grid.LAYERS if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan")]
+    assert list(meta["files"]) == [name for name in grid.LAYERS
+                                   if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating")]
 
 
 def test_knows_the_zones_and_the_municipality(aarhus: Built):

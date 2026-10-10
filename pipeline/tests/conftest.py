@@ -179,11 +179,16 @@ def sources(tmp_path_factory) -> Path:
     # --- Plandata's local plans of the last two years: one proposed, one adopted ---
     planned([("", box(578_000, 6_216_000, 578_400, 6_216_400))]).to_file(root / "lokalplan_forslag.geojson", driver="GeoJSON")
     planned([("", box(572_000, 6_223_000, 572_300, 6_223_300))]).to_file(root / "lokalplan_vedtaget.geojson", driver="GeoJSON")
+    # --- The heat plans' supply areas: district heating in central Aarhus, natural gas south of it ---
+    supply = gpd.GeoDataFrame([{"type1203": 1, "geometry": box(573_000, 6_218_000, 576_000, 6_221_000)},
+                               {"type1203": 2, "geometry": box(573_000, 6_215_000, 576_000, 6_218_000)}], geometry="geometry", crs="EPSG:25832")
+    supply.to_file(root / "forsyningomraade_vedtaget.geojson", driver="GeoJSON")
 
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
         "planned_traffic": "planlagttrafikanlaeg_vedtaget.geojson", "planned_traffic_proposed": "planlagttrafikanlaeg_forslag.geojson",
         "local_plans_proposed": "lokalplan_forslag.geojson", "local_plans_adopted": "lokalplan_vedtaget.geojson",
+        "supply_areas": "forsyningomraade_vedtaget.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
