@@ -12,7 +12,7 @@ Usage:
 <inputs.json> names the file of every source (relative paths are read from the JSON file's folder):
 
     osm_layers    layers.gpkg from the osm step        osm_addresses  addresses.npy from the osm step
-                  (forests, lakes, beaches, solar parks, airfields, …)
+                  (forests, lakes, beaches, solar parks, airfields, pharmacies, libraries, …)
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
     noise_rail, noise_air, noise_industry  Miljøstyrelsen's maps of railways, airports and industry (optional)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
@@ -86,7 +86,7 @@ ROAD_NOISE_AT_10M = {"motorway": 76.0, "trunk": 72.0, "primary": 69.0, "secondar
 NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
-LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
+LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
           "turbine_heights", "solar", "airport", "airfield", "air_station", "protected_area", "natura2000", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
@@ -411,8 +411,17 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     layers["daycare"] = encode_distance(grid.distance_to(grid.burn_points(dx, dy) > 0))
     found = {"supermarkets": len(supermarkets), "stations": len(stations), "schools": len(schools), "daycare": len(daycare)}
     del supermarkets, stations, institutions, schools, daycare
+
+    # Pharmacies and public libraries (OpenStreetMap), from the point or the middle of the building
+    for name, counted in (("pharmacy", "pharmacies"), ("library", "libraries")):
+        places = read_layer(gpkg, name)
+        middle = places.geometry.centroid
+        layers[name] = encode_distance(grid.distance_to(grid.burn_points(middle.x.to_numpy(), middle.y.to_numpy()) > 0))
+        found[counted] = len(places)
+        del places, middle
     step(f"Services: {found['supermarkets']:,} supermarkets, {found['stations']:,} stations, "
-         f"{found['schools']:,} schools, {found['daycare']:,} daycare units", 0.35)
+         f"{found['schools']:,} schools, {found['daycare']:,} daycare units, {found['pharmacies']:,} pharmacies, "
+         f"{found['libraries']:,} libraries", 0.35)
 
     # --- Wind turbines (Energistyrelsen) -------------------------------------------------------
     sheet = openpyxl.load_workbook(inputs["turbines"], read_only=True, data_only=True).worksheets[0]
@@ -682,7 +691,8 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
             "addresses": found["addresses"], "homeCells": int((display_mask & 2).astype(bool).sum()),
             "regionLandCells": int((display_mask & 1).astype(bool).sum()),
             "supermarkets": found["supermarkets"], "stations": found["stations"],
-            "schools": found["schools"], "daycare": found["daycare"], "turbines": found["turbines"],
+            "schools": found["schools"], "daycare": found["daycare"], "pharmacies": found["pharmacies"],
+            "libraries": found["libraries"], "turbines": found["turbines"],
             "mstShareOfRegion": round(mapped, 4),
         },
     }

@@ -96,6 +96,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `natura2000` | Distance to a Natura 2000 area for habitats or birds; 0 inside one (Miljøstyrelsen; added 2026-10-10, which keeps the language version) |
 | `density` | Addresses within 300 m |
 | `supermarket`, `school`, `daycare`, `station` | Distance to the nearest one |
+| `pharmacy`, `library` | Distance to the nearest pharmacy or public library (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `zone` | Planning zone: `BYZONE`, `LANDZONE` or `SOMMERHUS` |
 | `income_tax` | Municipal income tax, % |
 | `land_tax` | Land tax, ‰ |

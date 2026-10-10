@@ -41,7 +41,7 @@ FEATURE_TAGS = [
     ("landuse", "industrial"),
     ("natural", "water"), ("waterway", "riverbank"),
     ("natural", "coastline"), ("natural", "beach"),
-    ("shop", "supermarket"),
+    ("shop", "supermarket"), ("amenity", "pharmacy"), ("amenity", "library"),
     ("railway", "station"), ("railway", "halt"),
     ("boundary", "administrative"),
     *[("highway", key) for key in ROAD_CLASSES],
@@ -53,7 +53,7 @@ FEATURE_TAGS = [
 THEMES: dict[str, list[str]] = {
     "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [], "solar": [],
     "supermarket": ["name"], "station": ["name"], "municipality": ["name", "ref"], "country": [], "road": ["road_class"],
-    "aerodrome": ["name", "kind"],
+    "aerodrome": ["name", "kind"], "pharmacy": ["name"], "library": ["name"],
 }
 
 
@@ -72,6 +72,8 @@ def classify(tags) -> str | None:
         return "beach"
     if tags.get("shop") == "supermarket":
         return "supermarket"
+    if tags.get("amenity") in ("pharmacy", "library") and tags.get("access") not in ("private", "no"):
+        return tags["amenity"]
     if tags.get("railway") in ("station", "halt"):
         if tags.get("disused") == "yes" or tags.get("usage") == "tourism" or tags.get("railway:preserved") == "yes":
             return None
@@ -121,11 +123,12 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
             continue
         kind = obj.type_str()
         try:
-            if kind == "n" and theme in ("supermarket", "station", "beach", "aerodrome"):
+            if kind == "n" and theme in ("supermarket", "station", "beach", "aerodrome", "pharmacy", "library"):
                 geom = wkb.create_point(obj)
             elif kind == "w" and theme in ("coastline", "road"):
                 geom = wkb.create_linestring(obj)
-            elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar", "aerodrome"):
+            elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar", "aerodrome",
+                                           "pharmacy", "library"):
                 geom = wkb.create_multipolygon(obj)
             else:
                 continue
@@ -135,7 +138,7 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
         row["geometry"].append(bytes.fromhex(geom))
         if theme == "road":
             row["road_class"].append(ROAD_CLASSES[obj.tags["highway"]])
-        if theme in ("municipality", "station", "supermarket", "aerodrome"):
+        if theme in ("municipality", "station", "supermarket", "aerodrome", "pharmacy", "library"):
             row["name"].append(obj.tags.get("name", ""))
         if theme == "aerodrome":
             row["kind"].append(aerodrome_kind(obj.tags))

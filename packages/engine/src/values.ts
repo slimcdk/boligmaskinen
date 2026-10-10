@@ -41,6 +41,8 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'school', label: 'Distance to a folkeskole, friskole or private school', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'school' },
   { name: 'daycare', label: 'Distance to a daycare unit', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'daycare' },
   { name: 'station', label: 'Distance to a train or light rail station', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'station' },
+  { name: 'pharmacy', label: 'Distance to a pharmacy', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'pharmacy' },
+  { name: 'library', label: 'Distance to a public library', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'library' },
   { name: 'zone', label: 'Planning zone: BYZONE, LANDZONE or SOMMERHUS', unit: '', group: 'Area and economy', kind: 'category', layer: 'zone' },
   { name: 'income_tax', label: 'Municipal income tax, 2026', unit: '%', group: 'Area and economy', kind: 'municipal', field: 'incomeTax' },
   { name: 'land_tax', label: 'Land tax, 2026', unit: '‰', group: 'Area and economy', kind: 'municipal', field: 'landTax' },

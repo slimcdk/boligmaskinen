@@ -34,6 +34,9 @@ def extract(tmp_path_factory):
         Node(id=35, location=(10.17, 56.17)), Node(id=36, location=(10.19, 56.17)), Node(id=37, location=(10.19, 56.18)), Node(id=38, location=(10.17, 56.18)),
         Node(id=39, location=(10.08, 56.19), tags={"aeroway": "aerodrome", "aerodrome": "gliding", "name": "Svæveflyveplads"}),
         Node(id=40, location=(10.09, 56.19), tags={"aeroway": "aerodrome", "disused": "yes", "name": "Gammel flyveplads"}),
+        Node(id=41, location=(10.13, 56.13), tags={"amenity": "pharmacy", "name": "Apoteket"}),
+        Node(id=42, location=(10.14, 56.13), tags={"amenity": "library", "name": "Hovedbiblioteket"}),
+        Node(id=43, location=(10.15, 56.13), tags={"amenity": "library", "access": "private", "name": "Skolens bibliotek"}),
     ]
     ways = [
         Way(id=100, nodes=[1, 2, 3, 4, 1]),
@@ -70,7 +73,7 @@ def test_extracts_a_layer_per_theme(extract):
     assert [name for name, _ in pyogrio.list_layers(out / "layers.gpkg")] == list(osm.THEMES)
     assert {theme: counts[theme] for theme in osm.THEMES} == {
         "forest": 1, "industrial": 0, "water": 0, "coastline": 0, "beach": 0, "solar": 1,
-        "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1, "aerodrome": 3,
+        "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1, "aerodrome": 3, "pharmacy": 1, "library": 1,
     }
     municipality = pyogrio.read_dataframe(out / "layers.gpkg", layer="municipality")
     assert (municipality["name"][0], municipality["ref"][0]) == ("Aarhus Kommune", "751")
