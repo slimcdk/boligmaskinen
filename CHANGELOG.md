@@ -31,6 +31,7 @@ Everything so far: there is no release yet. The test instance follows `master`.
 - An unchanged source is not fetched or built again. A new pack is built beside the one in use and
   switched in at once, and a pack whose counts changed too much is not switched in.
 - The cell size and the region are settings.
+- A national build fits in 1 GB of memory.
 - "About the data" credits every source with its licence, and the licence texts are served with
   the fonts and icons.
 
@@ -44,8 +45,7 @@ Everything so far: there is no release yet. The test instance follows `master`.
 
 ### Upgrade notes
 
-- **The data jobs need memory:** about 4 GB while the data of all of Denmark is built, and about
-  2.5 GB for a smaller region (#69).
+- **The data jobs need memory:** about 1 GB while the data is built, a few minutes a night (#69).
 - **`./data` has to belong to the user the app runs as**: `BOLIGMASKINEN_UID` and
   `BOLIGMASKINEN_GID`, 1000 by default.
 - **An instance with a data pack from before the jobs** keeps it, and moves it aside the first

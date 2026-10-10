@@ -28,6 +28,7 @@ import gzip
 import json
 import re
 import time
+from collections.abc import Iterator
 from datetime import date
 from pathlib import Path
 
@@ -35,15 +36,25 @@ import geopandas as gpd
 import numpy as np
 import openpyxl
 import pyogrio
+import shapely
 from pyproj import Transformer
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
 from scipy import ndimage
 
+from .memory import release
 from .progress import log, progress, warn
 
 BUFFER = 10_000  # metres of context around the region, so distances near borders are right
 DIST_MAX = 20_000  # metres; distances are stored with a square-root encoding up to this value
+
+# What keeps a national build small in memory (#69):
+# rasterio copies every vertex into Python objects before it burns them, so geometries are burned
+# this many vertices at a time
+BURN_VERTICES = 500_000
+# Distances are worked out in blocks of this many cells a side, each with a margin of the farthest
+# distance that matters, so they take the same memory for a town and for the whole country
+DISTANCE_BLOCK = 1024
 
 REGIONS = {
     "denmark": {"name": "Danmark", "codes": None},  # every municipality
@@ -88,11 +99,19 @@ class Grid:
         return max(1, round(metres / self.cell))
 
     def burn(self, geometries, value=1, all_touched=False, dtype="uint8", fill=0) -> np.ndarray:
-        shapes = [(geom, value) for geom in geometries if geom is not None and not geom.is_empty]
-        if not shapes:
-            return np.full(self.shape, fill, dtype=dtype)
-        return rasterize(shapes, out_shape=self.shape, transform=self.transform,
-                         all_touched=all_touched, fill=fill, dtype=dtype)
+        out = np.full(self.shape, fill, dtype=dtype)
+        batch, vertices = [], 0
+        for geom in geometries:
+            if geom is None or geom.is_empty:
+                continue
+            batch.append((geom, value))
+            vertices += shapely.get_num_coordinates(geom)
+            if vertices >= BURN_VERTICES:
+                rasterize(batch, out=out, transform=self.transform, all_touched=all_touched)
+                batch, vertices = [], 0
+        if batch:
+            rasterize(batch, out=out, transform=self.transform, all_touched=all_touched)
+        return out
 
     def burn_points(self, xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
         counts = np.zeros(self.shape, dtype=np.int32)
@@ -102,11 +121,32 @@ class Grid:
         np.add.at(counts, (rows[inside], cols[inside]), 1)
         return counts
 
-    def distance_to(self, mask: np.ndarray) -> np.ndarray:
-        """Distance in metres from every cell to the nearest cell where mask is true."""
-        if not mask.any():
-            return np.full(self.shape, np.inf, dtype=np.float32)
-        return (ndimage.distance_transform_edt(~mask.astype(bool)) * self.cell).astype(np.float32)
+    def distance_to(self, mask: np.ndarray, limit: float = DIST_MAX) -> np.ndarray:
+        """Distance in metres from every cell to the nearest cell where mask is true.
+
+        It is exact up to `limit`; farther away it is more than `limit`, or infinite. Each block of
+        cells looks only as far as `limit` around it, which is where its nearest cell is when it
+        is that near. The distances are worked out from the nearest cells as SciPy does, in whole
+        cells, but for the block alone: the same values in a third of the memory.
+        """
+        out = np.full(self.shape, np.inf, dtype=np.float32)
+        mask = mask.astype(bool, copy=False)
+        margin = int(np.ceil(limit / self.cell)) + 1
+        height, width = self.shape
+        for r0 in range(0, height, DISTANCE_BLOCK):
+            for c0 in range(0, width, DISTANCE_BLOCK):
+                r1, c1 = min(r0 + DISTANCE_BLOCK, height), min(c0 + DISTANCE_BLOCK, width)
+                wr0, wc0 = max(0, r0 - margin), max(0, c0 - margin)
+                window = mask[wr0:min(height, r1 + margin), wc0:min(width, c1 + margin)]
+                if not window.any():
+                    continue
+                nearest = ndimage.distance_transform_edt(~window, return_distances=False, return_indices=True)
+                rows, cols = nearest[:, r0 - wr0:r1 - wr0, c0 - wc0:c1 - wc0].astype(np.int64)
+                del nearest
+                rows -= np.arange(r0 - wr0, r1 - wr0)[:, None]
+                cols -= np.arange(c0 - wc0, c1 - wc0)[None, :]
+                out[r0:r1, c0:c1] = np.sqrt(rows * rows + cols * cols) * self.cell
+        return out
 
 
 def to_utm(frame: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
@@ -186,6 +226,24 @@ def read_layer(gpkg: Path, layer: str) -> gpd.GeoDataFrame:
     return to_utm(pyogrio.read_dataframe(gpkg, layer=layer))
 
 
+def read_chunks(path: Path, chunk: int, **options) -> Iterator[gpd.GeoDataFrame]:
+    """A file's features a chunk at a time, so a big layer never has to be in memory at once."""
+    start = 0
+    while not (frame := pyogrio.read_dataframe(path, skip_features=start, max_features=chunk, **options)).empty:
+        yield frame
+        start += chunk
+
+
+def large_areas(gpkg: Path, layer: str, minimum: float) -> Iterator:
+    """The areas of an OSM layer of at least `minimum` m², in EPSG:25832, a chunk at a time."""
+    if layer not in {name for name, _ in pyogrio.list_layers(gpkg)}:
+        warn(f"The OSM extract has no {layer} layer")
+        return
+    for frame in read_chunks(gpkg, 20_000, layer=layer, columns=[]):
+        frame = to_utm(frame)
+        yield from frame.geometry[frame.area >= minimum]
+
+
 def region_spec(region: str) -> dict:
     """A named region, or the municipalities whose codes are listed."""
     if region in REGIONS:
@@ -204,6 +262,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     started = time.time()
 
     def step(message: str, fraction: float) -> None:
+        release()
         log(f"[{time.time() - started:6.1f} s] {message}")
         progress(fraction)
 
@@ -229,31 +288,39 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     step(f"{region_name}: {len(region)} municipalities; grid {grid.width} × {grid.height} cells of {cell} m "
          f"({grid.width * grid.height / 1e6:.1f} M)", 0.05)
 
+    # The municipal outlines for the map, and the area the detailed basemap has to cover, while
+    # little else is in memory
+    outlines = region[["index", "name", "geometry"]].copy()
+    outlines["geometry"] = outlines.geometry.simplify(display * 0.4)
+    outlines.to_crs("EPSG:4326").to_file(out / "municipalities.json", driver="GeoJSON", COORDINATE_PRECISION=5)
+    # Simplified before it is buffered: a buffer around every bend of the coast took gigabytes
+    coverage = gpd.GeoSeries([region.geometry.simplify(100).union_all().buffer(3_000).simplify(500)], crs="EPSG:25832")
+    coverage.to_crs("EPSG:4326").to_file(out / "basemap-region.geojson", driver="GeoJSON", COORDINATE_PRECISION=4)
+    del outlines, coverage
+
     municipality_index = np.zeros(grid.shape, dtype=np.uint8)
     for row in region.itertuples():
         municipality_index = np.maximum(municipality_index, grid.burn([row.geometry], value=row.index))
     land = grid.burn(municipalities.geometry).astype(bool)
+    del municipalities
     # The national boundary includes the territorial sea; what is inside it and not land is sea.
     # (The coastline alone cannot tell: the extract has almost no German or Swedish coast.)
     territory = grid.burn(read_layer(gpkg, "country").geometry).astype(bool)
     sea = territory & ~land
+    del territory
 
     # --- Nature ------------------------------------------------------------------------------
     layers: dict[str, np.ndarray] = {}
-    forest = read_layer(gpkg, "forest")
-    forest = forest[forest.area >= 50_000]  # woods of at least 5 ha
-    layers["forest"] = encode_distance(grid.distance_to(grid.burn(forest.geometry)))
-    del forest
-
-    water = read_layer(gpkg, "water")
-    water = water[water.area >= 50_000]  # lakes of at least 5 ha
-    lakes = grid.burn(water.geometry).astype(bool)
+    layers["forest"] = encode_distance(grid.distance_to(grid.burn(large_areas(gpkg, "forest", 50_000))))  # woods of at least 5 ha
+    lakes = grid.burn(large_areas(gpkg, "water", 50_000)).astype(bool)  # lakes of at least 5 ha
     layers["water"] = encode_distance(grid.distance_to(lakes | sea))
-    del water
+    del sea
 
     beach = read_layer(gpkg, "beach")
     layers["beach"] = encode_distance(grid.distance_to(grid.burn(beach.geometry, all_touched=True).astype(bool)))
+    del beach
     region_land = (municipality_index > 0) & ~lakes
+    del lakes
     step(f"Nature distances done; land cells in the region: {region_land.sum():,} "
          f"({region_land.sum() * cell * cell / 1e6:,.0f} km²)", 0.2)
 
@@ -279,8 +346,10 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
                    if r["aktivitetsstatus"] == "Aktiv" and r["geoBredde"] and r["geoLaengde"]]
     dx, dy = points_utm([float(r["geoLaengde"]) for r in daycare], [float(r["geoBredde"]) for r in daycare])
     layers["daycare"] = encode_distance(grid.distance_to(grid.burn_points(dx, dy) > 0))
-    step(f"Services: {len(supermarkets):,} supermarkets, {len(stations):,} stations, "
-         f"{len(schools):,} schools, {len(daycare):,} daycare units", 0.35)
+    found = {"supermarkets": len(supermarkets), "stations": len(stations), "schools": len(schools), "daycare": len(daycare)}
+    del supermarkets, stations, institutions, schools, daycare
+    step(f"Services: {found['supermarkets']:,} supermarkets, {found['stations']:,} stations, "
+         f"{found['schools']:,} schools, {found['daycare']:,} daycare units", 0.35)
 
     # --- Wind turbines (Energistyrelsen) -------------------------------------------------------
     sheet = openpyxl.load_workbook(inputs["turbines"], read_only=True, data_only=True).worksheets[0]
@@ -292,7 +361,9 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         turbine_x.append(float(str(x).replace(",", ".")))
         turbine_y.append(float(str(y).replace(",", ".")))
     layers["turbine"] = encode_distance(grid.distance_to(grid.burn_points(np.array(turbine_x), np.array(turbine_y)) > 0))
-    step(f"Wind turbines in operation: {len(turbine_x):,}", 0.4)
+    found["turbines"] = len(turbine_x)
+    del sheet, turbine_x, turbine_y
+    step(f"Wind turbines in operation: {found['turbines']:,}", 0.4)
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])
@@ -302,45 +373,61 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     zone = np.where(byzone & land, 1, zone)
     zone = np.where(grid.burn(zones[zones["zone"] == 3].geometry).astype(bool) & land, 3, zone)
     layers["zone"] = zone
+    del land, zone
     step(f"Planning zones: {len(zones):,} polygons", 0.45)
+    del zones
 
     # --- Road noise: Miljøstyrelsen where mapped, otherwise an estimate from road classes ----
-    mst = pyogrio.read_dataframe(inputs["noise"], bbox=(grid.x0, grid.y0, grid.x1, grid.y1), columns=["category", "source"])
+    # A cell has the loudest band of the polygons over it
     mst_level = np.zeros(grid.shape, dtype=np.uint8)
-    for category, level in sorted(MST_BANDS.items(), key=lambda item: item[1]):
-        cells = grid.burn(mst[mst["category"] == category].geometry).astype(bool)
-        mst_level = np.where(cells, level, mst_level)
+    agglomeration_roads = np.zeros(grid.shape, dtype=bool)
+    mst_polygons = 0
+    for mst in read_chunks(inputs["noise"], 2_000, bbox=(grid.x0, grid.y0, grid.x1, grid.y1), columns=["category", "source"]):
+        mst_polygons += len(mst)
+        for category, level in MST_BANDS.items():
+            np.maximum(mst_level, grid.burn(mst[mst["category"] == category].geometry, value=level), out=mst_level)
+        agglomeration_roads |= grid.burn(mst[mst["source"] == "roadsInAgglomeration"].geometry).astype(bool)
     # In the agglomerations (Copenhagen, Aarhus, Odense and Aalborg) every road is mapped, so their
     # byzone is quieter than 55 dB wherever the map has no band. Elsewhere only major roads are.
-    agglomeration_roads = grid.burn(mst[mst["source"] == "roadsInAgglomeration"].geometry).astype(bool)
     agglomeration = ndimage.binary_dilation(agglomeration_roads, iterations=grid.cells(1_000)) & byzone
+    del agglomeration_roads, byzone
 
     roads = read_layer(gpkg, "road")
     estimate = np.full(grid.shape, NOISE_FLOOR, dtype=np.float32)
     for road_class, level in ROAD_NOISE_AT_10M.items():
         cells = grid.burn(roads[roads["road_class"] == road_class].geometry, all_touched=True)
-        distance = np.maximum(grid.distance_to(cells.astype(bool)), 10.0)
-        estimate = np.maximum(estimate, level - 10.0 * np.log10(distance / 10.0))
+        # level - 10 log10(distance / 10), in place; farther than where it falls to the floor it does not count
+        noise = grid.distance_to(cells.astype(bool), limit=10.0 * 10 ** ((level - NOISE_FLOOR) / 10))
+        np.maximum(noise, 10.0, out=noise)
+        np.divide(noise, 10.0, out=noise)
+        np.log10(noise, out=noise)
+        noise *= -10.0
+        noise += level
+        np.maximum(estimate, noise, out=estimate)
+        del cells, noise
+    del roads
     estimate = np.where(agglomeration, np.minimum(estimate, 54.0), estimate)
     layers["noise"] = np.where(mst_level > 0, mst_level + 100, np.clip(np.round(estimate), 0, 99)).astype(np.uint8)
-    del estimate, agglomeration_roads
+    del estimate
     mapped = float((mst_level > 0)[region_land].mean()) if region_land.any() else 0.0
-    step(f"Noise: {len(mst):,} MST polygons; {mapped:.1%} of the region's land mapped by MST; "
+    step(f"Noise: {mst_polygons:,} MST polygons; {mapped:.1%} of the region's land mapped by MST; "
          f"agglomerations cover {agglomeration[region_land].mean() if region_land.any() else 0:.1%}", 0.65)
+    del mst_level, agglomeration
 
     # --- Homes: OSM address points (imported from the national address register) -------------
     lons_lats = np.load(inputs["osm_addresses"]).reshape(-1, 2)
-    ax, ay = points_utm(lons_lats[:, 0], lons_lats[:, 1])
-    address_count = grid.burn_points(ax, ay)
+    address_count = grid.burn_points(*points_utm(lons_lats[:, 0], lons_lats[:, 1]))
+    found["addresses"] = len(lons_lats)
+    del lons_lats
     industrial_cells = grid.burn(read_layer(gpkg, "industrial").geometry).astype(bool)
     radius = grid.cells(300)  # the addresses within 300 m
     yy, xx = np.mgrid[-radius:radius + 1, -radius:radius + 1]
-    disk = ((xx ** 2 + yy ** 2) <= radius ** 2).astype(np.float32)
-    density = ndimage.convolve(address_count.astype(np.float32), disk, mode="constant")
-    layers["density"] = np.clip(np.round(density), 0, 255).astype(np.uint8)
+    disk = ((xx ** 2 + yy ** 2) <= radius ** 2).astype(np.int32)
+    density = ndimage.convolve(address_count, disk, mode="constant")
+    layers["density"] = np.clip(density, 0, 255).astype(np.uint8)
     homes = (address_count > 0) & ~industrial_cells & region_land
-    del density, address_count
-    step(f"Addresses: {len(ax):,}; cells with homes in the region: {homes.sum():,}", 0.75)
+    del density, address_count, industrial_cells
+    step(f"Addresses: {found['addresses']:,}; cells with homes in the region: {homes.sum():,}", 0.75)
 
     # --- Municipal statistics (Danmarks Statistik) ---------------------------------------------
     tax = jsonstat_matrix(inputs["tax"], "SKATPCT")
@@ -376,12 +463,20 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     mx1, my0 = mx0 + width * pixel, my1 - height * pixel
     px = mx0 + (np.arange(width) + 0.5) * pixel
     py = my1 - (np.arange(height) + 0.5) * pixel
-    gx, gy = np.meshgrid(px, py)
-    ux, uy = from_merc.transform(gx.ravel(), gy.ravel())
-    cols = ((ux - grid.x0) // cell).astype(np.int64).reshape(height, width)
-    rows_ = ((grid.y1 - uy) // cell).astype(np.int64).reshape(height, width)
-    inside = (cols >= 0) & (cols < grid.width) & (rows_ >= 0) & (rows_ < grid.height)
-    cols, rows_ = np.clip(cols, 0, grid.width - 1), np.clip(rows_, 0, grid.height - 1)
+    # The grid cell under each display cell, a strip of rows at a time
+    cols = np.empty((height, width), dtype=np.int32)
+    rows_ = np.empty((height, width), dtype=np.int32)
+    inside = np.empty((height, width), dtype=bool)
+    for r0 in range(0, height, 256):
+        r1 = min(height, r0 + 256)
+        gx, gy = np.meshgrid(px, py[r0:r1])
+        ux, uy = from_merc.transform(gx.ravel(), gy.ravel())
+        strip_cols = ((ux - grid.x0) // cell).reshape(r1 - r0, width)
+        strip_rows = ((grid.y1 - uy) // cell).reshape(r1 - r0, width)
+        inside[r0:r1] = (strip_cols >= 0) & (strip_cols < grid.width) & (strip_rows >= 0) & (strip_rows < grid.height)
+        cols[r0:r1] = np.clip(strip_cols, 0, grid.width - 1)
+        rows_[r0:r1] = np.clip(strip_rows, 0, grid.height - 1)
+    del gx, gy, ux, uy, strip_cols, strip_rows
 
     def sample(raster: np.ndarray) -> np.ndarray:
         values = raster[rows_, cols]
@@ -440,15 +535,6 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         step(f"Detail tiles at {cell} m: {len(available)} of {columns} × {rows_count} have land "
              f"({sum((out / 'tiles' / f'{key}.u8.gz').stat().st_size for key in available) / 1e6:.1f} MB)", 0.99)
 
-    # --- Municipal outlines for the map ------------------------------------------------------
-    outlines = region[["index", "name", "geometry"]].copy()
-    outlines["geometry"] = outlines.geometry.simplify(display * 0.4)
-    outlines.to_crs("EPSG:4326").to_file(out / "municipalities.json", driver="GeoJSON", COORDINATE_PRECISION=5)
-
-    # --- The area the detailed basemap has to cover --------------------------------------------
-    coverage = gpd.GeoSeries([region.geometry.union_all().buffer(3_000).simplify(500)], crs="EPSG:25832")
-    coverage.to_crs("EPSG:4326").to_file(out / "basemap-region.geojson", driver="GeoJSON", COORDINATE_PRECISION=4)
-
     west, north = to_lonlat.transform(mx0, my1)
     east, south = to_lonlat.transform(mx1, my0)
     meta = {
@@ -463,10 +549,10 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         **({"tiles": tiles} if tiles else {}),
         "municipalities": municipality_stats,
         "counts": {
-            "addresses": int(len(ax)), "homeCells": int((display_mask & 2).astype(bool).sum()),
+            "addresses": found["addresses"], "homeCells": int((display_mask & 2).astype(bool).sum()),
             "regionLandCells": int((display_mask & 1).astype(bool).sum()),
-            "supermarkets": int(len(supermarkets)), "stations": int(len(stations)),
-            "schools": int(len(schools)), "daycare": int(len(daycare)), "turbines": int(len(turbine_x)),
+            "supermarkets": found["supermarkets"], "stations": found["stations"],
+            "schools": found["schools"], "daycare": found["daycare"], "turbines": found["turbines"],
             "mstShareOfRegion": round(mapped, 4),
         },
     }

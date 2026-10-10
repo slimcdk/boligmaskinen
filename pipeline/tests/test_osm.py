@@ -64,7 +64,8 @@ def test_extracts_a_layer_per_theme(extract):
     municipality = pyogrio.read_dataframe(out / "layers.gpkg", layer="municipality")
     assert (municipality["name"][0], municipality["ref"][0]) == ("Aarhus Kommune", "751")
     assert pyogrio.read_dataframe(out / "layers.gpkg", layer="road")["road_class"].tolist() == ["motorway"]
-    assert not (out / "features.osm.pbf").exists()
+    # The node locations were in a temporary file, which is gone
+    assert sorted(path.name for path in out.iterdir()) == ["addresses.npy", "counts.json", "layers.gpkg"]
     assert json.loads((out / "counts.json").read_text()) == counts
 
 

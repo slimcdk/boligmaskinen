@@ -24,11 +24,37 @@ size. They are aligned with the display grid, and each holds every layer, one af
 Only the tiles with land are written: 121 for Denmark, 15 MB. The map loads the ones around the
 view from zoom 10, so zooming into a town shows 100 m cells (`meta.json` → `tiles`).
 
-All of Denmark takes a little over a minute and 3.8 GB of memory. `--region aarhus` builds only
-Aarhus Kommune in 15 seconds; it is the frontend's test data pack (see below).
+All of Denmark takes about a minute and under 0.8 GB of memory (see [Memory](#memory)).
+`--region aarhus` builds only Aarhus Kommune in 20 seconds; it is the frontend's test data pack
+(see below).
 `docs/data-sources.md` in the repository root describes every source and how it is fetched.
 
-## Running the steps by hand
+## Memory
+
+A national build fits in a container with 1 GB of memory. Measured on 2026-10-10 in the app
+image under a memory limit, with the real data:
+
+| Step | Peak memory |
+|---|---|
+| `osm` | About 0.4 GB. The location of every node goes into a temporary file of about 0.9 GB in `$TMPDIR` (the jobs use `DATA_DIR/tmp`); with less memory for its cache it is slower, but it ran in 600 MB |
+| `grid`, all of Denmark at 100 m | Under 0.8 GB; about 0.5 GB for a region |
+| `world` | 0.2 GB |
+| `pack` | 0.35 GB |
+| The basemap, cut out with `pmtiles extract` | 0.06 GB |
+
+What keeps them small (#69):
+
+- **`osm`** reads the extract once. pyosmium keeps the node locations in a file rather than in
+  memory, and assembles the areas from the relations with the tags the map uses.
+- **`grid`**:
+  - burns geometries half a million vertices at a time, because rasterio copies every vertex into
+    Python objects first;
+  - reads the big layers (forests, lakes, the noise map) a chunk at a time;
+  - works out distances in blocks of 1024 cells, each with a margin of the farthest distance
+    that matters, which gives the distances SciPy gives for the whole grid;
+  - frees each source once its layer is built.
+- **Between their parts** the steps give freed memory back to the system (`memory.py`).
+
 
 ```sh
 uv sync
