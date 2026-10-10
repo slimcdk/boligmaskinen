@@ -4,10 +4,13 @@ A self-hosted, map-first home search for Denmark. A full-screen map shows how we
 fits what you care about. You say what that is with blocks: small formulas over open data, whose
 numbers become sliders.
 
-**Status:** prototype. It covers all of Denmark with 13 layers of open data and keeps several maps
-of blocks. Its data jobs fetch the sources and build the data themselves, every night. Still to
-come: the map at full detail ([milestone 3](docs/plan.md#milestone-3-the-map-at-full-detail-and-speed))
-and data about homes ([milestone 4](docs/plan.md#milestone-4-homes)).
+**Status:** prototype. It covers all of Denmark with 29 layers of open data on a 100 m grid, in
+Danish and English, and keeps several maps of blocks. Its data jobs fetch the sources and build
+the data themselves, every night, and find the travel times to your places on OpenStreetMap's
+roads. Still to come: data about homes and homes for sale
+([milestones 4 and 5](docs/plan.md#milestone-4-homes)), which wait for access to their sources,
+public transport, and a first release. [The plan](docs/plan.md#where-we-are-2026-10-10) says
+where it stands.
 
 | Folder | What it is |
 |---|---|
