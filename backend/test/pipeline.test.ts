@@ -173,8 +173,13 @@ describeWithDatabase('an install from before the jobs', () => {
       for (let i = 0; i < 120 && !lstatSync(join(dataDir, 'data-pack')).isSymbolicLink(); i++) await wait(500);
       expect(readlinkSync(join(dataDir, 'data-pack'))).toMatch(/^packs\/\d{8}T\d{6}Z-run\d+$/);
       expect((await app.inject('/data-packs/00000000T000000Z-before-the-jobs/data/meta.json')).json()).toEqual({ built: '2026-10-07' });
-      const pack = (await app.inject('/api/jobs')).json().runs.find((r: JobRun) => r.jobId === 'pack' && r.result?.startsWith('Switched'));
-      expect(pack.log.map((l: { text: string }) => l.text)).toContain('Moving the data pack from before the jobs aside');
+      // The pack's run gets its result as it finishes, a moment after it switched the pack in
+      let pack: JobRun | undefined;
+      for (let i = 0; i < 40 && !pack; i++) {
+        pack = ((await app.inject('/api/jobs')).json().runs as JobRun[]).find((r) => r.jobId === 'pack' && r.result?.startsWith('Switched'));
+        if (!pack) await wait(250);
+      }
+      expect(pack?.log.map((l) => l.text)).toContain('Moving the data pack from before the jobs aside');
     } finally {
       await app.close();
       await server.close();
