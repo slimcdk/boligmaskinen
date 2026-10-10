@@ -36,10 +36,13 @@ Without the dev container, Node 24 is needed (`frontend/.nvmrc`), and uv for the
 ## Running it
 
 One image runs the whole app: the backend serves the frontend, the data pack and the API on
-port 8080, and runs the data jobs. PostGIS runs next to it. `compose.yaml` starts both:
+port 8080, and runs the data jobs. PostGIS runs next to it. `compose.yaml` starts both;
+[`docs/self-hosting.md`](docs/self-hosting.md) is the full guide (install, settings, updates,
+backups, troubleshooting), and [`CHANGELOG.md`](CHANGELOG.md) has the release notes:
 
 ```sh
 echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" > .env
+mkdir data                           # as the user the app runs as, uid 1000 by default
 docker compose up -d                 # http://localhost:8080
 ```
 
