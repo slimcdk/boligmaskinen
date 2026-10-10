@@ -90,6 +90,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `turbine_heights` | The same distance in the turbine's total height, the nearest in those terms: 4 is what Danish rules keep from a neighbour; 25.4 or more where none is that near (added 2026-10-10, which keeps the language version) |
 | `solar` | Distance to a solar park of at least 1 ha: a plant, or panels on the ground (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `planned_road` | Distance to a road or railway the municipal plans lay out, adopted or proposed (Plandata.dk; added 2026-10-10, which keeps the language version) |
+| `new_local_plan` | Distance to a local plan of the last two years, proposed or adopted; 0 inside one, so `new_local_plan < 500` is "a new local plan within 500 m" (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `power_line` | Distance to an overhead power line of 132 kV or more; the lines under ground do not count (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `airport` | Distance to an airport: an aerodrome with an IATA code, such as Billund or Kastrup (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `airfield` | Distance to an airfield of any kind: the airports and air stations, and the public, private, gliding and microlight fields (OpenStreetMap; added 2026-10-10, which keeps the language version) |

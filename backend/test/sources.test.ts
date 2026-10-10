@@ -200,13 +200,24 @@ describeWithDatabase('the source jobs', () => {
     await expect(run('protected')).rejects.toThrow(/did not give what it should: only 1 protected areas/);
   });
 
-  it('Planned roads and railways: fetches the adopted and the proposed plans, of which there may be none', async () => {
+  it('Plans: fetches the planned traffic, and the local plans of the last two years, of which there may be no proposals', async () => {
+    const asked: string[] = [];
     server.on('GET /wfs-plans', (request, response) => {
-      const proposed = new URL(request.url, 'http://x').searchParams.get('typeNames')!.endsWith('_forslag');
+      const query = new URL(request.url, 'http://x').searchParams;
+      asked.push(`${query.get('typeNames')} ${query.get('CQL_FILTER') ?? ''}`.trim());
+      const proposed = query.get('typeNames')!.endsWith('_forslag');
       response.writeHead(200, { 'content-type': 'application/json' });
-      response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: proposed ? 0 : 1799 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
+      response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: proposed ? 0 : 1072 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
     });
-    expect(await run('plans')).toMatchObject({ changed: true, result: '1,799 adopted, 0 proposed' });
+    expect(await run('plans')).toMatchObject({ changed: true, result: '1,072 adopted, 0 proposed, 0 proposed local plans, 1,072 adopted local plans' });
+    const since = (date: Date) => date.toISOString().slice(0, 10).replaceAll('-', '');
+    expect(asked).toEqual([
+      'pdk:theme_pdk_planlagttrafikanlaeg_vedtaget', 'pdk:theme_pdk_planlagttrafikanlaeg_forslag',
+      expect.stringMatching(/^pdk:theme_pdk_lokalplan_forslag datoforsl>=\d{8}$/), expect.stringMatching(/^pdk:theme_pdk_lokalplan_vedtaget datovedt>=\d{8}$/),
+    ]);
+    // Two years back, give or take the time zone
+    expect(Number(asked[3].slice(-8))).toBeGreaterThanOrEqual(Number(since(new Date(Date.now() - 731 * 86_400_000))));
+    expect(Number(asked[3].slice(-8))).toBeLessThanOrEqual(Number(since(new Date(Date.now() - 729 * 86_400_000))));
     expect(await run('plans')).toMatchObject({ changed: false });
     server.on('GET /wfs-plans', (_request, response) => {
       response.writeHead(200).end('<ows:ExceptionReport>Could not do it</ows:ExceptionReport>');
