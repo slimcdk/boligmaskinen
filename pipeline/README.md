@@ -55,6 +55,7 @@ What keeps them small (#69):
   - frees each source once its layer is built.
 - **Between their parts** the steps give freed memory back to the system (`memory.py`).
 
+## Running the steps by hand
 
 ```sh
 uv sync
