@@ -38,6 +38,14 @@ describe('decodeValue', () => {
     // A turbine's distance in its heights, in tenths
     expect(decodeValue({ kind: 'scaled', layerName: 'turbine_heights' }, 41, ctx)).toBe(4);
   });
+
+  it("reads a municipality's statistics, and one it has none of as missing", () => {
+    const municipalities = [undefined, { index: 1, code: '751', name: 'Aarhus', incomeTax: 24.52, landTax: 6, population: 378_270, burglariesPer1000: 3.43, income: 281_588 },
+      { index: 2, code: '730', name: 'Randers', incomeTax: 25.4, landTax: 7.2, population: 100_000, burglariesPer1000: 3 }];
+    expect(decodeValue({ kind: 'municipal', field: 'income' }, 1, { ...ctx, municipalities })).toBe(281_588);
+    expect(decodeValue({ kind: 'municipal', field: 'income' }, 2, { ...ctx, municipalities })).toBeNull();
+    expect(decodeValue({ kind: 'municipal', field: 'income' }, 0, { ...ctx, municipalities })).toBeNull();
+  });
 });
 
 describe('buildLut', () => {

@@ -53,6 +53,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'land_tax', label: 'Land tax, 2026', unit: '‰', group: 'Area and economy', kind: 'municipal', field: 'landTax' },
   { name: 'burglaries', label: 'Home burglaries per 1,000 residents, 2025', unit: 'per 1,000', group: 'Area and economy', kind: 'municipal', field: 'burglariesPer1000' },
   { name: 'population', label: 'Residents of the municipality', unit: '', group: 'Area and economy', kind: 'municipal', field: 'population' },
+  { name: 'income', label: 'Mean disposable income per resident of the municipality, 2024', unit: 'kr.', group: 'Area and economy', kind: 'municipal', field: 'income' },
 ];
 
 export const MODES: { mode: TravelMode; suffix: string }[] = [
@@ -89,6 +90,7 @@ export function formatValueOf(info: Pick<ValueInfo, 'kind' | 'unit' | 'field'>, 
     case 'scaled': return `${formatNumber(value, wording, 1)} ${unit}`;
     case 'municipal':
       if (info.field === 'population') return Math.round(value).toLocaleString(wording.locale);
+      if (info.field === 'income') return `${Math.round(value).toLocaleString(wording.locale)} ${unit}`;
       return `${formatNumber(value, wording, info.field === 'incomeTax' ? 2 : 1)} ${unit}`;
     default: return `${Math.round(value)} ${unit}`.trim();
   }
@@ -97,6 +99,7 @@ export function formatValueOf(info: Pick<ValueInfo, 'kind' | 'unit' | 'field'>, 
 /** A control value with its unit: distances in m or km, the rest as written. */
 export function formatWithUnit(value: number, unit: string, wording: Wording = ENGLISH): string {
   if (unit === 'm') return formatDistance(value, wording);
-  const text = formatNumber(Math.round(value * 1000) / 1000, wording, 0, 3);
+  // Amounts such as 320,000 kr. are grouped; the rest, which are small, are not
+  const text = Math.abs(value) >= 10_000 ? Math.round(value).toLocaleString(wording.locale) : formatNumber(Math.round(value * 1000) / 1000, wording, 0, 3);
   return unit ? `${text} ${word(wording, unit)}` : text;
 }

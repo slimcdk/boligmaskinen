@@ -84,6 +84,8 @@ const GRID_SOURCES: Record<string, [job: string, name: string]> = {
 };
 /** Files the grid reads when they are there: an install fetched the noise archive before it took these out too. */
 const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
+  // An install fetched the statistics before the income came; it comes with their next run
+  income: ['dst', 'indkomst.json'],
   noise_rail: ['noise', 'eu_2022_jernbane_4m.shp'],
   noise_air: ['noise', 'eu_2022_lufthavn_4m.shp'],
   noise_industry: ['noise', 'eu_2022_virksomhed_by_4m.shp'],

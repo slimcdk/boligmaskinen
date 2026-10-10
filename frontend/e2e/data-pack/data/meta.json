@@ -54,7 +54,8 @@
    "incomeTax": 24.52,
    "landTax": 6,
    "population": 378270,
-   "burglariesPer1000": 3.43
+   "burglariesPer1000": 3.43,
+   "income": 281588
   }
  ],
  "counts": {

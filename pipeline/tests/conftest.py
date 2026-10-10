@@ -148,6 +148,9 @@ def sources(tmp_path_factory) -> Path:
                                                          [5000, 1300, 300])), encoding="utf-8")
     (root / "folk.json").write_text(json.dumps(jsonstat({"OMRÅDE": areas, "KØN": ["TOT"], "ALDER": ["IALT"], "CIVILSTAND": ["TOT"], "Tid": ["2026K3"]},
                                                         [6_000_000, 378_270, 100_000])), encoding="utf-8")
+    # The mean disposable income, whose newest year is listed with zeros before its numbers come
+    (root / "indkomst.json").write_text(json.dumps(jsonstat({"OMRÅDE": areas, "ENHED": ["116"], "Tid": ["2024", "2025"]},
+                                                            [287_682, 0, 281_588, 0, 285_000, 0])), encoding="utf-8")
 
     # --- DCE's air quality: 1 km squares over the two municipalities, NO₂ rising to the east ---
     squares = []
@@ -196,7 +199,7 @@ def sources(tmp_path_factory) -> Path:
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
-        "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json",
+        "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",
     }
     (root / "inputs.json").write_text(json.dumps(inputs), encoding="utf-8")
     return root / "inputs.json"

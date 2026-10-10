@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type Block, type BlockInputs, blockSummary, evaluateBlocks, newId } from './blocks.ts';
+import { ENGLISH } from './wording.ts';
 import { turnAround } from './formula.ts';
 import { decodeValue, scoreCells, type ScoringItem } from './engine.ts';
 import { blockFrom, criterionTemplate, LIBRARY, placeTemplate } from './library.ts';
@@ -73,6 +74,10 @@ describe('helpers', () => {
     const zone = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'zone')!));
     expect(blockSummary(zone)).toBe('Only Byzone, Landzone');
     expect(blockSummary(block('// Close to the sea\nramp(water, 0, 1000)'))).toBe('Close to the sea');
+    // Amounts are grouped, as the locale writes them
+    const income = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'income')!));
+    expect(blockSummary(income)).toBe('No points below 260,000 kr. · Full points from 320,000 kr.');
+    expect(blockSummary(income, undefined, { ...ENGLISH, locale: 'da-DK' })).toBe('No points below 260.000 kr. · Full points from 320.000 kr.');
     // A ramp from 0 m is about being inside an area, in either direction
     const heating = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'district_heating')!));
     expect(blockSummary(heating)).toBe('Full points inside the area · No points from 200 m');
