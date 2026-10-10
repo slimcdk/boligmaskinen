@@ -44,7 +44,9 @@ the homes.**
 - All of Denmark: 29 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
   10, with a world map around it. Nature, protected areas and Natura 2000, noise from roads,
   railways, airports and industry, air quality, wind turbines (also by their height), solar parks,
-  airports and airfields, everyday services, planning zones and municipal statistics.
+  power lines, airports and airfields, what the plans lay out (roads and railways, new local
+  plans, zones around businesses), district heating, everyday services (also pharmacies and
+  libraries), planning zones and municipal statistics (also the income).
 - The weighting is blocks in our own language ([`block-language.md`](block-language.md)), with
   versions and migrations. Predefined blocks are code too, and a block can be turned around. The
   blocks run as compiled JavaScript in a Web Worker, and compile to SQL for the database.
