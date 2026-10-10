@@ -275,7 +275,7 @@ Cell values to start with, each from the adopted (`_vedtaget`) or proposed (`_fo
 | `proposed_plan_500m` | A proposed local plan within 500 m: `new_local_plan < 500` since 2026-10-10, which also counts the local plans adopted in the last two years |
 | `planned_road` | Distance to a planned road or railway (in use since 2026-10-10: the municipal plans' roads and railways, adopted or proposed) |
 | `in_noise_area` | The plan marks the area as noise-loaded |
-| `in_consequence_zone` | A consequence zone around a business or plant |
+| `in_consequence_zone` | A consequence zone around a business or plant: `consequence_zone == 0` since 2026-10-10 |
 | `forest_planned` | Forest planting is wanted here |
 | `coastal_zone` | Inside the coastal zone |
 | `groundwater_near_surface` | The plan marks groundwater near the surface |
@@ -289,7 +289,7 @@ let full = slider(2000, 0, 10000, 50)  // Full points at (m)
 
 ```
 // Nothing big coming next door (a requirement)
-!proposed_plan_500m && !in_consequence_zone
+new_local_plan >= 500 && consequence_zone > 0
 ```
 
 ## Airports and airfields

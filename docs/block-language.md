@@ -92,6 +92,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `planned_road` | Distance to a road or railway the municipal plans lay out, adopted or proposed (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `new_local_plan` | Distance to a local plan of the last two years, proposed or adopted; 0 inside one, so `new_local_plan < 500` is "a new local plan within 500 m" (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `district_heating` | Distance to an area the heat plans give district heating; 0 inside one, so `district_heating == 0` is "in a district heating area" (Plandata.dk; added 2026-10-10, which keeps the language version) |
+| `consequence_zone` | Distance to a zone the municipal plans draw around a business or technical plant that smells, makes noise or is a risk; 0 inside one (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `power_line` | Distance to an overhead power line of 132 kV or more; the lines under ground do not count (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `airport` | Distance to an airport: an aerodrome with an IATA code, such as Billund or Kastrup (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `airfield` | Distance to an airfield of any kind: the airports and air stations, and the public, private, gliding and microlight fields (OpenStreetMap; added 2026-10-10, which keeps the language version) |

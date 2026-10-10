@@ -183,12 +183,16 @@ def sources(tmp_path_factory) -> Path:
     supply = gpd.GeoDataFrame([{"type1203": 1, "geometry": box(573_000, 6_218_000, 576_000, 6_221_000)},
                                {"type1203": 2, "geometry": box(573_000, 6_215_000, 576_000, 6_218_000)}], geometry="geometry", crs="EPSG:25832")
     supply.to_file(root / "forsyningomraade_vedtaget.geojson", driver="GeoJSON")
+    # --- The plans' zones around a business in the east and a sewage plant in the north-west ---
+    planned([("0", box(578_500, 6_219_500, 579_500, 6_220_500))]).to_file(root / "konsekvensomraade_vedtaget.geojson", driver="GeoJSON")
+    planned([("0", box(570_500, 6_222_000, 571_000, 6_222_500))]).to_file(root / "tekniskanlaegkonsekvensomraade_vedtaget.geojson", driver="GeoJSON")
 
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
         "planned_traffic": "planlagttrafikanlaeg_vedtaget.geojson", "planned_traffic_proposed": "planlagttrafikanlaeg_forslag.geojson",
         "local_plans_proposed": "lokalplan_forslag.geojson", "local_plans_adopted": "lokalplan_vedtaget.geojson",
         "supply_areas": "forsyningomraade_vedtaget.geojson",
+        "consequence_zones": "konsekvensomraade_vedtaget.geojson", "consequence_zones_plants": "tekniskanlaegkonsekvensomraade_vedtaget.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",

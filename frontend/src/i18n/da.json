@@ -180,6 +180,11 @@
       "name": "Fjernvarme",
       "opposite": "Uden for fjernvarme",
       "note": "Inden for et område, som varmeplanerne giver fjernvarme, fra Plandata.dk."
+    },
+    "consequence_zone": {
+      "name": "Væk fra konsekvenszoner",
+      "opposite": "Tæt på konsekvenszoner",
+      "note": "Nærmeste zone, som planerne lægger om en virksomhed eller et anlæg, der lugter, larmer eller er en risiko, fra Plandata.dk."
     }
   },
   "examples": {
@@ -234,7 +239,8 @@
     "power_line": "Afstand til en luftledning på 132 kV eller mere",
     "planned_road": "Afstand til en vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået",
     "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
-    "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)"
+    "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)",
+    "consequence_zone": "Afstand til en konsekvenszone om en virksomhed eller et teknisk anlæg (0 inden for en)"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -562,7 +568,7 @@
         "note": "Ændret: lagt på kortets celler på 100 m. En model, ikke en måling på adressen."
       },
       "plandata": {
-        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet; de veje og baner, som kommuneplanerne lægger ud; lokalplanerne fra de seneste to år; og varmeplanernes fjernvarmeområder.",
+        "uses": "Planzoner: byzone, landzone og sommerhusområde fra zonekortet; de veje og baner, som kommuneplanerne lægger ud; lokalplanerne fra de seneste to år; konsekvenszonerne om virksomheder og anlæg; og varmeplanernes fjernvarmeområder.",
         "note": "Ændret: lagt på kortets celler på 100 m."
       },
       "schools": {
@@ -762,7 +768,7 @@
       },
       "plans": {
         "name": "Planer",
-        "description": "De veje og baner, som kommuneplanerne lægger ud, lokalplanerne fra de seneste to år, vedtaget eller foreslået, og varmeplanernes forsyningsområder, fra WFS'en."
+        "description": "De veje og baner, som kommuneplanerne lægger ud, lokalplanerne fra de seneste to år, vedtaget eller foreslået, varmeplanernes forsyningsområder og konsekvenszonerne om virksomheder og anlæg, fra WFS'en."
       }
     }
   }
