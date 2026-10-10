@@ -24,7 +24,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'forest', label: 'Distance to a wood of at least 5 ha', unit: 'm', group: 'Nature', kind: 'distance', layer: 'forest' },
   { name: 'water', label: 'Distance to a lake of at least 5 ha, or the sea', unit: 'm', group: 'Nature', kind: 'distance', layer: 'water' },
   { name: 'beach', label: 'Distance to a beach', unit: 'm', group: 'Nature', kind: 'distance', layer: 'beach' },
-  { name: 'noise', label: 'Road noise, Lden (no data where unknown)', unit: 'dB', group: 'Peace and quiet', kind: 'noise', layer: 'noise' },
+  { name: 'noise', label: 'Noise from roads, railways, airports and industry, Lden', unit: 'dB', group: 'Peace and quiet', kind: 'noise', layer: 'noise' },
   { name: 'no2', label: 'Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'concentration', layer: 'no2' },
   { name: 'pm25', label: 'Fine particles (PM2.5), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'concentration', layer: 'pm25' },
   { name: 'turbine', label: 'Distance to a wind turbine in operation', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'turbine' },

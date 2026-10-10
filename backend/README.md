@@ -41,7 +41,7 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
 - **"Check the data pack"** reads the data pack and checks that every file it names is there.
 - **A job per source** (`src/pipeline/sources.ts`) fetches it into the raw archive: OpenStreetMap,
   Plandata's zones, STIL's schools and daycare, Energistyrelsen's wind turbines, Danmarks
-  Statistik's tables, Miljøstyrelsen's road noise and Natural Earth. The OSM job also takes the
+  Statistik's tables, Miljøstyrelsen's noise maps and Natural Earth. The OSM job also takes the
   layers and addresses out of the extract, and the world job builds the world map, with the
   pipeline's steps.
 - **Three jobs build the data pack** (`src/pipeline/builds.ts`), each only when what it is made

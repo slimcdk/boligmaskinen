@@ -148,17 +148,17 @@ describeWithDatabase('the source jobs', () => {
     expect(await run('dst')).toMatchObject({ changed: false });
   });
 
-  it('Road noise: takes the map out of the archive only when the archive changed', async () => {
+  it('Noise: takes the maps out of the archive only when the archive changed', async () => {
     let etag = '"noise-1"';
     server.file('/noise/2022_noise_shp.zip', () => ({ content: 'a big zip', etag }));
-    expect(await run('noise')).toMatchObject({ changed: true, result: 'The road noise map, 36 B' });
+    expect(await run('noise')).toMatchObject({ changed: true, result: 'The noise maps, 144 B' });
     const kept = (await db.query(`select name, path from source_file where source = 'noise' order by name`)).rows;
-    expect(kept.map((r) => r.name)).toEqual(['eu_2022_vej_4m.dbf', 'eu_2022_vej_4m.prj', 'eu_2022_vej_4m.shp', 'eu_2022_vej_4m.shx']);
+    expect(kept.map((r) => r.name)).toEqual(['jernbane', 'lufthavn', 'vej', 'virksomhed_by'].flatMap((map) => ['dbf', 'prj', 'shp', 'shx'].map((ext) => `eu_2022_${map}_4m.${ext}`)));
     expect(new Set(kept.map((r) => r.path.split('/').slice(0, -1).join('/'))).size).toBe(1);
 
     expect(await run('noise')).toMatchObject({ changed: false });
     expect(server.to('/noise/2022_noise_shp.zip').map((r) => r.method)).toEqual(['HEAD', 'HEAD']);
-    // A new archive with the same road noise map in it
+    // A new archive with the same noise maps in it
     etag = '"noise-2"';
     expect(await run('noise')).toMatchObject({ changed: false });
     writeFileSync(join(dataDir, 'noise.txt'), 'new noise');

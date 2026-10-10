@@ -84,7 +84,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `forest` | Distance to a wood of at least 5 ha |
 | `water` | Distance to a lake of at least 5 ha, or the sea |
 | `beach` | Distance to a beach |
-| `noise` | Road noise, Lden in dB; missing where it is not mapped |
+| `noise` | Noise, Lden in dB: the loudest of roads, railways, airports and industry where Miljøstyrelsen maps them, else an estimate from the roads (railways, airports and industry added 2026-10-10, which keeps the language version) |
 | `no2`, `pm25` | Nitrogen dioxide and fine particles, yearly means 2024 in µg/m³ on a 1 km grid (added 2026-10-10; additions keep the language version) |
 | `turbine` | Distance to a wind turbine in operation |
 | `density` | Addresses within 300 m |

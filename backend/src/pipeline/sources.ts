@@ -246,8 +246,10 @@ async function fetchStatistics(w: Work): Promise<JobOutcome> {
   };
 }
 
-/** The road noise map's files (a shapefile), taken out of Miljøstyrelsen's 2 GB archive with range requests. */
-export const NOISE_FILES = ['eu_2022_vej_4m.shp', 'eu_2022_vej_4m.shx', 'eu_2022_vej_4m.dbf', 'eu_2022_vej_4m.prj'];
+/** Miljøstyrelsen's strategic noise maps the grid reads: roads, railways, airports and industry. */
+export const NOISE_MAPS = ['eu_2022_vej_4m', 'eu_2022_jernbane_4m', 'eu_2022_lufthavn_4m', 'eu_2022_virksomhed_by_4m'];
+/** Their files, the roads' shapefile first. */
+export const NOISE_FILES = NOISE_MAPS.flatMap((map) => ['shp', 'shx', 'dbf', 'prj'].map((ext) => `${map}.${ext}`));
 
 async function fetchNoise(w: Work): Promise<JobOutcome> {
   const head = await fetch(w.urls.noise, { method: 'HEAD', headers: { 'user-agent': USER_AGENT }, signal: w.context.signal });
@@ -261,18 +263,18 @@ async function fetchNoise(w: Work): Promise<JobOutcome> {
     for (const f of kept) await w.archive.touch(f!, {});
     return { changed: false, result: unchangedSince(w, kept as SourceFile[]), bytes: kept.reduce((sum, f) => sum + f!.bytes, 0) };
   }
-  await w.context.log(`The archive is ${formatBytes(Number(head.headers.get('content-length')) || 0)}; taking out the road noise map`);
+  await w.context.log(`The archive is ${formatBytes(Number(head.headers.get('content-length')) || 0)}; taking out the noise maps of roads, railways, airports and industry`);
   const tmp = await w.archive.tmpPath('-noise');
   await mkdir(tmp);
   try {
-    const pattern = `^(.*/)?eu_2022_vej_4m\\.(shp|shx|dbf|prj)$`;
+    const pattern = `^(.*/)?(${NOISE_MAPS.join('|')})\\.(shp|shx|dbf|prj)$`;
     await runStep(w.context, w.step([0, 0.9]), 'remote-zip', ['extract', w.urls.noise, pattern, tmp]);
     const files = await w.archive.keepFiles(w.context, NOISE_FILES.map((name) => ({
       spec: { source: 'noise', name, url: w.urls.noise, licence: LICENCES.noise }, tmp: join(tmp, name), known: validators,
     })));
     const bytes = files.reduce((sum, f) => sum + f.file.bytes, 0);
     const changed = files.some((f) => f.changed);
-    return { changed, bytes, result: changed ? `The road noise map, ${formatBytes(bytes)}` : unchangedSince(w, files.map((f) => f.file)) };
+    return { changed, bytes, result: changed ? `The noise maps, ${formatBytes(bytes)}` : unchangedSince(w, files.map((f) => f.file)) };
   } finally {
     await rm(tmp, { recursive: true, force: true });
   }
@@ -363,8 +365,8 @@ const SOURCES: SourceJob[] = [
   },
   { id: 'dst', name: 'Municipal statistics', source: 'Danmarks Statistik', schedule: '0 5 * * 1', then: ['grid'], fetch: fetchStatistics, description: 'Tax (PSKAT), population (FOLK1A) and burglaries (STRAF22), each in its newest period.' },
   {
-    id: 'noise', name: 'Road noise', source: 'Miljøstyrelsen', schedule: '0 4 1 * *', then: ['grid'], fetch: fetchNoise,
-    description: 'The strategic noise map of roads, taken out of the 2 GB archive with range requests. New maps every 5 years.',
+    id: 'noise', name: 'Noise', source: 'Miljøstyrelsen', schedule: '0 4 1 * *', then: ['grid'], fetch: fetchNoise,
+    description: 'The strategic noise maps of roads, railways, airports and industry, taken out of the 2 GB archive with range requests. New maps every 5 years.',
   },
   {
     id: 'air', name: 'Air quality', source: 'DCE, Danmarks Miljøportal', schedule: '0 5 2 * *', then: ['grid'], fetch: fetchAir,
