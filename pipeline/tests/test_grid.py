@@ -98,6 +98,11 @@ def test_measures_the_distance_to_solar_parks_of_at_least_1_ha(aarhus: Built):
     assert decode_distance(aarhus.at("solar", 571_530, 6_223_530)) > 5_000
 
 
+def test_measures_the_distance_to_power_lines(aarhus: Built):
+    assert decode_distance(aarhus.at("power_line", 575_050, 6_224_050)) < 200
+    assert decode_distance(aarhus.at("power_line", 575_050, 6_222_000)) == pytest.approx(2_000, abs=150)
+
+
 def test_measures_the_distance_to_pharmacies_and_libraries(aarhus: Built):
     # Within a cell or so: the display grid may sample a cell beside the one with the pharmacy
     assert decode_distance(aarhus.at("pharmacy", 576_000, 6_221_000)) < 200

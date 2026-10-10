@@ -159,6 +159,11 @@
       "name": "Library",
       "opposite": "Away from libraries",
       "note": "Nearest public library, from OpenStreetMap."
+    },
+    "power_line": {
+      "name": "Away from power lines",
+      "opposite": "Close to power lines",
+      "note": "Nearest overhead line of 132 to 400 kV, from OpenStreetMap."
     }
   },
   "examples": {
@@ -209,7 +214,8 @@
     "natura2000": "Distance to a Natura 2000 area for habitats or birds (0 inside one)",
     "protected_area": "Distance to a protected area, a fredning of land in force (0 inside one)",
     "pharmacy": "Distance to a pharmacy",
-    "library": "Distance to a public library"
+    "library": "Distance to a public library",
+    "power_line": "Distance to an overhead power line of 132 kV or more"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",

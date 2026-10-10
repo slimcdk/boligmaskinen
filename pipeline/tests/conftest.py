@@ -78,6 +78,8 @@ def sources(tmp_path_factory) -> Path:
         "supermarket": [{"name": "Netto", "geometry": Point(574_000, 6_219_000)}, {"name": "Rema", "geometry": Point(577_000, 6_223_000)}],
         "station": [{"name": "Aarhus H", "geometry": Point(575_000, 6_221_000)}],
         "pharmacy": [{"name": "Apoteket", "geometry": Point(576_000, 6_221_000)}],
+        # A 400 kV line across the north of Aarhus
+        "power_line": [{"geometry": LineString([(570_000, 6_224_000), (580_000, 6_224_000)])}],
         # A library mapped as its building
         "library": [{"name": "Dokk1", "geometry": box(578_900, 6_221_900, 579_100, 6_222_100)}],
         "industrial": [{"geometry": INDUSTRIAL}],

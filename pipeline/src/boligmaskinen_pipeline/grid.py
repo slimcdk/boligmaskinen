@@ -87,7 +87,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
-          "turbine_heights", "solar", "airport", "airfield", "air_station", "protected_area", "natura2000", "density", "zone",
+          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
 # The areas of Miljøstyrelsen's layers each distance is to, by input; a layer whose sources are not all
@@ -448,6 +448,12 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     layers["solar"] = encode_distance(grid.distance_to(solar))
     step(f"Solar parks cover {solar.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.42)
     del solar
+
+    # --- Overhead power lines of 132 kV or more (OpenStreetMap) --------------------------------
+    lines = read_layer(gpkg, "power_line")
+    layers["power_line"] = encode_distance(grid.distance_to(grid.burn(lines.geometry, all_touched=True).astype(bool)))
+    step(f"Power lines: {lines.length.sum() / 1000:,.0f} km overhead at 132 kV or more", 0.425)
+    del lines
 
     # --- Airports, air stations and every other airfield (OpenStreetMap) ----------------------
     aerodromes = read_layer(gpkg, "aerodrome")

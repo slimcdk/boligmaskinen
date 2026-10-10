@@ -29,6 +29,7 @@
   "turbine": "turbine.png",
   "turbine_heights": "turbine_heights.png",
   "solar": "solar.png",
+  "power_line": "power_line.png",
   "airport": "airport.png",
   "airfield": "airfield.png",
   "air_station": "air_station.png",
