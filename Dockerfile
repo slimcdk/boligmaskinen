@@ -22,12 +22,14 @@ RUN REVISION="$REVISION" SOURCE="$SOURCE" npm run build
 # Debian, not Alpine: the pipeline's Python packages (geopandas, rasterio, scipy, osmium) come as
 # wheels built for glibc. Python runs the pipeline's steps, wget answers the healthcheck, and
 # PostgreSQL's client 18 (from PostgreSQL's own apt repository, as Debian has 17) dumps the
-# database for the nightly backup.
+# database for the nightly backup. The downloads try again, as a build fails on one lost lookup.
 FROM node:24-trixie-slim AS base
-RUN apt-get update \
+RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries \
+    && apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates wget \
     && install -d /usr/share/postgresql-common/pgdg \
-    && wget -qO /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    && wget -qO /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --tries=5 --waitretry=10 --retry-connrefused --retry-on-host-error \
+       https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-18 \
@@ -67,7 +69,8 @@ RUN set -eux; \
       arm64) arch=arm64; sum=f8bd47e7ea866863489cad588fbaf2f31f42e5821f7a03f009b3769f05801cb1 ;; \
       *) echo "There is no go-pmtiles build for $TARGETARCH" >&2; exit 1 ;; \
     esac; \
-    wget -qO /tmp/pmtiles.tgz "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_${arch}.tar.gz"; \
+    wget -qO /tmp/pmtiles.tgz --tries=5 --waitretry=10 --retry-connrefused --retry-on-host-error \
+      "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_${arch}.tar.gz"; \
     echo "$sum  /tmp/pmtiles.tgz" | sha256sum -c -; \
     tar -xzf /tmp/pmtiles.tgz -C /usr/local/bin pmtiles
 
