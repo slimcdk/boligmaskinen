@@ -50,7 +50,7 @@ export interface JobRun {
 
 export const JOBS: Job[] = [
   {
-    id: 'osm', name: 'OpenStreetMap', kind: 'fetch', source: 'Geofabrik', schedule: '0 3 * * *', enabled: true, then: ['grid'],
+    id: 'osm', name: 'OpenStreetMap', kind: 'fetch', source: 'Geofabrik', schedule: '0 3 * * *', enabled: true, then: ['grid', 'roads'],
     description: 'The extract of Denmark, and from it forests, water, beaches, shops, stations, roads, addresses and municipalities.',
   },
   { id: 'plandata', name: 'Planning zones', kind: 'fetch', source: 'Plandata.dk', schedule: '30 3 * * *', enabled: true, then: ['grid'], description: 'Byzone and sommerhusområde polygons from the WFS.' },
@@ -62,6 +62,7 @@ export const JOBS: Job[] = [
   { id: 'basemap', name: 'Basemap', kind: 'fetch', source: 'Protomaps', schedule: '0 2 * * 0', enabled: true, then: ['pack'], description: 'Tiles for Denmark up to zoom 12 from the daily planet build.' },
   { id: 'world', name: 'World map', kind: 'fetch', source: 'Natural Earth', schedule: '0 2 1 * *', enabled: true, then: ['pack'], description: 'Land, lakes, borders and names outside Denmark.' },
   { id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', enabled: true, then: ['pack'], description: 'Every data layer on the 100 m grid, sampled to the 200 m display grid.' },
+  { id: 'roads', name: 'Road network', kind: 'build', source: 'OpenStreetMap', schedule: '15 6 * * *', enabled: true, description: 'The roads, paths and ferries of the OSM extract, which the travel times to your places are found on.' },
   { id: 'pack', name: 'Pack the data', kind: 'build', source: 'Boligmaskinen', schedule: '30 6 * * *', enabled: true, description: 'The data pack the map loads.' },
   { id: 'datafordeler', name: 'Addresses and buildings', kind: 'fetch', source: 'Datafordeleren (DAR, BBR)', schedule: '15 2 * * *', enabled: false, blocked: 'Needs a Datafordeleren API key', description: 'Dwellings per address and building data.' },
   { id: 'ejf', name: 'Sale prices', kind: 'fetch', source: 'Datafordeleren (EJF)', schedule: '30 2 * * *', enabled: false, blocked: 'Needs approval from Geodatastyrelsen', description: 'Købesum per sale.' },
