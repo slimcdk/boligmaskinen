@@ -56,8 +56,10 @@ export class MapSwitcher {
   protected readonly texts = inject(Texts);
 
   private askName(data: NameDialogData, then: (name: string) => void): void {
+    // As the dialog starts to close, not once it has: the page under it takes clicks again at once,
+    // and a click on a suggestion just after "Create" belongs to the new map
     this.dialog.open<NameDialog, NameDialogData, string>(NameDialog, { data, width: '400px', maxWidth: '92vw', autoFocus: 'first-tabbable' })
-      .afterClosed().subscribe((name) => name && then(name));
+      .beforeClosed().subscribe((name) => name && then(name));
   }
 
   protected newMap(): void {
@@ -85,6 +87,6 @@ export class MapSwitcher {
       action: this.i18n.t('maps.delete'),
     };
     this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data, width: '400px', maxWidth: '92vw' })
-      .afterClosed().subscribe((yes) => yes && this.store.deleteMap(map.id));
+      .beforeClosed().subscribe((yes) => yes && this.store.deleteMap(map.id));
   }
 }

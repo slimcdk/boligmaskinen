@@ -68,6 +68,18 @@ describe('MapSwitcher', () => {
     expect(store.map().name).toBe('Near the sea');
   });
 
+  it('opens the new map as its dialog starts to close, so a click just after belongs to it', async () => {
+    const { open, item, settle } = render();
+    open();
+    item('New map').click();
+    await settle();
+    document.querySelector<HTMLButtonElement>('app-name-dialog button[type="submit"]')!.click();
+    // The dialog is still closing
+    expect(document.querySelector('app-name-dialog')).not.toBeNull();
+    expect(store.map().name).toBe('Map');
+    await settle();
+  });
+
   it('asks before it deletes a map, and keeps the last one', async () => {
     store.newMap('Second');
     const { open, item, settle } = render();
