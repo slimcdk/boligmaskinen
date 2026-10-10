@@ -37,23 +37,36 @@ These hold for every milestone.
 ## Where we are (2026-10-10)
 
 **Done: the prototype (milestone 0), the backend foundation (milestone 1) and the data pipeline
-as jobs (milestone 2).**
+as jobs (milestone 2). Milestone 3 is done but for public transport and the sources that need
+access; milestone 7 but for the Danish interface and a first release. Of milestone 4, scoring in
+the database is ready for the homes.**
 
-- All of Denmark: 13 layers of open data on a 100 m grid, shown at 200 m, with a world map
-  around it.
+- All of Denmark: 17 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
+  10, with a world map around it. Nature, noise from roads, railways, airports and industry, air
+  quality, wind turbines (also by their height), solar parks, everyday services, planning zones
+  and municipal statistics.
 - The weighting is blocks in our own language ([`block-language.md`](block-language.md)), with
-  versions and migrations. Predefined blocks are code too, and a block can be turned around.
-- Several maps, each with its own blocks in groups that can be switched off. The places, with
-  travel times by car, bike and on foot found on OSM's roads, are shared by the maps. The maps and places are saved
-  on the server, so every browser has them (issue #34, done early, 2026-10-09).
-- Material 3 in light and dark mode, on desktops, tablets and phones.
-- One image: the Node backend serves the app, the data pack and the API, with PostGIS beside
-  it, and its data jobs fetch every source and build the data pack every night. A new install
-  builds its own data at its first start.
-- CI runs the engine, frontend, backend and end-to-end tests and starts the image. Every green
-  commit on `master` is published as `:master`, which the test instance on a home server runs.
+  versions and migrations. Predefined blocks are code too, and a block can be turned around. The
+  blocks run as compiled JavaScript in a Web Worker, and compile to SQL for the database.
+- Several maps, each with its own blocks in groups that can be switched off. The places are
+  shared by the maps; their travel times by car, bike and on foot are found on OSM's roads, and
+  by train they are still estimated. The maps and places are saved on the server, so every
+  browser has them.
+- Material 3 in light and dark mode, on desktops, tablets and phones, with a finger's 48 px on
+  touch screens; axe finds no WCAG 2.2 AA violations in the main views.
+- One image, for amd64 and arm64: the Node backend serves the app, the data pack and the API,
+  with PostGIS beside it, and its data jobs fetch every source and build the data pack and the
+  road network every night, each step in under 1 GB of memory. A new install builds its own data
+  at its first start: checked on 2026-10-10 from `master`, in an empty data folder, for all of
+  Denmark under a 1.5 GB memory limit. Every job succeeded in 5½ minutes with no step killed, and
+  the first travel times were ready 14 s after a place was added. A guide for running it
+  yourself, and a changelog.
+- CI runs the engine, frontend, backend, pipeline and end-to-end tests, starts the image and scans
+  it; Dependabot proposes updates. Every green commit on `master` is published as `:master`,
+  which the test instance on a home server runs.
 
-**Not yet:** routing, data about homes, homes for sale, and alerts.
+**Not yet:** public transport, data about homes, homes for sale and prices, and alerts, which wait
+for the access in Track A; and the Danish interface.
 
 ## Track A: access applications (start now, runs alongside)
 
@@ -115,7 +128,7 @@ what they took (#69).
   manual step.
 - The nightly jobs keep the data current.
 
-## Milestone 3: the map at full detail and speed
+## Milestone 3: the map at full detail and speed (done 2026-10-10, but for public transport and the sources that need access)
 
 **Goal:** detail follows the zoom, and the map answers a slider at once.
 

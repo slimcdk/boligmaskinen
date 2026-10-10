@@ -13,7 +13,7 @@ empty folder to the map, and through updates and backups.
 | Memory | About 1 GB while the data is built (each night, for a few minutes); about 300 MB the rest of the time |
 | Disk | About 4 GB in `./data`: the raw downloads, the builds, the road network and the data packs. Reading the OpenStreetMap extract takes 1 GB more for a few minutes |
 | Network | About 1 GB of downloads the first time (OpenStreetMap is 500 MB of it), then a few hundred MB a night |
-| Time | About ten minutes for the first build of all of Denmark |
+| Time | About six minutes for the first build of all of Denmark on a fast connection (5½ on 2026-10-10) |
 
 The image is private for now: you need read access to `ghcr.io/slimcdk/boligmaskinen`
 (`docker login ghcr.io`).
