@@ -71,9 +71,9 @@ export const SOURCES: DataSource[] = [
   },
   {
     id: 'protected', name: 'Miljøstyrelsen and the regions, through Danmarks Miljøportal', url: 'https://arealdata.miljoeportal.dk',
-    uses: 'Fredninger of land in force, which protect landscapes and nature, the Natura 2000 areas for habitats and birds, and the areas the regions’ raw material plans set aside for digging, now or later.',
+    uses: 'Fredninger of land in force, which protect landscapes and nature, the Natura 2000 areas for habitats and birds, the areas the regions’ raw material plans set aside for digging, now or later, and the building lines around forests, churches, lakes and streams.',
     licence: { name: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
-    credit: 'Fredede områder og Natura 2000: Miljøstyrelsen; råstofområder: regionerne; Danmarks Miljøportal',
+    credit: 'Fredede områder, Natura 2000 og byggelinjer: Miljøstyrelsen; råstofområder: regionerne; Danmarks Miljøportal',
     note: "Changed: put on the map's 100 m cells. CC0 asks for no credit; it is given as a courtesy.",
   },
   {

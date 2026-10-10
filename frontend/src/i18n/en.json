@@ -191,6 +191,11 @@
       "opposite": "Outside district heating",
       "note": "Inside an area the heat plans give district heating, from Plandata.dk."
     },
+    "building_line": {
+      "name": "Outside building lines",
+      "opposite": "Inside building lines",
+      "note": "Nearest building line around a forest, church, lake or stream, inside which building needs a dispensation, from Danmarks Miljøportal."
+    },
     "consequence_zone": {
       "name": "Away from consequence zones",
       "opposite": "Close to consequence zones",
@@ -277,6 +282,7 @@
     "planned_road": "Distance to a road or railway the municipal plans lay out, adopted or proposed",
     "new_local_plan": "Distance to a local plan of the last two years, proposed or adopted (0 inside one)",
     "district_heating": "Distance to an area the heat plans give district heating (0 inside one)",
+    "building_line": "Distance to a building line around a forest, church, lake or stream, inside which building needs a dispensation (0 inside one)",
     "consequence_zone": "Distance to a zone the plans draw around a business or technical plant (0 inside one)",
     "extraction_area": "Distance to an area the regions’ raw material plans set aside for digging (0 inside one)",
     "extraction_interest": "Distance to an area the regions’ raw material plans keep for digging later (0 inside one)",

@@ -71,7 +71,7 @@ export const JOBS: Job[] = [
   },
   {
     id: 'protected', name: 'Protected areas', kind: 'fetch', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', enabled: true, then: ['grid'],
-    description: 'Fredninger, the Natura 2000 areas for habitats and birds, and the regions’ raw material areas, from Danmarks Miljøportal’s WFS.',
+    description: 'Fredninger, the Natura 2000 areas for habitats and birds, the regions’ raw material areas, and the building lines around forests, churches, lakes and streams, from Danmarks Miljøportal’s WFS.',
   },
   {
     id: 'water', name: 'Drinking water', kind: 'fetch', source: 'GEUS', schedule: '0 5 5 * *', enabled: true, then: ['grid'],

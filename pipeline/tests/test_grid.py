@@ -180,6 +180,14 @@ def test_measures_the_distance_to_the_areas_kept_for_digging_later(aarhus: Built
     assert decode_distance(aarhus.at("extraction_interest", 571_500, 6_216_500)) > 6_000
 
 
+def test_measures_the_distance_to_the_building_lines(aarhus: Built):
+    assert aarhus.at("building_line", 576_500, 6_222_500) == 0
+    assert aarhus.at("building_line", 571_300, 6_221_300) == 0
+    assert decode_distance(aarhus.at("building_line", 576_500, 6_220_500)) == pytest.approx(1_500, abs=150)
+    # A line not in force does not count
+    assert decode_distance(aarhus.at("building_line", 578_250, 6_221_250)) > 1_000
+
+
 def test_knows_the_hardness_of_the_drinking_water(aarhus: Built):
     # Raw 1 + °dH × 5: soft water in the south-west, hard in the south-east, none without waterworks
     assert aarhus.at("water_hardness", 572_500, 6_217_500) == 1 + 31
@@ -200,13 +208,13 @@ def test_leaves_out_the_protected_areas_and_plans_without_their_sources(sources:
     named = json.loads(sources.read_text(encoding="utf-8"))
     left_out = ("protected_areas", "natura2000_habitats", "natura2000_birds", "planned_traffic", "planned_traffic_proposed",
                 "local_plans_proposed", "local_plans_adopted", "supply_areas", "consequence_zones", "consequence_zones_plants", "raw_material_areas",
-                "transit", "water_hardness")
+                "transit", "water_hardness", "forest_lines", "church_lines", "lake_lines", "stream_lines")
     kept = {key: str((sources.parent / value).resolve()) for key, value in named.items() if key not in left_out}
     (tmp_path / "inputs.json").write_text(json.dumps(kept), encoding="utf-8")
     meta = grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
     assert list(meta["files"]) == [name for name in grid.LAYERS
                                    if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating", "consequence_zone",
-                                                   "extraction_area", "extraction_interest", "departures", "water_hardness")]
+                                                   "extraction_area", "extraction_interest", "departures", "water_hardness", "building_line")]
 
 
 def test_knows_the_zones_and_the_municipality(aarhus: Built):

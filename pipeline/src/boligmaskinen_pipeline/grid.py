@@ -34,6 +34,8 @@ Usage:
     transit       Rejseplanen's GTFS feed, for the departures near every cell (optional)
     water_hardness
                   GEUS's drinking water hardness per supply area: a GeoPackage, or a ZIP file with one (optional)
+    forest_lines, church_lines, lake_lines, stream_lines
+                  the building lines around forests, churches, lakes and streams, from Danmarks Miljøportal (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -91,7 +93,8 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 # Sources a build can do without: their layers have no data then
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
-                   "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit", "water_hardness"]
+                   "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit", "water_hardness",
+                   "forest_lines", "church_lines", "lake_lines", "stream_lines"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -106,7 +109,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "departures", "pharmacy", "library", "turbine",
-          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
+          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "building_line", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
           "municipality", "no2", "pm25", "water_hardness", "mask"]
 
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
@@ -178,6 +181,9 @@ AREA_LAYERS = [
     AreaLayer("extraction_area", [AreaSource("raw_material_areas", ["Statuskode", "Omr_tkode"],
                                              lambda frame: in_force(frame) & (frame["Omr_tkode"] == EXTRACTION_AREA))],
               "Raw material extraction areas in force"),
+    # Building needs a dispensation inside them: 300 m from forests and churches, 150 m from lakes and streams
+    AreaLayer("building_line", [AreaSource(key, ["Statuskode"], in_force) for key in ("forest_lines", "church_lines", "lake_lines", "stream_lines")],
+              "Building lines around forests, churches, lakes and streams in force"),
     AreaLayer("extraction_interest", [AreaSource("raw_material_areas", ["Statuskode", "Omr_tkode"],
                                                  lambda frame: in_force(frame) & (frame["Omr_tkode"] == EXTRACTION_INTEREST))],
               "Raw material areas kept for later, in force"),
