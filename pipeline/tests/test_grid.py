@@ -5,7 +5,10 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import shapely
 from pyproj import Transformer
+from rasterio.features import rasterize
+from scipy import ndimage
 
 from boligmaskinen_pipeline import grid
 
@@ -166,3 +169,27 @@ def test_cuts_the_grid_into_detail_tiles_when_the_display_grid_is_coarser(source
     assert (built.layers["mask"] & 2).astype(bool).sum() > 3
     # Without a coarser display grid there are no tiles
     assert "tiles" not in grid.build(grid.read_inputs(sources), tmp_path / "same", "aarhus", cell=100)
+
+
+def test_distances_in_blocks_are_scipys_up_to_the_limit(monkeypatch):
+    """Worked out in blocks with a margin, the distances are SciPy's own up to the limit."""
+    monkeypatch.setattr(grid, "DISTANCE_BLOCK", 16)
+    g = grid.Grid(0, 0, 7_000, 5_000, 100)
+    mask = np.random.default_rng(1).random(g.shape) < 0.002
+    exact = (ndimage.distance_transform_edt(~mask) * g.cell).astype(np.float32)
+    blocks = g.distance_to(mask, limit=1_000)
+    near = exact <= 1_000
+    assert near.any() and (~near).any()
+    assert np.array_equal(blocks[near], exact[near])
+    # Farther than the limit it is only known to be farther
+    assert (blocks[~near] > 1_000).all()
+    assert np.isinf(g.distance_to(np.zeros(g.shape, dtype=bool))).all()
+
+
+def test_burns_a_few_vertices_at_a_time_as_in_one_go(monkeypatch):
+    g = grid.Grid(0, 0, 2_000, 2_000, 100)
+    shapes = [shapely.box(i * 100, i * 50, i * 100 + 450, i * 50 + 300) for i in range(12)]
+    whole = rasterize([(shape, 7) for shape in shapes], out_shape=g.shape, transform=g.transform, fill=0, dtype="uint8")
+    monkeypatch.setattr(grid, "BURN_VERTICES", 10)
+    assert np.array_equal(g.burn(shapes, value=7), whole)
+    assert whole.any()

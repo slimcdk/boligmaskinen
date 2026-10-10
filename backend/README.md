@@ -93,8 +93,8 @@ Last-Modified, and the run (`src/pipeline/archive.ts`).
 
 The jobs run the Python steps in `../pipeline` (`python -I -m boligmaskinen_pipeline <step>`) from
 `src/pipeline/python.ts`. Their output goes to the job's log, `@progress` lines move the progress
-bar, and a step that fails fails the job with its last error line. One step runs at a time, because
-they need a lot of memory: the OSM step about 2.2 GB, the grid of all of Denmark about 3.7 GB.
+bar, and a step that fails fails the job with its last error line. One step runs at a time, so the
+memory they need does not add up: under 1 GB for all of Denmark (`pipeline/README.md`, "Memory").
 
 ## Saved maps and places
 

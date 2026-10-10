@@ -53,8 +53,7 @@ as jobs (milestone 2).**
 - CI runs the engine, frontend, backend and end-to-end tests and starts the image. Every green
   commit on `master` is published as `:master`, which the test instance on a home server runs.
 
-**Not yet:** the map at full detail, data about homes, homes for sale, and alerts. The pipeline's
-steps need up to about 4 GB of memory, more than the home server gives them (#69).
+**Not yet:** routing, data about homes, homes for sale, and alerts.
 
 ## Track A: access applications (start now, runs alongside)
 
@@ -86,8 +85,8 @@ The backend owns the database and the jobs:
 **Goal:** the app fetches and builds its own data on schedule. Nothing is built by hand.
 
 What was built is described in `backend/README.md` (the jobs, the raw archive, the builds) and
-`pipeline/README.md` (the steps). One follow-up is open: making the steps fit in less memory
-(#69).
+`pipeline/README.md` (the steps). Then the steps were made to fit in 1 GB of memory, a quarter of
+what they took (#69).
 
 1. **Where the pipeline runs (decided 2026-10-09).** The Python steps stay in Python, in
    [`pipeline/`](../pipeline/README.md), and the jobs run them as commands. The jobs themselves,
