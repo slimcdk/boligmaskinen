@@ -42,6 +42,13 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByRole('dialog')).toBeVisible();
       expect(await problems(page)).toEqual([]);
       await page.keyboard.press('Escape');
+      // The catalogue, whose notes wrap onto a second line
+      await page.getByRole('button', { name: 'Add', exact: true }).click();
+      const option = page.getByRole('option', { name: /^Away from airfields/ });
+      await expect(option).toContainText('Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.');
+      expect(await problems(page)).toEqual([]);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toHaveCount(0);
       await page.getByRole('button', { name: 'Data jobs' }).click();
       await expect(page.getByRole('dialog')).toBeVisible();
       expect(await problems(page)).toEqual([]);
