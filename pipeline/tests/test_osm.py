@@ -37,6 +37,7 @@ def extract(tmp_path_factory):
         Node(id=41, location=(10.13, 56.13), tags={"amenity": "pharmacy", "name": "Apoteket"}),
         Node(id=42, location=(10.14, 56.13), tags={"amenity": "library", "name": "Hovedbiblioteket"}),
         Node(id=43, location=(10.15, 56.13), tags={"amenity": "library", "access": "private", "name": "Skolens bibliotek"}),
+        Node(id=44, location=(10.01, 56.19)), Node(id=45, location=(10.19, 56.19)), Node(id=46, location=(10.01, 56.01)), Node(id=47, location=(10.19, 56.01)),
     ]
     ways = [
         Way(id=100, nodes=[1, 2, 3, 4, 1]),
@@ -48,6 +49,9 @@ def extract(tmp_path_factory):
         Way(id=105, nodes=[27, 28, 29, 30, 27], tags={"power": "generator", "generator:source": "solar", "location": "roof"}),
         Way(id=106, nodes=[31, 32, 33, 34, 31], tags={"aeroway": "aerodrome", "aerodrome": "international", "iata": "AAR", "name": "Lufthavn"}),
         Way(id=107, nodes=[35, 36, 37, 38, 35], tags={"aeroway": "aerodrome", "military": "airfield", "landuse": "military", "name": "Flyvestation"}),
+        # A 150 kV line with a 60 kV circuit on the same masts counts; a 60 kV line alone does not
+        Way(id=108, nodes=[44, 45], tags={"power": "line", "voltage": "150000;60000"}),
+        Way(id=109, nodes=[46, 47], tags={"power": "line", "voltage": "60000"}),
     ]
     relations = [
         Relation(id=1000, members=[("w", 100, "outer")],
@@ -73,7 +77,7 @@ def test_extracts_a_layer_per_theme(extract):
     assert [name for name, _ in pyogrio.list_layers(out / "layers.gpkg")] == list(osm.THEMES)
     assert {theme: counts[theme] for theme in osm.THEMES} == {
         "forest": 1, "industrial": 0, "water": 0, "coastline": 0, "beach": 0, "solar": 1,
-        "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1, "aerodrome": 3, "pharmacy": 1, "library": 1,
+        "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1, "aerodrome": 3, "pharmacy": 1, "library": 1, "power_line": 1,
     }
     municipality = pyogrio.read_dataframe(out / "layers.gpkg", layer="municipality")
     assert (municipality["name"][0], municipality["ref"][0]) == ("Aarhus Kommune", "751")

@@ -45,7 +45,7 @@ FEATURE_TAGS = [
     ("railway", "station"), ("railway", "halt"),
     ("boundary", "administrative"),
     *[("highway", key) for key in ROAD_CLASSES],
-    ("power", "plant"), ("power", "generator"),
+    ("power", "plant"), ("power", "generator"), ("power", "line"),
     ("aeroway", "aerodrome"),
 ]
 
@@ -53,7 +53,7 @@ FEATURE_TAGS = [
 THEMES: dict[str, list[str]] = {
     "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [], "solar": [],
     "supermarket": ["name"], "station": ["name"], "municipality": ["name", "ref"], "country": [], "road": ["road_class"],
-    "aerodrome": ["name", "kind"], "pharmacy": ["name"], "library": ["name"],
+    "aerodrome": ["name", "kind"], "pharmacy": ["name"], "library": ["name"], "power_line": [],
 }
 
 
@@ -91,7 +91,20 @@ def classify(tags) -> str | None:
         return "solar"
     if tags.get("aeroway") == "aerodrome" and tags.get("disused") != "yes" and tags.get("abandoned") != "yes":
         return "aerodrome"
+    # Overhead lines of the transmission grid; the ones under ground are power=cable
+    if tags.get("power") == "line" and voltage(tags) >= HIGH_VOLTAGE:
+        return "power_line"
     return None
+
+
+# An overhead line of the transmission grid carries at least this many volts: 132 kV and up
+HIGH_VOLTAGE = 132_000
+
+
+def voltage(tags) -> int:
+    """The highest voltage a line carries, as OSM writes it ("400000", or "150000;60000"), or 0."""
+    values = [part.strip() for part in (tags.get("voltage") or "").split(";")]
+    return max((int(part) for part in values if part.isdigit()), default=0)
 
 
 def aerodrome_kind(tags) -> str:
@@ -125,7 +138,7 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
         try:
             if kind == "n" and theme in ("supermarket", "station", "beach", "aerodrome", "pharmacy", "library"):
                 geom = wkb.create_point(obj)
-            elif kind == "w" and theme in ("coastline", "road"):
+            elif kind == "w" and theme in ("coastline", "road", "power_line"):
                 geom = wkb.create_linestring(obj)
             elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar", "aerodrome",
                                            "pharmacy", "library"):

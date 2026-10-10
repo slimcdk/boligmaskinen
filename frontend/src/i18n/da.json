@@ -159,6 +159,11 @@
       "name": "Bibliotek",
       "opposite": "Væk fra biblioteker",
       "note": "Nærmeste folkebibliotek, fra OpenStreetMap."
+    },
+    "power_line": {
+      "name": "Væk fra højspændingsledninger",
+      "opposite": "Tæt på højspændingsledninger",
+      "note": "Nærmeste luftledning på 132 til 400 kV, fra OpenStreetMap."
     }
   },
   "examples": {
@@ -209,7 +214,8 @@
     "natura2000": "Afstand til et Natura 2000-område for naturtyper eller fugle (0 inden for et)",
     "protected_area": "Afstand til et fredet område, en gældende arealfredning (0 inden for et)",
     "pharmacy": "Afstand til et apotek",
-    "library": "Afstand til et folkebibliotek"
+    "library": "Afstand til et folkebibliotek",
+    "power_line": "Afstand til en luftledning på 132 kV eller mere"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -524,7 +530,7 @@
     "unknown": "ukendt",
     "sources": {
       "osm": {
-        "uses": "Skove, søer, kysten, strande, solcelleparker, lufthavne og flyvepladser, supermarkeder, stationer, apoteker, biblioteker, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
+        "uses": "Skove, søer, kysten, strande, solcelleparker, højspændingsledninger, lufthavne og flyvepladser, supermarkeder, stationer, apoteker, biblioteker, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
         "note": "Datalagene lavet ud fra det er også under ODbL."
       },
       "mst": {

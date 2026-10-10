@@ -166,14 +166,15 @@ test('protected areas and Natura 2000 score the map, and "Free to build" leaves 
   await expect.poll(() => cellsShown(page)).toBeLessThan(before);
 });
 
-test('pharmacies and libraries score the map', async ({ page }) => {
+test('pharmacies, libraries and power lines score the map', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Add', exact: true }).click();
-  for (const name of [/^Pharmacy/, /^Library/]) {
+  for (const name of [/^Pharmacy/, /^Library/, /^Away from power lines/]) {
     await page.getByRole('option', { name }).click();
   }
   await page.getByRole('button', { name: 'Done' }).click();
-  for (const name of ['Pharmacy', 'Library']) {
+  await expect(block(page, 'Away from power lines').locator('.rule')).toHaveText('No points below 100 m · Full points from 500 m');
+  for (const name of ['Pharmacy', 'Library', 'Away from power lines']) {
     // Each reads a layer of the test data pack, so none says it has no data
     await expect(block(page, name).locator('.rule')).not.toHaveClass(/error/);
   }
