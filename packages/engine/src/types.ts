@@ -173,7 +173,8 @@ export const DEFAULT_CRITERIA: Criterion[] = [
 
 export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85, palette: 'red-green', bands: 'smooth' };
 
-export const PLACE_COLOURS = ['#1f6feb', '#8a3ffc', '#007d79', '#d12771', '#b28600'];
+/** The places' pins; white reads on each at 4.5:1 or more. */
+export const PLACE_COLOURS = ['#1f6feb', '#8a3ffc', '#007d79', '#d12771', '#946f00'];
 
 export const CRITERION_GROUPS: CriterionGroup[] = ['Nature', 'Peace and quiet', 'Everyday life', 'Area and economy'];
 

@@ -12,12 +12,22 @@ html {
       tertiary: mat.$orange-palette,
     ),
     typography: Roboto,
-    density: -2,
   ));
+
+  // Compact where a mouse points. A touch screen keeps Material's density, whose targets are a
+  // finger's 48 px (M3); the controls below that Material leaves small get it too.
+  @media (pointer: fine) {
+    @include mat.theme((density: -2));
+  }
+  @media (pointer: coarse) {
+    @include mat.button-toggle-overrides((height: 48px));
+  }
 
   // Colours Material has no role for
   --app-success: light-dark(#2e7d32, #81c995);
   --app-warning: light-dark(#b26a00, #ffb95c);
+  // Text and rings on the places' own colours (PLACE_COLOURS), which white reads on at 4.5:1
+  --app-on-place: #fff;
 }
 
 // `light dark` follows the viewer's system setting. A page that embeds the app may pin a theme
@@ -52,15 +62,27 @@ body {
   font: var(--mat-sys-body-medium);
 }
 
-// Compact toggles for importance and travel mode inside the panel
+// Compact toggles for importance and travel mode inside the panel; on a touch screen they keep the
+// 48 px of every toggle
 app-block-row .role,
 app-param-control .toggles,
 app-code-dialog .role {
   @include mat.button-toggle-overrides((
-    height: 28px,
     label-text-size: 12px,
     shape: 8px,
   ));
+
+  @media (pointer: fine) {
+    @include mat.button-toggle-overrides((height: 28px));
+  }
+}
+
+// MapLibre's zoom buttons, for a finger
+@media (pointer: coarse) {
+  .maplibregl-ctrl-group button {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 // Expansion panel headers in the side panel: keep the title whole and shorten the summary

@@ -13,9 +13,14 @@
     font: var(--mat-sys-title-large);
     padding: 2px 0;
 
-    &:hover,
-    &:focus {
+    &:hover {
       border-bottom-color: var(--mat-sys-outline);
+    }
+
+    // A clear focus, as the panel's names have, without the line moving the text
+    &:focus {
+      border-bottom-color: transparent;
+      box-shadow: inset 0 -2px 0 var(--mat-sys-primary);
       outline: none;
     }
   }
