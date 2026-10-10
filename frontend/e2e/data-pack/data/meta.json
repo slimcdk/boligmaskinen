@@ -1,5 +1,5 @@
 {
- "built": "2026-10-07",
+ "built": "2026-10-10",
  "region": {
   "id": "aarhus",
   "name": "Aarhus Kommune"
@@ -13,6 +13,7 @@
   "north": 56.33280102782615
  },
  "cellMetres": 100,
+ "gridMetres": 100,
  "distanceMax": 20000,
  "files": {
   "forest": "forest.png",
@@ -24,9 +25,13 @@
   "daycare": "daycare.png",
   "station": "station.png",
   "turbine": "turbine.png",
+  "turbine_heights": "turbine_heights.png",
+  "solar": "solar.png",
   "density": "density.png",
   "zone": "zone.png",
   "municipality": "municipality.png",
+  "no2": "no2.png",
+  "pm25": "pm25.png",
   "mask": "mask.png"
  },
  "municipalities": [
@@ -41,12 +46,12 @@
   }
  ],
  "counts": {
-  "addresses": 2615038,
+  "addresses": 2615075,
   "homeCells": 14013,
   "regionLandCells": 46501,
   "supermarkets": 2815,
   "stations": 619,
-  "schools": 1938,
+  "schools": 1929,
   "daycare": 4886,
   "turbines": 4866,
   "mstShareOfRegion": 0.1238
@@ -54,6 +59,6 @@
  "basemap": {
   "parts": 1,
   "chunkSize": 5000000,
-  "size": 2159851
+  "size": 2226436
  }
 }
