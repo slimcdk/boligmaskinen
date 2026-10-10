@@ -16,7 +16,8 @@ Usage:
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
     noise_rail, noise_air, noise_industry  Miljøstyrelsen's maps of railways, airports and industry (optional)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
-    turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST); income  INDKP101 (DST, optional)
+    turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST); income, nursery_price, class_size
+                  INDKP101, RES88, KVOTIEN (DST, optional)
     no2, pm25     DCE's air quality on a 1 km grid, as GeoJSON (optional: without them the layers have no data)
     protected_areas, natura2000_habitats, natura2000_birds
                   Miljøstyrelsen's fredninger and Natura 2000 areas, as GeoJSON (optional: without them the
@@ -80,7 +81,7 @@ CODES = re.compile(r"^\d{3}(,\d{3})*$")
 
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
 # Sources a build can do without: their layers have no data then
-OPTIONAL_INPUTS = ["income", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
+OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
                    "consequence_zones", "consequence_zones_plants"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
@@ -653,9 +654,13 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     tax = jsonstat_matrix(inputs["tax"], "SKATPCT")
     burglaries = jsonstat_values(inputs["burglaries"])
     population = jsonstat_values(inputs["population"])
-    income_year, income = jsonstat_newest(inputs["income"]) if inputs.get("income") else (None, {})
-    if not income:
-        warn("No source for the income: the municipalities have none")
+    # Statistics a municipality may lack, by their field in the meta: the newest year with numbers
+    optional = {}
+    for field, key in (("income", "income"), ("nurseryPrice", "nursery_price"), ("classSize", "class_size")):
+        if inputs.get(key):
+            optional[field] = jsonstat_newest(inputs[key])[1]
+        else:
+            warn(f"No source for {key}: the municipalities have none")
     municipality_stats = []
     for row in region.itertuples():
         municipality_stats.append({
@@ -663,7 +668,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
             "incomeTax": tax[row.code]["KOM"], "landTax": tax[row.code]["GRUND"],
             "population": population[row.code],
             "burglariesPer1000": round(burglaries[row.code] / population[row.code] * 1000, 2),
-            **({"income": income[row.code]} if income.get(row.code) else {}),
+            **{field: values[row.code] for field, values in optional.items() if values.get(row.code)},
         })
     layers["municipality"] = np.where(region_land, municipality_index, 0).astype(np.uint8)
 

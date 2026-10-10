@@ -138,12 +138,12 @@ describeWithDatabase('the source jobs', () => {
   it('Municipal statistics: asks for every area in the newest period of each table', async () => {
     server.on('POST /statbank', (request, response) => {
       const { table } = JSON.parse(request.body) as { table: string };
-      const periods = { PSKAT: { 2026: 0 }, STRAF22: { 2025: 0 }, FOLK1A: { '2026K3': 0 }, INDKP101: { 2024: 0, 2025: 1 } }[table];
+      const periods = { PSKAT: { 2026: 0 }, STRAF22: { 2025: 0 }, FOLK1A: { '2026K3': 0 }, INDKP101: { 2024: 0, 2025: 1 }, RES88: { 2025: 0, 2026: 1 }, KVOTIEN: { 2024: 0, 2025: 1 } }[table];
       response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ dataset: { dimension: { Tid: { category: { index: periods } } }, value: [1, 2] } }));
     });
-    expect(await run('dst')).toMatchObject({ changed: true, result: 'PSKAT 2026, STRAF22 2025, FOLK1A 2026K3, INDKP101 2024, 2025' });
+    expect(await run('dst')).toMatchObject({ changed: true, result: 'PSKAT 2026, STRAF22 2025, FOLK1A 2026K3, INDKP101 2024, 2025, RES88 2025, 2026, KVOTIEN 2024, 2025' });
     const bodies = server.to('/statbank').map((r) => JSON.parse(r.body) as { table: string; variables: { code: string; values: string[] }[] });
-    expect(bodies.map((b) => b.table)).toEqual(['PSKAT', 'STRAF22', 'FOLK1A', 'INDKP101']);
+    expect(bodies.map((b) => b.table)).toEqual(['PSKAT', 'STRAF22', 'FOLK1A', 'INDKP101', 'RES88', 'KVOTIEN']);
     expect(bodies.every((b) => b.variables[0].values[0] === '*' && b.variables.at(-1)!.values[0] === '(1)')).toBe(true);
     // The income's newest year can be all zeros, so the year before comes along
     expect(bodies[3].variables.at(-1)!.values).toEqual(['(1)', '(2)']);

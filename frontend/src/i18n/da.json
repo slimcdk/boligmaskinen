@@ -190,6 +190,16 @@
       "name": "Høje indkomster",
       "opposite": "Lave indkomster",
       "note": "Gennemsnitlig disponibel indkomst pr. indbygger i kommunen, 2024, fra Danmarks Statistik."
+    },
+    "nurseryPrice": {
+      "name": "Lave vuggestuepriser",
+      "opposite": "Høje vuggestuepriser",
+      "note": "Årlig takst for en kommunal vuggestueplads (0–2 år), 2026, fra Danmarks Statistik."
+    },
+    "classSize": {
+      "name": "Små klasser",
+      "opposite": "Store klasser",
+      "note": "Elever pr. klasse i kommunens folkeskoler, 2025, fra Danmarks Statistik."
     }
   },
   "examples": {
@@ -246,7 +256,9 @@
     "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
     "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)",
     "consequence_zone": "Afstand til en konsekvenszone om en virksomhed eller et teknisk anlæg (0 inden for en)",
-    "income": "Gennemsnitlig disponibel indkomst pr. indbygger i kommunen, 2024"
+    "income": "Gennemsnitlig disponibel indkomst pr. indbygger i kommunen, 2024",
+    "nursery_price": "Årlig takst for en kommunal vuggestueplads (0–2 år), 2026",
+    "class_size": "Elever pr. klasse i kommunens folkeskoler, 2025"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -268,7 +280,8 @@
     "car": "bil",
     "bike": "cykel",
     "walk": "gang",
-    "train": "tog"
+    "train": "tog",
+    "pupils": "elever"
   },
   "wording": {
     "noData": "ingen data",
@@ -596,7 +609,7 @@
         "note": "Afstanden til nærmeste mølle er vores egen beregning."
       },
       "dst": {
-        "uses": "Indkomstskat og grundskyld, befolkning, indbrud i beboelser og gennemsnitlig disponibel indkomst pr. kommune.",
+        "uses": "Indkomstskat og grundskyld, befolkning, indbrud i beboelser, gennemsnitlig disponibel indkomst, vuggestuetakster og klassestørrelser pr. kommune.",
         "licence": "Fri brug med kildeangivelse, som CC BY 4.0",
         "credit": "Kilde: Egne beregninger på baggrund af tal fra Danmarks Statistik"
       },
@@ -720,7 +733,7 @@
       },
       "dst": {
         "name": "Kommunal statistik",
-        "description": "Skat (PSKAT), befolkning (FOLK1A), indbrud (STRAF22) og indkomst (INDKP101), hver i sin nyeste periode."
+        "description": "Skat (PSKAT), befolkning (FOLK1A), indbrud (STRAF22), indkomst (INDKP101), vuggestuetakster (RES88) og klassestørrelser (KVOTIEN), hver i sin nyeste periode."
       },
       "noise": {
         "name": "Støj",

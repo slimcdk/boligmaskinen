@@ -190,6 +190,16 @@
       "name": "High incomes",
       "opposite": "Low incomes",
       "note": "Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik."
+    },
+    "nurseryPrice": {
+      "name": "Low nursery prices",
+      "opposite": "High nursery prices",
+      "note": "Yearly rate for a municipal nursery place (0–2 years), 2026, from Danmarks Statistik."
+    },
+    "classSize": {
+      "name": "Small classes",
+      "opposite": "Large classes",
+      "note": "Pupils per class in the municipality’s folkeskoler, 2025, from Danmarks Statistik."
     }
   },
   "examples": {
@@ -246,7 +256,9 @@
     "new_local_plan": "Distance to a local plan of the last two years, proposed or adopted (0 inside one)",
     "district_heating": "Distance to an area the heat plans give district heating (0 inside one)",
     "consequence_zone": "Distance to a zone the plans draw around a business or technical plant (0 inside one)",
-    "income": "Mean disposable income per resident of the municipality, 2024"
+    "income": "Mean disposable income per resident of the municipality, 2024",
+    "nursery_price": "Yearly rate for a municipal nursery place (0–2 years), 2026",
+    "class_size": "Pupils per class in the folkeskoler of the municipality, 2025"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",
@@ -268,7 +280,8 @@
     "car": "car",
     "bike": "bike",
     "walk": "walk",
-    "train": "train"
+    "train": "train",
+    "pupils": "pupils"
   },
   "wording": {
     "noData": "no data",

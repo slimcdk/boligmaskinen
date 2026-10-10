@@ -15,7 +15,7 @@ export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'cate
 export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10 };
 
 /** Numbers Danmarks Statistik gives per municipality. */
-export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population' | 'income';
+export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population' | 'income' | 'nurseryPrice' | 'classSize';
 
 /** A preference gives points; a requirement removes cells that do not meet it. */
 export type Role = 'want' | 'must';
@@ -76,6 +76,10 @@ export interface Municipality {
   burglariesPer1000: number;
   /** The mean disposable income of its residents, in kroner; missing where the statistics have none yet. */
   income?: number;
+  /** The yearly rate of a municipal nursery place (0-2 years), in kroner, where it has one. */
+  nurseryPrice?: number;
+  /** The pupils per class in its folkeskoler. */
+  classSize?: number;
 }
 
 export interface GridMeta {
@@ -156,6 +160,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'supermarket', group: 'Everyday life', name: 'Supermarket', opposite: 'Away from supermarkets', note: 'Nearest supermarket.', kind: 'distance', layer: 'supermarket', role: 'want', weight: 2, full: 500, zero: 5000 },
   { id: 'school', group: 'Everyday life', name: 'School', opposite: 'Away from schools', note: 'Nearest folkeskole, friskole or private school.', kind: 'distance', layer: 'school', role: 'want', weight: 2, full: 1000, zero: 5000 },
   { id: 'daycare', group: 'Everyday life', name: 'Daycare', opposite: 'Away from daycare', note: 'Nearest daycare unit.', kind: 'distance', layer: 'daycare', role: 'want', weight: 2, full: 500, zero: 4000 },
+  { id: 'classSize', group: 'Everyday life', name: 'Small classes', opposite: 'Large classes', note: 'Pupils per class in the municipality’s folkeskoler, 2025, from Danmarks Statistik.', kind: 'municipal', field: 'classSize', unit: 'pupils', min: 10, max: 28, step: 0.5, role: 'want', weight: 1, full: 18, zero: 23 },
   { id: 'station', group: 'Everyday life', name: 'Train or light rail', opposite: 'Away from railways', note: 'Nearest station.', kind: 'distance', layer: 'station', role: 'want', weight: 1, full: 1000, zero: 10000 },
   { id: 'pharmacy', group: 'Everyday life', name: 'Pharmacy', opposite: 'Away from pharmacies', note: 'Nearest pharmacy, from OpenStreetMap.', kind: 'distance', layer: 'pharmacy', role: 'want', weight: 1, full: 1000, zero: 5000 },
   { id: 'library', group: 'Everyday life', name: 'Library', opposite: 'Away from libraries', note: 'Nearest public library, from OpenStreetMap.', kind: 'distance', layer: 'library', role: 'want', weight: 1, full: 1000, zero: 5000 },
@@ -187,6 +192,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'district_heating', group: 'Area and economy', name: 'District heating', opposite: 'Outside district heating', note: 'Inside an area the heat plans give district heating, from Plandata.dk.', kind: 'distance', layer: 'district_heating', role: 'want', weight: 1, full: 0, zero: 200 },
   { id: 'incomeTax', group: 'Area and economy', name: 'Low municipal tax', opposite: 'High municipal tax', note: 'Income tax per municipality, 2026.', kind: 'municipal', field: 'incomeTax', unit: '%', min: 24, max: 26.5, step: 0.1, role: 'want', weight: 1, full: 24.6, zero: 26.0 },
   { id: 'income', group: 'Area and economy', name: 'High incomes', opposite: 'Low incomes', note: 'Mean disposable income per resident of the municipality, 2024, from Danmarks Statistik.', kind: 'municipal', field: 'income', unit: 'kr.', min: 200000, max: 600000, step: 5000, role: 'want', weight: 1, full: 320000, zero: 260000 },
+  { id: 'nurseryPrice', group: 'Area and economy', name: 'Low nursery prices', opposite: 'High nursery prices', note: 'Yearly rate for a municipal nursery place (0–2 years), 2026, from Danmarks Statistik.', kind: 'municipal', field: 'nurseryPrice', unit: 'kr.', min: 30000, max: 65000, step: 500, role: 'want', weight: 1, full: 40000, zero: 55000 },
   { id: 'burglary', group: 'Area and economy', name: 'Few home burglaries', opposite: 'Many home burglaries', note: 'Reported per 1,000 residents per municipality, 2025.', kind: 'municipal', field: 'burglariesPer1000', unit: 'per 1,000', min: 1, max: 5, step: 0.1, role: 'want', weight: 1, full: 2.5, zero: 4.5 },
   {
     id: 'zone', group: 'Area and economy', name: 'Planning zone', note: 'Homes in a sommerhusområde cannot be lived in all year.', kind: 'category', layer: 'zone',

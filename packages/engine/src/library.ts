@@ -20,7 +20,7 @@ export interface BlockTemplate {
 }
 
 /** The value name for a catalogue criterion. */
-const VALUE_NAME: Record<string, string> = { incomeTax: 'income_tax', burglary: 'burglaries' };
+const VALUE_NAME: Record<string, string> = { incomeTax: 'income_tax', burglary: 'burglaries', nurseryPrice: 'nursery_price', classSize: 'class_size' };
 
 interface Scale { min: number; max: number; step: number; unit: string }
 

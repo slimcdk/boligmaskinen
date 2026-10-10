@@ -366,7 +366,7 @@ close and others far away, so the block is turned around rather than written twi
 | A growing municipality | Population forecast to 2050 | `growth_2050` (%) | DST FRKM126 | Growing towns keep schools and shops |
 | How the area votes | Party shares in the polling district at the last general election | `vote_<party>` (%) | DST FV26TOTA | Possible but sensitive; offer it only as the user's own choice, never as a predefined block |
 | Kinds of crime | Violence, vandalism, theft and burglary per 1,000 inhabitants, quarterly | `crime_violence`, `crime_vandalism`, … | DST STRAF11 per municipality | Coarse; extends `burglaries` |
-| Childcare and schools by the numbers | Childcare price, children per adult, and class size | `childcare_price` (kr. a month), `childcare_ratio`, `class_size` | DST RES88, BOERN8, KVOTIEN per municipality | Per institution later from the registers |
+| Childcare and schools by the numbers | Childcare price, children per adult, and class size | `nursery_price` (kr. a year; in use since 2026-10-10), `childcare_ratio`, `class_size` (in use since 2026-10-10) | DST RES88, BOERN8, KVOTIEN per municipality | Per institution later from the registers |
 | Income in the area | Mean income | `income` (kr.; in use since 2026-10-10: mean disposable income per resident of the municipality) | DST INDKP101 per municipality (free); per parish or postcode only paid | Both ways |
 | Fewer cars | Cars per household | `cars_per_household` | DST BIL800 per municipality | A rough proxy for how well a place does without a car |
 
