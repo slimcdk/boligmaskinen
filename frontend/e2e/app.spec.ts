@@ -373,10 +373,12 @@ test('OpenStreetMap is credited on the map until the map is used, or for five se
 test('the whole world is open to explore', async ({ page }) => {
   await open(page);
   await expect.poll(() => zoom(page)).toBeGreaterThan(5);
-  // Out until the button gives up, which it does when the world fills the window
+  // Out until the button gives up, which it does when the world fills the window. It may give up
+  // while the last zoom still runs, after it said it was enabled, so it is clicked without waiting
+  // to be enabled: a disabled button takes no click
   const zoomOut = page.locator('.maplibregl-ctrl-zoom-out');
   for (let i = 0; i < 12 && await zoomOut.isEnabled(); i++) {
-    await zoomOut.click();
+    await zoomOut.click({ force: true });
     await page.waitForTimeout(300);
   }
   await expect.poll(() => zoom(page)).toBeLessThan(1.5);
