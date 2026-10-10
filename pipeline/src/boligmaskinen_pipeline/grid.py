@@ -12,6 +12,7 @@ Usage:
 <inputs.json> names the file of every source (relative paths are read from the JSON file's folder):
 
     osm_layers    layers.gpkg from the osm step        osm_addresses  addresses.npy from the osm step
+                  (forests, lakes, beaches, solar parks, …)
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
     noise_rail, noise_air, noise_industry  Miljøstyrelsen's maps of railways, airports and industry (optional)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
@@ -78,7 +79,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
-          "density", "zone", "municipality", "no2", "pm25", "mask"]
+          "solar", "density", "zone", "municipality", "no2", "pm25", "mask"]
 TILE = 256  # cells per side of a detail tile
 
 
@@ -367,6 +368,12 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     found["turbines"] = len(turbine_x)
     del sheet, turbine_x, turbine_y
     step(f"Wind turbines in operation: {found['turbines']:,}", 0.4)
+
+    # --- Solar parks (OpenStreetMap): plants and panels on the ground of at least 1 ha ------------
+    solar = grid.burn(large_areas(gpkg, "solar", 10_000), all_touched=True).astype(bool)
+    layers["solar"] = encode_distance(grid.distance_to(solar))
+    step(f"Solar parks cover {solar.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.42)
+    del solar
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])

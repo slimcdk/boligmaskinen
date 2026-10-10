@@ -78,6 +78,8 @@ def sources(tmp_path_factory) -> Path:
         "supermarket": [{"name": "Netto", "geometry": Point(574_000, 6_219_000)}, {"name": "Rema", "geometry": Point(577_000, 6_223_000)}],
         "station": [{"name": "Aarhus H", "geometry": Point(575_000, 6_221_000)}],
         "industrial": [{"geometry": INDUSTRIAL}],
+        # A solar park of 4 ha, and a 0.5 ha one too small to count
+        "solar": [{"geometry": box(577_000, 6_216_000, 577_200, 6_216_200)}, {"geometry": box(571_500, 6_223_500, 571_570, 6_223_570)}],
         "road": [{"road_class": "motorway", "geometry": LineString([(565_000, 6_222_000), (585_000, 6_222_000)])},
                  {"road_class": "secondary", "geometry": LineString([(574_000, 6_215_000), (574_000, 6_235_000)])}],
         "coastline": [{"geometry": LineString([(580_000, 6_215_000), (580_000, 6_235_000)])}],

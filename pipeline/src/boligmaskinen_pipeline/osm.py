@@ -45,11 +45,12 @@ FEATURE_TAGS = [
     ("railway", "station"), ("railway", "halt"),
     ("boundary", "administrative"),
     *[("highway", key) for key in ROAD_CLASSES],
+    ("power", "plant"), ("power", "generator"),
 ]
 
 # Every theme, with the columns it has besides the geometry, so each layer exists even when empty
 THEMES: dict[str, list[str]] = {
-    "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [],
+    "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [], "solar": [],
     "supermarket": ["name"], "station": ["name"], "municipality": ["name", "ref"], "country": [], "road": ["road_class"],
 }
 
@@ -79,6 +80,11 @@ def classify(tags) -> str | None:
         return "country"  # includes the territorial sea, so it also tells where the sea is
     if tags.get("highway") in ROAD_CLASSES:
         return "road"
+    # Solar parks: a plant, or the panels on the ground; not those on a roof
+    if (tags.get("power") == "plant" and tags.get("plant:source") == "solar") or (
+            tags.get("power") == "generator" and tags.get("generator:source") == "solar"
+            and tags.get("location") not in ("roof", "rooftop") and tags.get("generator:place") not in ("roof", "rooftop")):
+        return "solar"
     return None
 
 
@@ -104,7 +110,7 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
                 geom = wkb.create_point(obj)
             elif kind == "w" and theme in ("coastline", "road"):
                 geom = wkb.create_linestring(obj)
-            elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country"):
+            elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar"):
                 geom = wkb.create_multipolygon(obj)
             else:
                 continue

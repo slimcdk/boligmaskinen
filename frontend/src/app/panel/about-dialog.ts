@@ -32,7 +32,7 @@ const CC_BY = { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by
 export const SOURCES: DataSource[] = [
   {
     name: 'OpenStreetMap', url: 'https://www.openstreetmap.org',
-    uses: 'Forests, lakes, the coast, beaches, supermarkets, stations, roads, address points and municipalities, and the basemap of Denmark (through Protomaps).',
+    uses: 'Forests, lakes, the coast, beaches, solar parks, supermarkets, stations, roads and paths, address points and municipalities, and the basemap of Denmark (through Protomaps).',
     licence: { name: 'Open Database License 1.0 (ODbL)', url: 'https://www.openstreetmap.org/copyright' },
     credit: '© OpenStreetMap contributors',
     note: 'The data layers made from it are under the ODbL too.',
