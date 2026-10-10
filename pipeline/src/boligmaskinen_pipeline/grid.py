@@ -29,6 +29,8 @@ Usage:
     supply_areas  the heat plans' supply areas, from Plandata.dk (optional)
     consequence_zones, consequence_zones_plants
                   the plans' zones around businesses and technical plants, from Plandata.dk (optional)
+    raw_material_areas
+                  the regions' raw material areas, from Danmarks Miljøportal (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -83,7 +85,7 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 # Sources a build can do without: their layers have no data then
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
-                   "consequence_zones", "consequence_zones_plants"]
+                   "consequence_zones", "consequence_zones_plants", "raw_material_areas"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -98,7 +100,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
-          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "district_heating", "density", "zone",
+          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "district_heating", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
@@ -109,6 +111,9 @@ AREA_FREDNING = 1
 # Of the traffic the municipal plans plan, the kinds that are roads (1) and railways (2); not the
 # paths, corridors, stations, parking, ports and airports
 PLANNED_ROADS = {"1", "2"}
+# The regions' raw material areas set aside for digging ("Råstofgraveområde"), not those kept for
+# digging later ("Råstofinteresseområde", 2)
+EXTRACTION_AREA = 1
 # The heat plans' kind of supply area that is district heating ("Fjernvarme"); the others are
 # individual natural gas, other, and areas to be decided
 DISTRICT_HEATING = "1"
@@ -155,6 +160,9 @@ AREA_LAYERS = [
               "Zones around businesses and plants"),
     AreaLayer("district_heating", [AreaSource("supply_areas", ["type1203"], lambda frame: frame["type1203"].astype(str) == DISTRICT_HEATING)],
               "District heating areas"),
+    AreaLayer("extraction_area", [AreaSource("raw_material_areas", ["Statuskode", "Omr_tkode"],
+                                             lambda frame: in_force(frame) & (frame["Omr_tkode"] == EXTRACTION_AREA))],
+              "Raw material extraction areas in force"),
 ]
 
 # The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)

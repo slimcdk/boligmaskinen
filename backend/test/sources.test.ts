@@ -186,15 +186,15 @@ describeWithDatabase('the source jobs', () => {
     await expect(run('air')).rejects.toThrow(/did not give what it should: only 0 squares/);
   });
 
-  it('Protected areas: fetches the fredninger and both kinds of Natura 2000 area', async () => {
+  it('Protected areas: fetches the fredninger, both kinds of Natura 2000 area and the raw material areas', async () => {
     server.on('GET /wfs-protected', (request, response) => {
       const layer = new URL(request.url, 'http://x').searchParams.get('typeNames');
-      const count = { 'dai:fredede_omr': 4177, 'dai:habitat_omr': 269, 'dai:fugle_bes_omr': 125 }[layer!] ?? 0;
+      const count = { 'dai:fredede_omr': 4177, 'dai:habitat_omr': 269, 'dai:fugle_bes_omr': 125, 'dai:raastofomr': 1321 }[layer!] ?? 0;
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: count }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
     });
-    expect(await run('protected')).toMatchObject({ changed: true, result: '4,177 protected areas, 269 habitat areas, 125 bird protection areas' });
-    expect(server.to('/wfs-protected')).toHaveLength(3);
+    expect(await run('protected')).toMatchObject({ changed: true, result: '4,177 protected areas, 269 habitat areas, 125 bird protection areas, 1,321 raw material areas' });
+    expect(server.to('/wfs-protected')).toHaveLength(4);
     expect(await run('protected')).toMatchObject({ changed: false });
     server.on('GET /wfs-protected', (_request, response) => {
       response.writeHead(200).end(JSON.stringify({ features: [{ geometry: null }] }));

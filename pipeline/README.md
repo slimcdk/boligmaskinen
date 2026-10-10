@@ -148,7 +148,7 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 | New local plans | Plandata.dk, local plans | CC BY 4.0. Those proposed or adopted in the last two years, which the job asks for by date |
 | District heating | Plandata.dk, the heat plans' supply areas | CC BY 4.0. The areas of district heating, not those of natural gas |
 | Consequence zones | Plandata.dk, the plans' zones around businesses and technical plants | CC BY 4.0. Where the plans keep homes out, for smell, noise or risk |
-| Protected areas, Natura 2000 | Miljøstyrelsen, through Danmarks Miljøportal | CC0. The fredninger of land in force (not the kirkefredninger), and the Natura 2000 areas for habitats and birds: the distance to them, 0 inside |
+| Protected areas, Natura 2000, raw material areas | Miljøstyrelsen and the regions, through Danmarks Miljøportal | CC0. The fredninger of land in force (not the kirkefredninger), the Natura 2000 areas for habitats and birds, and the areas set aside for digging: the distance to them, 0 inside |
 | Schools | STIL Institutionsregisteret | Folkeskoler, friskoler and private schools |
 | Daycare | STIL Dagtilbudsregisteret | Active units |
 | Wind turbines | Energistyrelsen, stamdataregister | Turbines in operation: the distance, and the distance in each turbine's total height (hub and half the rotor) |
