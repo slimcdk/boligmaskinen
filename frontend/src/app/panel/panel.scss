@@ -41,10 +41,7 @@
   font-weight: 500;
 }
 
-.empty {
-  h2 { margin: 0 0 4px; font: var(--mat-sys-title-medium); }
-  p { margin: 0 0 10px; font: var(--mat-sys-body-medium); color: var(--mat-sys-on-surface-variant); }
-}
+.empty h2 { margin: 0 0 8px; font: var(--mat-sys-title-medium); }
 
 .section-head {
   display: flex;

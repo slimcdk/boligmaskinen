@@ -15,7 +15,6 @@
   },
   "panel": {
     "emptyTitle": "Where would you like to live?",
-    "emptyText": "Pick what matters to you. The map colours every {{ cell }} m cell by how well it fits.",
     "suggestions": "Suggestions",
     "whatMatters": "What matters to you",
     "nothingChosen": "Nothing chosen yet. Add a predefined block, an example of code, or one of the suggestions above.",

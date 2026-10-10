@@ -29,6 +29,8 @@ async function cellsShown(page: Page): Promise<number> {
 test('shows the map of the region and asks what matters', async ({ page }) => {
   await open(page);
   await expect(page.getByRole('heading', { name: 'Where would you like to live?' })).toBeVisible();
+  // The map's card says what the map shows, and the weighting below does not say it again
+  await expect(page.getByText(/colours every 100 m cell/)).toHaveCount(1);
   // The test data pack covers Aarhus Kommune
   await expect(page.locator('app-map-panel .head p')).toContainText('Aarhus Kommune');
   await expect(page.locator('.problem')).toHaveCount(0);
