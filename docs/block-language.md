@@ -154,6 +154,15 @@ Like free values in GeoGebra, some `let` lines become controls in the side panel
   block that gives more, or less, is left out, and the panel says how many cells were wrong and
   suggests `clamp(…)` or the role of a requirement.
 
+## In the database
+
+The same code runs in PostgreSQL too (`packages/engine/src/sql.ts`), for scoring homes where they
+are stored. Missing data is NULL there, and every function gives the number it gives in the
+browser, NULL where the browser has no data. Two things differ: a number past ±1.8 × 10³⁰⁸ stops
+the query where the browser says infinity, and the browser keeps scores as 32-bit numbers, so the
+points agree to about 1e-5. Like the generated JavaScript, the SQL is made from the parsed code,
+never from its text.
+
 ## Versions and migrations
 
 Saved blocks outlive the language they were written in, so the language has versions, and code

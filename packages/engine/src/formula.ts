@@ -451,6 +451,11 @@ function parse(source: string): Program {
   return new Parser(tokenize(source)).program();
 }
 
+/** The syntax tree of a formula that compiles (compileFormula says whether it does), as sql.ts reads it. */
+export function parseProgram(source: string): Program {
+  return parse(source);
+}
+
 /** Parse and compile a formula over the given value names. */
 export function compileFormula(source: string, inputs: string[]): CompileResult {
   try {

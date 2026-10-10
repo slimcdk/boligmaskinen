@@ -163,7 +163,10 @@ what they took (#69).
 4. **More about the property.** MAT, VUR (valuations), EBR, and school grades from
    uddannelsesstatistik.dk.
 5. **Scoring in the database.** The engine compiles blocks to SQL as well, so PostGIS can
-   find the best homes among millions without sending them to the browser.
+   find the best homes among millions without sending them to the browser. Done (2026-10-10):
+   `blockSql` and `weightingSql` in `packages/engine/src/sql.ts`; a test against PostGIS gives
+   2,000 rows the same values and points as the browser, for every predefined block and for
+   every operator and function.
 
 **Done when:** the panel shows the 50 best homes for the current weighting, each with an
 explanation.
