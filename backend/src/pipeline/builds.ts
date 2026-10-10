@@ -79,6 +79,8 @@ const GRID_SOURCES: Record<string, [job: string, name: string]> = {
   local_plans_proposed: ['plans', 'lokalplan_forslag.geojson'],
   local_plans_adopted: ['plans', 'lokalplan_vedtaget.geojson'],
   supply_areas: ['plans', 'forsyningomraade_vedtaget.geojson'],
+  consequence_zones: ['plans', 'konsekvensomraade_vedtaget.geojson'],
+  consequence_zones_plants: ['plans', 'tekniskanlaegkonsekvensomraade_vedtaget.geojson'],
 };
 /** Files the grid reads when they are there: an install fetched the noise archive before it took these out too. */
 const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
