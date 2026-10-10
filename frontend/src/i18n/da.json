@@ -124,6 +124,21 @@
     "zone": {
       "name": "Planzone",
       "note": "Boliger i et sommerhusområde må ikke bebos hele året."
+    },
+    "airport": {
+      "name": "Væk fra lufthavne",
+      "opposite": "Tæt på en lufthavn",
+      "note": "Nærmeste lufthavn med en IATA-kode, fx Billund eller Kastrup, fra OpenStreetMap."
+    },
+    "airfield": {
+      "name": "Væk fra flyvepladser",
+      "opposite": "Tæt på en flyveplads",
+      "note": "Nærmeste flyveplads af enhver art, helt ned til svæveflyve- og ultralet-pladser, fra OpenStreetMap."
+    },
+    "air_station": {
+      "name": "Væk fra flyvestationer",
+      "opposite": "Tæt på en flyvestation",
+      "note": "Nærmeste af flyvevåbnets flyvestationer: Aalborg, Karup og Skrydstrup."
     }
   },
   "examples": {
@@ -163,7 +178,10 @@
     "income_tax": "Kommunal indkomstskat, 2026",
     "land_tax": "Grundskyld, 2026",
     "burglaries": "Indbrud i beboelse pr. 1.000 indbyggere, 2025",
-    "population": "Indbyggere i kommunen"
+    "population": "Indbyggere i kommunen",
+    "airport": "Afstand til en lufthavn (en med IATA-kode)",
+    "airfield": "Afstand til en flyveplads af enhver art, også svæveflyve- og ultralet-pladser",
+    "air_station": "Afstand til en militær flyvestation"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -309,7 +327,7 @@
     "duplicate": "Kopiér",
     "renameTitle": "Omdøb kortet",
     "rename": "Omdøb",
-    "deleteTitle": "Slet \"{{ name }}\"?",
+    "deleteTitle": "Slet »{{ name }}«?",
     "deleteText": "Dets blokke slettes med det. Dine steder og de andre kort bliver.",
     "delete": "Slet"
   },
@@ -479,7 +497,7 @@
     "unknown": "ukendt",
     "sources": {
       "osm": {
-        "uses": "Skove, søer, kysten, strande, solcelleparker, supermarkeder, stationer, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
+        "uses": "Skove, søer, kysten, strande, solcelleparker, lufthavne og flyvepladser, supermarkeder, stationer, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
         "note": "Datalagene lavet ud fra det er også under ODbL."
       },
       "mst": {

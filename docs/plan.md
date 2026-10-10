@@ -41,10 +41,10 @@ as jobs (milestone 2). Milestone 3 is done but for public transport and the sour
 access; milestone 7 but for a first release. Of milestone 4, scoring in the database is ready for
 the homes.**
 
-- All of Denmark: 17 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
+- All of Denmark: 20 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
   10, with a world map around it. Nature, noise from roads, railways, airports and industry, air
-  quality, wind turbines (also by their height), solar parks, everyday services, planning zones
-  and municipal statistics.
+  quality, wind turbines (also by their height), solar parks, airports and airfields, everyday
+  services, planning zones and municipal statistics.
 - The weighting is blocks in our own language ([`block-language.md`](block-language.md)), with
   versions and migrations. Predefined blocks are code too, and a block can be turned around. The
   blocks run as compiled JavaScript in a Web Worker, and compile to SQL for the database.
@@ -151,7 +151,7 @@ what they took (#69).
    - When a place is added, the app finds its travel times (`POST /api/travel`). Done
      (2026-10-10) for car, bike and walk; the place says whether its times come from the roads.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
-   districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. And
+   districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too. And
    drinking water quality (hardness per supply area, PFAS, nitrate); see
    [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The open public data checked on
    2026-10-09, and where to start, is in [public-data.md](public-data.md). Each new source adds values to the block language, predefined blocks and a

@@ -80,6 +80,10 @@ def sources(tmp_path_factory) -> Path:
         "industrial": [{"geometry": INDUSTRIAL}],
         # A solar park of 4 ha, and a 0.5 ha one too small to count
         "solar": [{"geometry": box(577_000, 6_216_000, 577_200, 6_216_200)}, {"geometry": box(571_500, 6_223_500, 571_570, 6_223_570)}],
+        # An airport in the north-west corner, an air station in the north-east, and a gliding field mapped as a point
+        "aerodrome": [{"name": "Lufthavn", "kind": "airport", "geometry": box(570_000, 6_224_000, 571_000, 6_225_000)},
+                      {"name": "Flyvestation", "kind": "air_station", "geometry": box(578_500, 6_223_500, 579_000, 6_224_000)},
+                      {"name": "Svæveflyveplads", "kind": "airfield", "geometry": Point(571_050, 6_216_050)}],
         "road": [{"road_class": "motorway", "geometry": LineString([(565_000, 6_222_000), (585_000, 6_222_000)])},
                  {"road_class": "secondary", "geometry": LineString([(574_000, 6_215_000), (574_000, 6_235_000)])}],
         "coastline": [{"geometry": LineString([(580_000, 6_215_000), (580_000, 6_235_000)])}],

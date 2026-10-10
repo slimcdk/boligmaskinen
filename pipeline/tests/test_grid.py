@@ -98,6 +98,18 @@ def test_measures_the_distance_to_solar_parks_of_at_least_1_ha(aarhus: Built):
     assert decode_distance(aarhus.at("solar", 571_530, 6_223_530)) > 5_000
 
 
+def test_measures_the_distance_to_airports_air_stations_and_any_airfield(aarhus: Built):
+    assert aarhus.at("airport", 570_500, 6_224_500) == 0
+    assert decode_distance(aarhus.at("airport", 570_500, 6_221_500)) == pytest.approx(2_500, abs=150)
+    assert aarhus.at("air_station", 578_700, 6_223_700) == 0
+    assert decode_distance(aarhus.at("air_station", 578_750, 6_220_000)) == pytest.approx(3_500, abs=150)
+    # Every kind is an airfield, also the gliding field that is only a point
+    assert aarhus.at("airfield", 571_050, 6_216_050) == 0
+    assert aarhus.at("airfield", 578_700, 6_223_700) == 0
+    assert decode_distance(aarhus.at("airfield", 571_050, 6_219_050)) == pytest.approx(3_000, abs=150)
+    assert decode_distance(aarhus.at("airport", 571_050, 6_216_050)) == pytest.approx(7_950, abs=150)
+
+
 def test_knows_the_zones_and_the_municipality(aarhus: Built):
     assert aarhus.at("zone", 574_000, 6_219_000) == 1  # byzone
     assert aarhus.at("zone", 579_500, 6_215_500) == 3  # sommerhusområde

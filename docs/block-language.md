@@ -89,6 +89,9 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `turbine` | Distance to a wind turbine in operation |
 | `turbine_heights` | The same distance in the turbine's total height, the nearest in those terms: 4 is what Danish rules keep from a neighbour; 25.4 or more where none is that near (added 2026-10-10, which keeps the language version) |
 | `solar` | Distance to a solar park of at least 1 ha: a plant, or panels on the ground (OpenStreetMap; added 2026-10-10, which keeps the language version) |
+| `airport` | Distance to an airport: an aerodrome with an IATA code, such as Billund or Kastrup (OpenStreetMap; added 2026-10-10, which keeps the language version) |
+| `airfield` | Distance to an airfield of any kind: the airports and air stations, and the public, private, gliding and microlight fields (OpenStreetMap; added 2026-10-10, which keeps the language version) |
+| `air_station` | Distance to a military air station: Aalborg, Karup or Skrydstrup (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `density` | Addresses within 300 m |
 | `supermarket`, `school`, `daycare`, `station` | Distance to the nearest one |
 | `zone` | Planning zone: `BYZONE`, `LANDZONE` or `SOMMERHUS` |
