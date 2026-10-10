@@ -85,7 +85,7 @@ export class BlockRow {
     const t = (key: string) => this.i18n.t(key);
     const data: NameDialogData = { title: t('blockRow.newGroupTitle'), label: t('blockRow.groupName'), value: this.store.freeGroupName(t('blockRow.newGroupName')), action: t('blockRow.move') };
     this.dialog.open<NameDialog, NameDialogData, string>(NameDialog, { data, width: '400px', maxWidth: '92vw', autoFocus: 'first-tabbable' })
-      .afterClosed().subscribe((name) => name && this.store.moveToNewGroup(id, name));
+      .beforeClosed().subscribe((name) => name && this.store.moveToNewGroup(id, name));
   }
 
   protected remove(): void {

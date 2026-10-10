@@ -53,6 +53,6 @@ export class ShareService {
       action: this.i18n.t('share.addAction'),
     };
     this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data, width: '440px', maxWidth: '92vw' })
-      .afterClosed().subscribe((yes) => yes && this.store.addShared(shared));
+      .beforeClosed().subscribe((yes) => yes && this.store.addShared(shared));
   }
 }

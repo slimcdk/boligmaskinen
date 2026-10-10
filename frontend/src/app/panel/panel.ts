@@ -61,7 +61,7 @@ export class Panel {
   protected openCatalog(): void {
     const data: CatalogData = { inUse: [...this.store.templatesInUse()], places: this.store.places() };
     this.dialog.open(CatalogDialog, { data, width: '460px', maxWidth: '95vw', autoFocus: 'first-tabbable' })
-      .afterClosed()
+      .beforeClosed()
       .subscribe((result?: CatalogResult) => {
         if (!result) return;
         this.store.setCatalogue(result.catalogue);
