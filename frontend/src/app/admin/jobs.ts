@@ -73,6 +73,10 @@ export const JOBS: Job[] = [
     id: 'protected', name: 'Protected areas', kind: 'fetch', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', enabled: true, then: ['grid'],
     description: 'Fredninger, the Natura 2000 areas for habitats and birds, and the regions’ raw material areas, from Danmarks Miljøportal’s WFS.',
   },
+  {
+    id: 'water', name: 'Drinking water', kind: 'fetch', source: 'GEUS', schedule: '0 5 5 * *', enabled: true, then: ['grid'],
+    description: 'The hardness of the drinking water in the public waterworks’ supply areas, from GEUS’s national dataset (Jupiter).',
+  },
   { id: 'world', name: 'World map', kind: 'fetch', source: 'Natural Earth', schedule: '0 2 1 * *', enabled: true, then: ['pack'], description: 'Land, lakes, borders and names outside Denmark.' },
   { id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', enabled: true, then: ['pack'], description: 'Every data layer on the 100 m grid, sampled to the 200 m display grid.' },
   {

@@ -41,9 +41,9 @@ as jobs (milestone 2). Milestone 3 is done but for the sources that need
 access; milestone 7 but for a first release. Of milestone 4, scoring in the database is ready for
 the homes.**
 
-- All of Denmark: 32 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
+- All of Denmark: 33 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
   10, with a world map around it. Nature, protected areas and Natura 2000, noise from roads,
-  railways, airports and industry, air quality, wind turbines (also by their height), solar parks,
+  railways, airports and industry, air quality, the hardness of the drinking water, wind turbines (also by their height), solar parks,
   power lines, airports and airfields, what the plans lay out (roads and railways, new local
   plans, zones around businesses, gravel pits now and to come), district heating, everyday services (also pharmacies and
   libraries, and the departures of public transport nearby), planning zones and municipal statistics (also the income, nursery rates and class sizes).
@@ -158,7 +158,7 @@ what they took (#69).
      whether its times come from the roads and the timetables.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
    districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too, and Miljøstyrelsen's protected areas and Natura 2000 from Danmarks Miljøportal; pharmacies, libraries and the overhead power lines of 132 kV or more from OpenStreetMap, where they are nearly all mapped; and the roads and railways the municipal plans lay out, the local plans of the last two years, the zones around businesses and plants, and the district heating areas, from Plandata.dk; and the areas the regions' raw material plans set aside for digging, now or later, from Danmarks Miljøportal. And
-   drinking water quality (hardness per supply area, PFAS, nitrate); see
+   drinking water quality: the hardness per supply area came from GEUS on 2026-10-10, PFAS and nitrate are to come; see
    [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The GeoFA school
    districts were fetched on 2026-10-10 (1,409 districts, 143 MB of GeoJSON) but not used: a
    district has a number and a name, not the school's, and some hold several schools or grades,

@@ -82,6 +82,8 @@ describe('helpers', () => {
     expect(blockSummary(nursery)).toBe('Full points up to 40,000 kr. · No points from 55,000 kr.');
     const classes = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'classSize')!));
     expect(blockSummary(classes)).toBe('Full points up to 18 pupils · No points from 23 pupils');
+    const water = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'water_hardness')!));
+    expect(blockSummary(water)).toBe('Full points up to 8 °dH · No points from 18 °dH');
     const departures = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'departures')!));
     expect(blockSummary(departures)).toBe('No points below 2 per hour · Full points from 12 per hour');
     const pits = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'extraction_area')!));

@@ -30,6 +30,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'noise', label: 'Noise from roads, railways, airports and industry, Lden', unit: 'dB', group: 'Peace and quiet', kind: 'noise', layer: 'noise' },
   { name: 'no2', label: 'Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'scaled', layer: 'no2' },
   { name: 'pm25', label: 'Fine particles (PM2.5), yearly mean 2024 (no data at sea)', unit: 'µg/m³', group: 'Nature', kind: 'scaled', layer: 'pm25' },
+  { name: 'water_hardness', label: 'Hardness of the drinking water from the public waterworks (no data where homes have wells of their own)', unit: '°dH', group: 'Everyday life', kind: 'scaled', layer: 'water_hardness' },
   { name: 'turbine', label: 'Distance to a wind turbine in operation', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'turbine' },
   { name: 'turbine_heights', label: 'Distance to a wind turbine in operation, in its total heights (25.4 or more where none is near)', unit: 'heights', group: 'Infrastructure and plans', kind: 'scaled', layer: 'turbine_heights' },
   { name: 'solar', label: 'Distance to a solar park of at least 1 ha', unit: 'm', group: 'Infrastructure and plans', kind: 'distance', layer: 'solar' },

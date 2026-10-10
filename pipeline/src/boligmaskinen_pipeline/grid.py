@@ -32,6 +32,8 @@ Usage:
     raw_material_areas
                   the regions' raw material areas, from Danmarks Miljøportal (optional)
     transit       Rejseplanen's GTFS feed, for the departures near every cell (optional)
+    water_hardness
+                  GEUS's drinking water hardness per supply area: a GeoPackage, or a ZIP file with one (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -45,6 +47,7 @@ import json
 import re
 import tempfile
 import time
+import zipfile
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import date
@@ -53,6 +56,7 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import openpyxl
+import pandas as pd
 import pyogrio
 import shapely
 from pyproj import Transformer
@@ -87,7 +91,7 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 # Sources a build can do without: their layers have no data then
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
-                   "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit"]
+                   "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit", "water_hardness"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -103,7 +107,7 @@ MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "Ld
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "departures", "pharmacy", "library", "turbine",
           "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
-          "municipality", "no2", "pm25", "mask"]
+          "municipality", "no2", "pm25", "water_hardness", "mask"]
 
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
 IN_FORCE = 3
@@ -117,6 +121,9 @@ PLANNED_ROADS = {"1", "2"}
 # later ("Råstofinteresseområde")
 EXTRACTION_AREA = 1
 EXTRACTION_INTEREST = 2
+# The drinking water's hardness in °dH, in the public waterworks' supply areas: raw 1 + °dH × this,
+# up to 50.8 °dH; raw 0 is no data, as where homes have wells of their own
+HARDNESS_STEPS = 5
 # Public transport near a cell: the trips that leave a stop within DEPARTURES_M of it between
 # DEPARTURES_FROM and DEPARTURES_TO on the timetable's weekday, per hour
 DEPARTURES_M = 500
@@ -200,13 +207,14 @@ class Grid:
         """A distance in whole cells, at least one."""
         return max(1, round(metres / self.cell))
 
-    def burn(self, geometries, value=1, all_touched=False, dtype="uint8", fill=0) -> np.ndarray:
+    def burn(self, geometries, value=1, all_touched=False, dtype="uint8", fill=0, values=None) -> np.ndarray:
+        """The cells of the geometries: `value`, or each geometry's own of `values`."""
         out = np.full(self.shape, fill, dtype=dtype)
         batch, vertices = [], 0
-        for geom in geometries:
+        for index, geom in enumerate(geometries):
             if geom is None or geom.is_empty:
                 continue
-            batch.append((geom, value))
+            batch.append((geom, value if values is None else values[index]))
             vertices += shapely.get_num_coordinates(geom)
             if vertices >= BURN_VERTICES:
                 rasterize(batch, out=out, transform=self.transform, all_touched=all_touched)
@@ -273,6 +281,25 @@ def jsonstat_values(path: Path) -> dict[str, float]:
     sizes = dataset["dimension"]["size"]
     stride = int(np.prod(sizes[1:]))
     return {code: values[index * stride] for code, index in areas.items()}
+
+
+def read_zipped(path: Path, suffix: str = ".gpkg") -> gpd.GeoDataFrame:
+    """A layer of a file, or of the first file with `suffix` inside a ZIP file."""
+    if path.suffix.lower() != ".zip":
+        return gpd.read_file(path)
+    with zipfile.ZipFile(path) as archive:
+        member = next((name for name in archive.namelist() if name.lower().endswith(suffix)), None)
+    if member is None:
+        raise SystemExit(f"{path} has no {suffix} file")
+    return gpd.read_file(f"/vsizip/{path}/{member}")
+
+
+def water_hardness(grid: "Grid", source: Path) -> tuple[np.ndarray, int]:
+    """The hardness of the drinking water in every cell of a supply area (GEUS), as raw 1 + °dH ×
+    HARDNESS_STEPS; 0 elsewhere. Returns the layer and the number of areas."""
+    areas = read_zipped(source).set_crs("EPSG:25832", allow_override=True)
+    raw = np.clip(np.round(1 + pd.to_numeric(areas["Hardness_d"], errors="coerce").fillna(-1).to_numpy() * HARDNESS_STEPS), 0, 255).astype(np.uint8)
+    return grid.burn(areas.geometry.to_list(), values=raw), len(areas)
 
 
 def departures_per_hour(grid: "Grid", feed: Path) -> tuple[np.ndarray, int]:
@@ -730,6 +757,15 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     for name, (prop, steps) in CONCENTRATIONS.items():
         layers[name] = concentration(grid, inputs.get(name), prop, steps)
     step(f"Air quality: NO₂ for {(layers['no2'] > 0).sum():,} cells, PM2.5 for {(layers['pm25'] > 0).sum():,}", 0.78)
+
+    # --- Drinking water: its hardness in the public waterworks' supply areas (GEUS) ------------
+    if inputs.get("water_hardness"):
+        hardness, areas = water_hardness(grid, inputs["water_hardness"])
+        layers["water_hardness"] = hardness
+        step(f"Drinking water: {areas:,} supply areas cover {(hardness > 0).sum() * cell * cell / 1e6:,.0f} km² of cells", 0.785)
+        del hardness
+    else:
+        warn("No source for water_hardness: the layer is left out")
 
     # --- Sample onto a Web Mercator display grid ------------------------------------------------
     to_merc = Transformer.from_crs("EPSG:25832", "EPSG:3857", always_xy=True)

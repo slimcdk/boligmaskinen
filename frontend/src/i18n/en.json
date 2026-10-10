@@ -117,6 +117,11 @@
       "opposite": "Little public transport",
       "note": "Departures per hour between 7 and 9 on a weekday from the stops within 500 m, each trip once, from Rejseplanen."
     },
+    "water_hardness": {
+      "name": "Soft water",
+      "opposite": "Hard water",
+      "note": "Hardness of the drinking water in the public waterworks’ supply areas, from GEUS (samples up to 2023). No data where homes have wells of their own."
+    },
     "incomeTax": {
       "name": "Low municipal tax",
       "opposite": "High municipal tax",
@@ -246,6 +251,7 @@
     "noise": "Noise from roads, railways, airports and industry, Lden",
     "no2": "Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)",
     "pm25": "Fine particles (PM2.5), yearly mean 2024 (no data at sea)",
+    "water_hardness": "Hardness of the drinking water from the public waterworks (no data where homes have wells of their own)",
     "turbine": "Distance to a wind turbine in operation",
     "turbine_heights": "Distance to a wind turbine in operation, in its total heights (25.4 or more where none is near)",
     "solar": "Distance to a solar park of at least 1 ha",

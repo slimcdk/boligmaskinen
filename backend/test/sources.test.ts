@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -48,6 +48,7 @@ describeWithDatabase('the source jobs', () => {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`, transit: `${base}/transit/GTFS.zip`,
+      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -89,6 +90,16 @@ describeWithDatabase('the source jobs', () => {
     expect(await run('transit')).toMatchObject({ changed: false, result: expect.stringMatching(/^Unchanged since \d{4}-\d\d-\d\d$/) });
     server.file('/transit/GTFS.zip', { content: zip('agency.txt stops.txt'), etag: '"gtfs-2"' });
     await expect(run('transit')).rejects.toThrow(/did not give what it should: a ZIP file without trips.txt, stop_times.txt/);
+  });
+
+  it('Drinking water: finds the newest version\'s ZIP file for QGIS on the Dataverse, and fetches it', async () => {
+    const dataset = (files: { id: number; filename: string }[]) => JSON.stringify({ data: { latestVersion: { versionNumber: 2, files: files.map((dataFile) => ({ dataFile })) } } });
+    server.file('/geus/api/datasets/:persistentId/', { content: dataset([{ id: 83761, filename: 'DrikkevandetsHaardhed_ArcGISpro_DA_EN_2023.zip' }, { id: 83762, filename: 'DrikkevandetsHaardhed_QGIS_DK_EN_2023.zip' }]) });
+    server.file('/api/access/datafile/83762', { content: zip('DrikkevandetsHaardhed.gpkg'), etag: '"water-1"' });
+    expect(await run('water')).toMatchObject({ changed: true, result: '30 B' });
+    expect(server.to('/api/access/datafile/83762')).toHaveLength(1);
+    server.file('/geus/api/datasets/:persistentId/', { content: dataset([{ id: 1, filename: 'something else.pdf' }]) });
+    await expect(run('water')).rejects.toThrow(/Found no ZIP file for QGIS in the dataset/);
   });
 
   it('Planning zones: a new time stamp alone is no change, and an error page is not kept', async () => {

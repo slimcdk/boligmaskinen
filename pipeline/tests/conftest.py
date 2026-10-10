@@ -210,6 +210,14 @@ def sources(tmp_path_factory) -> Path:
         stop_times += [f"a{leaves},{hhmm(leaves + 2 * n)},{hhmm(leaves + 2 * n)},{stop},{n}" for n, stop in enumerate(stops)]
     trips.append("B,WEEK,booked")
     stop_times += ["booked,7:30:00,7:30:00,S3,0", "booked,7:40:00,7:40:00,S2,1"]
+    # --- GEUS's drinking water hardness: soft in the south-west, hard in the south-east, and no
+    # waterworks in the north; a GeoPackage in a ZIP file, as GEUS gives it ---
+    gpd.GeoDataFrame([{"Hardness_d": 6.2, "geometry": box(570_000, 6_215_000, 575_000, 6_220_000)},
+                      {"Hardness_d": 21.0, "geometry": box(575_000, 6_215_000, 580_000, 6_220_000)}],
+                     geometry="geometry", crs="EPSG:25832").to_file(root / "haardhed.gpkg", driver="GPKG")
+    with zipfile.ZipFile(root / "haardhed.zip", "w") as archive:
+        archive.writestr("README.qgz", "a QGIS project")
+        archive.write(root / "haardhed.gpkg", "DrikkevandetsHaardhed.gpkg")
     with zipfile.ZipFile(root / "GTFS.zip", "w") as feed:
         feed.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\n" + "".join(
             f"{stop},{stop},{lonlat(*xy)[1]:.6f},{lonlat(*xy)[0]:.6f}\n" for stop, xy in stops.items()))
@@ -225,7 +233,7 @@ def sources(tmp_path_factory) -> Path:
         "supply_areas": "forsyningomraade_vedtaget.geojson",
         "consequence_zones": "konsekvensomraade_vedtaget.geojson", "consequence_zones_plants": "tekniskanlaegkonsekvensomraade_vedtaget.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
-        "raw_material_areas": "raastofomr.geojson", "transit": "GTFS.zip",
+        "raw_material_areas": "raastofomr.geojson", "transit": "GTFS.zip", "water_hardness": "haardhed.zip",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",
