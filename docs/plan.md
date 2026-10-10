@@ -153,7 +153,10 @@ what they took (#69).
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
    districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too, and Miljøstyrelsen's protected areas and Natura 2000 from Danmarks Miljøportal. And
    drinking water quality (hardness per supply area, PFAS, nitrate); see
-   [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The open public data checked on
+   [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The GeoFA school
+   districts were fetched on 2026-10-10 (1,409 districts, 143 MB of GeoJSON) but not used: a
+   district has a number and a name, not the school's, and some hold several schools or grades,
+   so they wait for the school results (Track A, #7), which name the schools. The open public data checked on
    2026-10-09, and where to start, is in [public-data.md](public-data.md). Each new source adds values to the block language, predefined blocks and a
    line in "About the data".
 

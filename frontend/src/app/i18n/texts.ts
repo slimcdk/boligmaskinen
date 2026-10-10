@@ -39,9 +39,7 @@ export class Texts {
     return this.known(`criteria.${template.id}.name`) ?? this.known(`examples.${template.id}.name`) ?? template.name;
   }
 
-  templateDescription(template: { id: string; name: string; description?: string }): string {
-    // A place's block is named after the place
-    if (template.id.startsWith('place:')) return this.i18n.t('catalog.travelTime', { place: template.name });
+  templateDescription(template: { id: string; description?: string }): string {
     return this.known(`criteria.${template.id}.note`) ?? this.known(`examples.${template.id}.description`) ?? template.description ?? '';
   }
 

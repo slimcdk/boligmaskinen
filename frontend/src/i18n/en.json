@@ -352,8 +352,7 @@
     "intro": "Every choice becomes a block. Blocks are code: their sliders are in the side panel, and you can read and change the code.",
     "blocks": "Blocks",
     "travelTo": "Travel time to {{ name }}",
-    "examples": "Examples of code",
-    "travelTime": "Travel time to {{ place }}"
+    "examples": "Examples of code"
   },
   "code": {
     "blockName": "Name of the block",
