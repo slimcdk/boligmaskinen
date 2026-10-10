@@ -92,6 +92,8 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `airport` | Distance to an airport: an aerodrome with an IATA code, such as Billund or Kastrup (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `airfield` | Distance to an airfield of any kind: the airports and air stations, and the public, private, gliding and microlight fields (OpenStreetMap; added 2026-10-10, which keeps the language version) |
 | `air_station` | Distance to a military air station: Aalborg, Karup or Skrydstrup (OpenStreetMap; added 2026-10-10, which keeps the language version) |
+| `protected_area` | Distance to a protected area, a fredning of land in force (not the land around churches); 0 inside one, so `protected_area > 0` is "not inside" (Miljøstyrelsen; added 2026-10-10, which keeps the language version) |
+| `natura2000` | Distance to a Natura 2000 area for habitats or birds; 0 inside one (Miljøstyrelsen; added 2026-10-10, which keeps the language version) |
 | `density` | Addresses within 300 m |
 | `supermarket`, `school`, `daycare`, `station` | Distance to the nearest one |
 | `zone` | Planning zone: `BYZONE`, `LANDZONE` or `SOMMERHUS` |

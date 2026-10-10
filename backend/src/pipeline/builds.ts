@@ -71,6 +71,9 @@ const GRID_SOURCES: Record<string, [job: string, name: string]> = {
   population: ['dst', 'folk.json'],
   no2: ['air', 'no2.geojson'],
   pm25: ['air', 'pm25.geojson'],
+  protected_areas: ['protected', 'fredede_omr.geojson'],
+  natura2000_habitats: ['protected', 'habitat_omr.geojson'],
+  natura2000_birds: ['protected', 'fugle_bes_omr.geojson'],
 };
 /** Files the grid reads when they are there: an install fetched the noise archive before it took these out too. */
 const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {

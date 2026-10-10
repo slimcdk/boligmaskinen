@@ -139,6 +139,16 @@
       "name": "Away from air stations",
       "opposite": "Close to an air station",
       "note": "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup."
+    },
+    "natura2000": {
+      "name": "Near protected nature",
+      "opposite": "Away from protected nature",
+      "note": "Nearest Natura 2000 area, for habitats or birds, from Miljøstyrelsen."
+    },
+    "protected_area": {
+      "name": "Near a protected area",
+      "opposite": "Away from protected areas",
+      "note": "Nearest fredning of land in force, of landscapes and nature, from Miljøstyrelsen."
     }
   },
   "examples": {
@@ -157,6 +167,10 @@
     "empty": {
       "name": "New block",
       "description": "Write your own formula."
+    },
+    "free-to-build": {
+      "name": "Free to build",
+      "description": "A requirement: not inside a protected area (fredning), where building is limited."
     }
   },
   "values": {
@@ -181,7 +195,9 @@
     "population": "Residents of the municipality",
     "airport": "Distance to an airport (one with an IATA code)",
     "airfield": "Distance to an airfield of any kind, also gliding and microlight fields",
-    "air_station": "Distance to a military air station"
+    "air_station": "Distance to a military air station",
+    "natura2000": "Distance to a Natura 2000 area for habitats or birds (0 inside one)",
+    "protected_area": "Distance to a protected area, a fredning of land in force (0 inside one)"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",

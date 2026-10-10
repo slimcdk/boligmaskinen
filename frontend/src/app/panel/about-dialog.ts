@@ -56,6 +56,13 @@ export const SOURCES: DataSource[] = [
     note: "Changed: put on the map's 100 m cells. A model, not a measurement at the address.",
   },
   {
+    id: 'protected', name: 'Miljøstyrelsen, through Danmarks Miljøportal', url: 'https://arealdata.miljoeportal.dk',
+    uses: 'Fredninger of land in force, which protect landscapes and nature, and the Natura 2000 areas for habitats and birds.',
+    licence: { name: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
+    credit: 'Fredede områder og Natura 2000: Miljøstyrelsen, Danmarks Miljøportal',
+    note: "Changed: put on the map's 100 m cells. CC0 asks for no credit; it is given as a courtesy.",
+  },
+  {
     id: 'plandata', name: 'Plandata.dk', url: 'https://www.plandata.dk',
     uses: 'Planning zones: byzone, landzone and sommerhusområde, from the zone map.',
     licence: CC_BY,

@@ -139,6 +139,16 @@
       "name": "Væk fra flyvestationer",
       "opposite": "Tæt på en flyvestation",
       "note": "Nærmeste af flyvevåbnets flyvestationer: Aalborg, Karup og Skrydstrup."
+    },
+    "natura2000": {
+      "name": "Nær beskyttet natur",
+      "opposite": "Væk fra beskyttet natur",
+      "note": "Nærmeste Natura 2000-område for naturtyper eller fugle, fra Miljøstyrelsen."
+    },
+    "protected_area": {
+      "name": "Nær et fredet område",
+      "opposite": "Væk fra fredede områder",
+      "note": "Nærmeste gældende arealfredning af landskab og natur, fra Miljøstyrelsen."
     }
   },
   "examples": {
@@ -157,6 +167,10 @@
     "empty": {
       "name": "Ny blok",
       "description": "Skriv din egen formel."
+    },
+    "free-to-build": {
+      "name": "Frit at bygge",
+      "description": "Et krav: ikke inden for et fredet område, hvor byggeri er begrænset."
     }
   },
   "values": {
@@ -181,7 +195,9 @@
     "population": "Indbyggere i kommunen",
     "airport": "Afstand til en lufthavn (en med IATA-kode)",
     "airfield": "Afstand til en flyveplads af enhver art, også svæveflyve- og ultralet-pladser",
-    "air_station": "Afstand til en militær flyvestation"
+    "air_station": "Afstand til en militær flyvestation",
+    "natura2000": "Afstand til et Natura 2000-område for naturtyper eller fugle (0 inden for et)",
+    "protected_area": "Afstand til et fredet område, en gældende arealfredning (0 inden for et)"
   },
   "places": {
     "car": "Minutter til {{ place }} i bil",
@@ -553,6 +569,11 @@
       "naturalEarth": {
         "uses": "Verdenskortet uden for Danmark.",
         "licence": "Offentlig ejendom (public domain)"
+      },
+      "protected": {
+        "name": "Miljøstyrelsen, via Danmarks Miljøportal",
+        "uses": "Gældende arealfredninger, som beskytter landskab og natur, og Natura 2000-områderne for naturtyper og fugle.",
+        "note": "Ændret: lagt på kortets celler på 100 m. CC0 kræver ingen kreditering; den gives af høflighed."
       }
     }
   },
@@ -698,6 +719,10 @@
       "listings": {
         "name": "Boliger til salg",
         "description": "Nye og ændrede annoncer."
+      },
+      "protected": {
+        "name": "Beskyttede områder",
+        "description": "Fredninger og Natura 2000-områderne for naturtyper og fugle fra Danmarks Miljøportals WFS."
       }
     }
   }

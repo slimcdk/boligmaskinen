@@ -215,10 +215,12 @@ Both cut two ways, so each block can be turned around:
 
 **Data:**
 
-- **Protected areas now, as cell values:**
-  - Miljøstyrelsen's fredninger, published through Danmarks Miljøportal: Arealdata, and the layer
-    `FREDEDE_OMR_BK` in Arealinformation's WMS. WFS is still to check.
-  - Natura 2000 and §3 nature from the same portal, CC0 (see `public-data.md`).
+- **Protected areas now, as cell values:** done on 2026-10-10, as `protected_area` and `natura2000`
+  with the blocks "Near a protected area", "Near protected nature" and the example "Free to build".
+  - Miljøstyrelsen's fredninger, published through Danmarks Miljøportal: Arealinformation's WFS has
+    them as `dai:fredede_omr`, CC0.
+  - Natura 2000 from the same WFS (`dai:habitat_omr` and `dai:fugle_bes_omr`), CC0. §3 nature
+    (`dai:bes_naturtyper`, 320,000 areas) is still to come.
 - **Listed and preservation-worthy buildings later, per home (milestone 4):**
   - Slots- og Kulturstyrelsen's FBB: about 7,000 listed buildings, and about 360,000 with a SAVE
     value from 1 (the highest) to 9. It is an INSPIRE download (an Atom feed), with no conditions
@@ -231,9 +233,9 @@ Both cut two ways, so each block can be turned around:
 
 | Value | Meaning | Unit |
 |---|---|---|
-| `protected_area` | Distance to the nearest fredning | m |
-| `in_protected_area` | The cell (later the parcel) lies inside a fredning | |
-| `natura2000` | Distance to the nearest Natura 2000 area | m |
+| `protected_area` | Distance to the nearest fredning; 0 inside one (in use) | m |
+| `in_protected_area` | The cell (later the parcel) lies inside a fredning: `protected_area == 0` for now | |
+| `natura2000` | Distance to the nearest Natura 2000 area; 0 inside one (in use) | m |
 | `listed` | The home's building is listed (fredet) | |
 | `save_value` | The building's SAVE value, 1 (worth most) to 9; missing where it is not assessed | |
 | `listed_nearby` | Listed buildings within 300 m: an old, kept setting | buildings |
@@ -246,8 +248,8 @@ ramp(protected_area, full, zero)
 ```
 
 ```
-// Free to build: not inside a protected area (a requirement)
-!in_protected_area
+// Free to build: not inside a protected area (a requirement; the example "Free to build")
+protected_area > 0
 ```
 
 ```
@@ -393,7 +395,8 @@ sea_flood_level > rise
 ## What this needs, and when
 
 - **Before milestone 4:** these need no data about homes:
-  - the protected areas as cell values, with the other layers from Danmarks Miljøportal;
+  - the protected areas as cell values (done 2026-10-10), and the other layers from Danmarks
+    Miljøportal;
   - the plans' cell values from Plandata;
   - the distances to airports and airfields from OSM;
   - the blocks over the area found on 2026-10-09, each once its source is fetched by a job.

@@ -146,6 +146,26 @@ test('airports, airfields and air stations score the map', async ({ page }) => {
   await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
 });
 
+test('protected areas and Natura 2000 score the map, and "Free to build" leaves out the cells inside one', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  for (const name of [/^Near protected nature/, /^Near a protected area/]) {
+    await page.getByRole('option', { name }).click();
+  }
+  await page.getByRole('button', { name: 'Done' }).click();
+  for (const name of ['Near protected nature', 'Near a protected area']) {
+    // Each reads a layer of the test data pack, so none says it has no data
+    await expect(block(page, name).locator('.rule')).not.toHaveClass(/error/);
+  }
+  await expect(block(page, 'Near protected nature').locator('.rule')).toHaveText('Full points up to 1.0 km · No points from 5.0 km');
+  const before = await cellsShown(page);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('option', { name: /^Free to build/ }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(block(page, 'Free to build')).toBeVisible();
+  await expect.poll(() => cellsShown(page)).toBeLessThan(before);
+});
+
 test('a requirement removes the cells that do not meet it', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Quiet' }).click();

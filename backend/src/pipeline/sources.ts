@@ -19,6 +19,8 @@ export const SOURCE_URLS = {
   naturalEarth: 'https://naciscdn.org/naturalearth/50m',
   /** DCE's air quality through Danmarks Miljøportal's WFS: 90,162 squares of 1 km per layer. */
   air: 'https://arld-extgeo.miljoeportal.dk/geoserver/wfs',
+  /** Miljøstyrelsen's protected areas and Natura 2000 through Danmarks Miljøportal's Arealinformation WFS. */
+  protected: 'https://arealeditering-dist-geo.miljoeportal.dk/geoserver/wfs',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -32,6 +34,7 @@ const LICENCES = {
   noise: 'CC BY 4.0, Miljøstyrelsen',
   naturalEarth: 'Public domain, Natural Earth',
   air: 'CC BY 4.0, DCE – Nationalt Center for Miljø og Energi, Aarhus Universitet (Danmarks Miljøportal)',
+  protected: 'CC0 1.0, Miljøstyrelsen (Danmarks Miljøportal)',
 };
 
 /** What the data jobs need to fetch and build. */
@@ -313,6 +316,40 @@ async function fetchAir(w: Work): Promise<JobOutcome> {
   };
 }
 
+/** Miljøstyrelsen's protected areas (fredninger) and the Natura 2000 areas for habitats and birds. */
+const PROTECTED_LAYERS = [
+  { name: 'fredede_omr.geojson', layer: 'dai:fredede_omr', what: 'protected areas', minimum: 1000 },
+  { name: 'habitat_omr.geojson', layer: 'dai:habitat_omr', what: 'habitat areas', minimum: 100 },
+  { name: 'fugle_bes_omr.geojson', layer: 'dai:fugle_bes_omr', what: 'bird protection areas', minimum: 50 },
+];
+
+async function fetchProtected(w: Work): Promise<JobOutcome> {
+  const fetched: Archived[] = [];
+  for (const [i, { name, layer, what, minimum }] of PROTECTED_LAYERS.entries()) {
+    const url = `${w.urls.protected}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=100000`;
+    fetched.push(await w.archive.download(w.context, {
+      source: 'protected', name, url, licence: LICENCES.protected, progress: [i / PROTECTED_LAYERS.length, (i + 1) / PROTECTED_LAYERS.length],
+      // GeoServer stamps every answer with the time it was made
+      normalize: (content) => {
+        const { timeStamp: _, ...rest } = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
+        return JSON.stringify(rest);
+      },
+      check: jsonCheck((json) => {
+        const features = (json as { features?: { geometry?: unknown }[] }).features;
+        if (!Array.isArray(features) || features.length < minimum) throw new Error(`only ${features?.length ?? 0} ${what}`);
+        if (!features[0].geometry) throw new Error(`${what} without their areas`);
+        return `${number(features.length)} ${what}`;
+      }),
+    }));
+  }
+  for (const f of fetched) await w.context.log(`${f.summary}: ${freshness(f, w.day)}`);
+  const changed = fetched.some((f) => f.changed);
+  return {
+    changed, bytes: fetched.reduce((sum, f) => sum + f.file.bytes, 0),
+    result: changed ? fetched.map((f) => f.summary).join(', ') : unchangedSince(w, fetched.map((f) => f.file)),
+  };
+}
+
 /** Natural Earth's world map, and the layers built from it. */
 export const NATURAL_EARTH = [
   'physical/ne_50m_land', 'physical/ne_50m_lakes', 'cultural/ne_50m_admin_0_boundary_lines_land',
@@ -371,6 +408,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'air', name: 'Air quality', source: 'DCE, Danmarks Miljøportal', schedule: '0 5 2 * *', then: ['grid'], fetch: fetchAir,
     description: 'Nitrogen dioxide and fine particles: yearly means on a 1 km grid from DCE’s model.',
+  },
+  {
+    id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,
+    description: 'Fredninger, and the Natura 2000 areas for habitats and birds, from Danmarks Miljøportal’s WFS.',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];

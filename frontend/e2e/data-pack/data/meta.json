@@ -30,6 +30,8 @@
   "airport": "airport.png",
   "airfield": "airfield.png",
   "air_station": "air_station.png",
+  "protected_area": "protected_area.png",
+  "natura2000": "natura2000.png",
   "density": "density.png",
   "zone": "zone.png",
   "municipality": "municipality.png",
