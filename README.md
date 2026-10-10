@@ -55,6 +55,19 @@ docker compose up -d                 # http://localhost:8080
 - **The image:** `BOLIGMASKINEN_TAG` picks it. `master` (the default) is the newest build, and a
   release has its version, such as `v0.1.0`.
 
+### Licences
+
+The data comes with duties, which "About the data" in the app lists source by source.
+
+- **Credits.** Every source is credited there, with its licence. OpenStreetMap's credit is also on
+  the map until it is first used.
+- **The ODbL.** An instance that only its owner uses publishes nothing. One that is open to others
+  must offer the database made from OpenStreetMap (the data layers of the pack) or the way it is
+  made: the source of `pipeline/` and `backend/src/pipeline/`, as the ODbL 4.6 says.
+- **Licence texts.** The data pack serves the licence texts of the map's fonts and icons in
+  `licences/`. The app serves those of its own fonts and of its libraries in `/licences/`
+  (`docs/data-sources.md`).
+
 ### Backups
 
 Every night at 01:30 the job "Back up the database" dumps the database into `./data/backups/`

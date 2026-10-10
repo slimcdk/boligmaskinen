@@ -1,15 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 
 /**
- * What a page of the app may load and do: only this server's scripts, data and workers. Angular
- * Material sets styles at run time, and the fonts come from Google Fonts until they are served
- * from here (#48).
+ * What a page of the app may load and do: only this server's scripts, styles, fonts, data and
+ * workers; nothing from elsewhere. Angular Material sets styles at run time.
  */
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: blob:",
   "worker-src 'self' blob:",
   "connect-src 'self'",

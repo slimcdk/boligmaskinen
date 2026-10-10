@@ -50,7 +50,7 @@ test('the gear opens the data jobs, which can be run at once', async ({ page }) 
   await expect(dialog.locator('.head p')).toHaveText('Preview without a backend: the runs are simulated');
   const row = dialog.getByRole('row').filter({ hasText: 'Planning zones' });
   await expect(row).toContainText('Every day at 03:30');
-  await expect(row).toContainText(/in \d+ hours|tomorrow|in a moment|in \d+ minutes/);
+  await expect(row).toContainText(/in \d+ hours?|tomorrow|in a moment|in \d+ minutes?/);
   await expect(dialog.getByRole('row').filter({ hasText: 'Sale prices' })).toContainText('Needs approval from Geodatastyrelsen');
 
   await row.getByRole('button', { name: 'Run Planning zones now' }).click();

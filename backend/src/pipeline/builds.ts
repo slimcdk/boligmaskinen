@@ -16,6 +16,8 @@ export const PROTOMAPS_URLS = {
   builds: 'https://build-metadata.protomaps.dev/builds.json',
   tiles: 'https://build.protomaps.com',
   assets: 'https://protomaps.github.io/basemaps-assets',
+  /** The sprites are made from tangrams' icons, under MIT. */
+  iconsLicence: 'https://raw.githubusercontent.com/tangrams/icons/master/LICENSE.md',
 };
 
 /** Denmark up to zoom 12 is about 75 MB; zoom 13 doubles it. */
@@ -163,6 +165,14 @@ async function buildBasemap(w: Work, options: BuildOptions): Promise<JobOutcome>
     const file = await w.archive.download(w.context, { source: 'basemap', name, url: `${urls.assets}/sprites/v4/${sprite}`, licence: 'MIT, © Mapzen' });
     assets[name] = file.file.path;
   }
+  // The licence texts that go with the copies of the fonts and icons the pack serves
+  for (const [name, url, licence] of [
+    ['licences/noto-fonts-OFL.txt', `${urls.assets}/fonts/OFL.txt`, 'SIL Open Font License 1.1'],
+    ['licences/icons-MIT.md', urls.iconsLicence, 'MIT'],
+  ]) {
+    const file = await w.archive.download(w.context, { source: 'basemap', name, url, licence });
+    assets[name] = file.file.path;
+  }
   const styles = { 'styles/style-layers.json': styleLayers('light'), 'styles/style-layers-dark.json': styleLayers('dark') };
   const wanted: MadeFrom = {
     revision: w.revision,
@@ -255,6 +265,11 @@ async function buildPack(w: Work, options: BuildOptions & { dataPackDir: string 
     '--styles', join(basemap, 'styles'), '--world', world, '--out', stage, '--id', id,
   ]);
   await writeFile(join(stage, 'made-from.json'), JSON.stringify(wanted));
+  // The licence texts of the fonts and icons go with the copies the pack serves
+  for (const name of ['noto-fonts-OFL.txt', 'icons-MIT.md']) {
+    const from = join(basemap, 'licences', name);
+    if (await exists(from)) await place(from, join(stage, 'licences', name));
+  }
   // The pack from before the jobs is a folder, not a link: it moves aside once, and stays as an older version
   if (!(await packs.isLink()) && (await exists(options.dataPackDir))) {
     await w.context.log('Moving the data pack from before the jobs aside');

@@ -32,9 +32,24 @@
                 "glob": "maplibre-gl-worker.mjs",
                 "input": "node_modules/maplibre-gl/dist",
                 "output": "."
+              },
+              {
+                "glob": "LICENSE",
+                "input": "node_modules/@fontsource/roboto",
+                "output": "licences/roboto"
+              },
+              {
+                "glob": "LICENSE",
+                "input": "node_modules/@material-symbols/font-400",
+                "output": "licences/material-symbols"
               }
             ],
             "styles": [
+              "node_modules/@fontsource/roboto/300.css",
+              "node_modules/@fontsource/roboto/400.css",
+              "node_modules/@fontsource/roboto/500.css",
+              "node_modules/@fontsource/roboto/700.css",
+              "node_modules/@material-symbols/font-400/outlined.css",
               "src/styles.scss"
             ],
             "baseHref": "./",

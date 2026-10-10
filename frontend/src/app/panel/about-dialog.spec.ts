@@ -32,7 +32,10 @@ describe('AboutDialog', () => {
     expect(osm.querySelector('.credit')!.textContent).toBe('© OpenStreetMap contributors');
     expect(osm.querySelector<HTMLAnchorElement>('dd a')!.href).toBe('https://www.openstreetmap.org/copyright');
     const links = [...element.querySelectorAll<HTMLAnchorElement>('.sources a')];
-    expect(links.every((a) => a.href.startsWith('https://') && a.target === '_blank' && a.rel === 'noopener')).toBe(true);
+    // Sources link to their sites; the licence texts of the fonts and icons are served from here
+    expect(links.every((a) => (a.href.startsWith('https://') || a.href.startsWith(location.origin)) && a.target === '_blank' && a.rel === 'noopener')).toBe(true);
+    const texts = links.filter((a) => ['Noto fonts', 'Icons', 'Roboto', 'Material Symbols'].includes(a.textContent!.trim())).map((a) => a.href.replace(location.origin, ''));
+    expect(texts).toEqual(['/data-pack/licences/noto-fonts-OFL.txt', '/data-pack/licences/icons-MIT.md', '/licences/roboto/LICENSE', '/licences/material-symbols/LICENSE']);
     // One row each, with a divider between them
     expect(element.querySelectorAll('.sources mat-divider')).toHaveLength(SOURCES.length - 1);
     // Every source is credited, and one without terms says so
