@@ -21,6 +21,8 @@ export const SOURCE_URLS = {
   air: 'https://arld-extgeo.miljoeportal.dk/geoserver/wfs',
   /** Miljøstyrelsen's protected areas and Natura 2000 through Danmarks Miljøportal's Arealinformation WFS. */
   protected: 'https://arealeditering-dist-geo.miljoeportal.dk/geoserver/wfs',
+  /** Plandata.dk's WFS, for the roads and railways the municipal plans plan. */
+  plans: 'https://geoserver.plandata.dk/geoserver/wfs',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -289,22 +291,32 @@ export const AIR_LAYERS = [
   { name: 'pm25.geojson', layer: 'luft:ID7_Luft_Koncentration_2024_PM2_5', property: 'PM2_5' },
 ];
 
-async function fetchAir(w: Work): Promise<JobOutcome> {
+/** A layer of a GeoServer WFS, the file it is kept as, and what its features have to be. */
+interface WfsLayer {
+  name: string;
+  layer: string;
+  /** Says what the features are, or throws when they are not what the layer has. */
+  check: (features: { geometry?: unknown; properties?: Record<string, unknown> }[]) => string;
+}
+
+/**
+ * Layers of a GeoServer WFS as GeoJSON in EPSG:25832, one GetFeature each. GeoServer stamps every
+ * answer with the time it was made, which the change check leaves out.
+ */
+async function fetchWfs(w: Work, source: string, base: string, licence: string, layers: WfsLayer[], count: number): Promise<JobOutcome> {
   const fetched: Archived[] = [];
-  for (const [i, { name, layer, property }] of AIR_LAYERS.entries()) {
-    const url = `${w.urls.air}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=200000`;
+  for (const [i, { name, layer, check }] of layers.entries()) {
+    const url = `${base}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=${count}`;
     fetched.push(await w.archive.download(w.context, {
-      source: 'air', name, url, licence: LICENCES.air, progress: [i / AIR_LAYERS.length, (i + 1) / AIR_LAYERS.length],
-      // GeoServer stamps every answer with the time it was made
+      source, name, url, licence, progress: [i / layers.length, (i + 1) / layers.length],
       normalize: (content) => {
         const { timeStamp: _, ...rest } = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
         return JSON.stringify(rest);
       },
       check: jsonCheck((json) => {
-        const features = (json as { features?: { properties?: Record<string, unknown> }[] }).features;
-        if (!Array.isArray(features) || features.length < 1000) throw new Error(`only ${features?.length ?? 0} squares`);
-        if (typeof features[0].properties?.[property] !== 'number') throw new Error(`squares without ${property}`);
-        return `${number(features.length)} squares of ${property.replace('_', '.')}`;
+        const features = (json as { features?: unknown }).features;
+        if (!Array.isArray(features)) throw new Error('a GeoJSON file without features');
+        return check(features);
       }),
     }));
   }
@@ -315,40 +327,41 @@ async function fetchAir(w: Work): Promise<JobOutcome> {
     result: changed ? fetched.map((f) => f.summary).join(', ') : unchangedSince(w, fetched.map((f) => f.file)),
   };
 }
+
+/** A check that there are at least `minimum` features, with areas. */
+const areas = (what: string, minimum: number): WfsLayer['check'] => (features) => {
+  if (features.length < minimum) throw new Error(`only ${features.length} ${what}`);
+  if (features.length && !features[0].geometry) throw new Error(`${what} without their areas`);
+  return `${number(features.length)} ${what}`;
+};
+
+const fetchAir = (w: Work) => fetchWfs(w, 'air', w.urls.air, LICENCES.air, AIR_LAYERS.map(({ name, layer, property }) => ({
+  name, layer, check: (features) => {
+    if (features.length < 1000) throw new Error(`only ${features.length} squares`);
+    if (typeof features[0].properties?.[property] !== 'number') throw new Error(`squares without ${property}`);
+    return `${number(features.length)} squares of ${property.replace('_', '.')}`;
+  },
+})), 200_000);
 
 /** Miljøstyrelsen's protected areas (fredninger) and the Natura 2000 areas for habitats and birds. */
-const PROTECTED_LAYERS = [
-  { name: 'fredede_omr.geojson', layer: 'dai:fredede_omr', what: 'protected areas', minimum: 1000 },
-  { name: 'habitat_omr.geojson', layer: 'dai:habitat_omr', what: 'habitat areas', minimum: 100 },
-  { name: 'fugle_bes_omr.geojson', layer: 'dai:fugle_bes_omr', what: 'bird protection areas', minimum: 50 },
+const PROTECTED_LAYERS: WfsLayer[] = [
+  { name: 'fredede_omr.geojson', layer: 'dai:fredede_omr', check: areas('protected areas', 1000) },
+  { name: 'habitat_omr.geojson', layer: 'dai:habitat_omr', check: areas('habitat areas', 100) },
+  { name: 'fugle_bes_omr.geojson', layer: 'dai:fugle_bes_omr', check: areas('bird protection areas', 50) },
 ];
 
-async function fetchProtected(w: Work): Promise<JobOutcome> {
-  const fetched: Archived[] = [];
-  for (const [i, { name, layer, what, minimum }] of PROTECTED_LAYERS.entries()) {
-    const url = `${w.urls.protected}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=100000`;
-    fetched.push(await w.archive.download(w.context, {
-      source: 'protected', name, url, licence: LICENCES.protected, progress: [i / PROTECTED_LAYERS.length, (i + 1) / PROTECTED_LAYERS.length],
-      // GeoServer stamps every answer with the time it was made
-      normalize: (content) => {
-        const { timeStamp: _, ...rest } = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
-        return JSON.stringify(rest);
-      },
-      check: jsonCheck((json) => {
-        const features = (json as { features?: { geometry?: unknown }[] }).features;
-        if (!Array.isArray(features) || features.length < minimum) throw new Error(`only ${features?.length ?? 0} ${what}`);
-        if (!features[0].geometry) throw new Error(`${what} without their areas`);
-        return `${number(features.length)} ${what}`;
-      }),
-    }));
-  }
-  for (const f of fetched) await w.context.log(`${f.summary}: ${freshness(f, w.day)}`);
-  const changed = fetched.some((f) => f.changed);
-  return {
-    changed, bytes: fetched.reduce((sum, f) => sum + f.file.bytes, 0),
-    result: changed ? fetched.map((f) => f.summary).join(', ') : unchangedSince(w, fetched.map((f) => f.file)),
-  };
-}
+const fetchProtected = (w: Work) => fetchWfs(w, 'protected', w.urls.protected, LICENCES.protected, PROTECTED_LAYERS, 100_000);
+
+/**
+ * The traffic the municipal plans plan, adopted and proposed: roads and railways, and also paths,
+ * stations, parking, ports and airports, which the grid leaves out. Proposals may be few.
+ */
+const PLANNED_LAYERS: WfsLayer[] = [
+  { name: 'planlagttrafikanlaeg_vedtaget.geojson', layer: 'pdk:theme_pdk_planlagttrafikanlaeg_vedtaget', check: areas('adopted', 500) },
+  { name: 'planlagttrafikanlaeg_forslag.geojson', layer: 'pdk:theme_pdk_planlagttrafikanlaeg_forslag', check: areas('proposed', 0) },
+];
+
+const fetchPlans = (w: Work) => fetchWfs(w, 'plans', w.urls.plans, LICENCES.plandata, PLANNED_LAYERS, 20_000);
 
 /** Natural Earth's world map, and the layers built from it. */
 export const NATURAL_EARTH = [
@@ -408,6 +421,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'air', name: 'Air quality', source: 'DCE, Danmarks Miljøportal', schedule: '0 5 2 * *', then: ['grid'], fetch: fetchAir,
     description: 'Nitrogen dioxide and fine particles: yearly means on a 1 km grid from DCE’s model.',
+  },
+  {
+    id: 'plans', name: 'Planned roads and railways', source: 'Plandata.dk', schedule: '35 3 * * *', then: ['grid'], fetch: fetchPlans,
+    description: 'The roads and railways the municipal plans lay out, adopted or proposed, from the WFS.',
   },
   {
     id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,

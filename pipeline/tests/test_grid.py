@@ -139,13 +139,21 @@ def test_measures_the_distance_to_protected_areas_in_force_and_natura_2000(aarhu
     assert decode_distance(aarhus.at("natura2000", 575_000, 6_215_500)) == pytest.approx(4_000, abs=150)
 
 
-def test_leaves_out_the_protected_areas_without_their_sources(sources: Path, tmp_path: Path):
+def test_measures_the_distance_to_planned_roads_and_railways(aarhus: Built):
+    assert decode_distance(aarhus.at("planned_road", 571_050, 6_222_000)) < 200
+    assert decode_distance(aarhus.at("planned_road", 573_050, 6_223_000)) == pytest.approx(1_950, abs=150)
+    # The proposed railway counts; the path does not
+    assert decode_distance(aarhus.at("planned_road", 575_000, 6_219_050)) < 200
+    assert decode_distance(aarhus.at("planned_road", 577_050, 6_223_000)) > 3_000
+
+
+def test_leaves_out_the_protected_areas_and_plans_without_their_sources(sources: Path, tmp_path: Path):
     named = json.loads(sources.read_text(encoding="utf-8"))
-    kept = {key: str((sources.parent / value).resolve()) for key, value in named.items()
-            if key not in ("protected_areas", "natura2000_habitats", "natura2000_birds")}
+    left_out = ("protected_areas", "natura2000_habitats", "natura2000_birds", "planned_traffic", "planned_traffic_proposed")
+    kept = {key: str((sources.parent / value).resolve()) for key, value in named.items() if key not in left_out}
     (tmp_path / "inputs.json").write_text(json.dumps(kept), encoding="utf-8")
     meta = grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
-    assert list(meta["files"]) == [name for name in grid.LAYERS if name not in ("protected_area", "natura2000")]
+    assert list(meta["files"]) == [name for name in grid.LAYERS if name not in ("protected_area", "natura2000", "planned_road")]
 
 
 def test_knows_the_zones_and_the_municipality(aarhus: Built):

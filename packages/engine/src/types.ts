@@ -3,7 +3,7 @@
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
   | 'station' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
-  | 'natura2000' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'natura2000' | 'planned_road' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
@@ -174,6 +174,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
     kind: 'scaled', layer: 'turbine_heights', unit: 'heights', min: 0, max: 25, step: 0.5, role: 'want', weight: 1, full: 10, zero: 4,
   },
   { id: 'solar', group: 'Peace and quiet', name: 'Away from solar parks', opposite: 'Close to solar parks', note: 'Nearest solar park of at least 1 ha, from OpenStreetMap.', kind: 'distance', layer: 'solar', role: 'want', weight: 1, full: 1000, zero: 300 },
+  { id: 'planned_road', group: 'Peace and quiet', name: 'Away from planned roads and railways', opposite: 'Close to planned roads and railways', note: 'Nearest road or railway the municipal plans lay out, adopted or proposed, from Plandata.dk.', kind: 'distance', layer: 'planned_road', role: 'want', weight: 1, full: 1000, zero: 200 },
   { id: 'power_line', group: 'Peace and quiet', name: 'Away from power lines', opposite: 'Close to power lines', note: 'Nearest overhead line of 132 to 400 kV, from OpenStreetMap.', kind: 'distance', layer: 'power_line', role: 'want', weight: 1, full: 500, zero: 100 },
   { id: 'airport', group: 'Peace and quiet', name: 'Away from airports', opposite: 'Close to an airport', note: 'Nearest airport with an IATA code, such as Billund or Kastrup, from OpenStreetMap.', kind: 'distance', layer: 'airport', role: 'want', weight: 1, full: 10000, zero: 3000 },
   { id: 'airfield', group: 'Peace and quiet', name: 'Away from airfields', opposite: 'Close to an airfield', note: 'Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap.', kind: 'distance', layer: 'airfield', role: 'want', weight: 1, full: 3000, zero: 1000 },

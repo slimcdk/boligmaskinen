@@ -169,8 +169,17 @@ def sources(tmp_path_factory) -> Path:
     areas([(3, None, box(570_000, 6_215_000, 571_000, 6_216_000))]).drop(columns="Fred_tkode").to_file(root / "habitat_omr.geojson", driver="GeoJSON")
     areas([(3, None, box(579_000, 6_224_000, 580_000, 6_225_000))]).drop(columns="Fred_tkode").to_file(root / "fugle_bes_omr.geojson", driver="GeoJSON")
 
+    # --- Plandata's planned traffic: a road the plan lays out across the west, a proposed railway,
+    # and a path, which does not count ---
+    def planned(rows: list[tuple]) -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame([{"temaspkode": kind, "geometry": geometry} for kind, geometry in rows], geometry="geometry", crs="EPSG:25832")
+    planned([("1", box(571_000, 6_215_000, 571_100, 6_225_000)), ("4", box(577_000, 6_215_000, 577_100, 6_225_000))]
+            ).to_file(root / "planlagttrafikanlaeg_vedtaget.geojson", driver="GeoJSON")
+    planned([("2", box(570_000, 6_219_000, 580_000, 6_219_100))]).to_file(root / "planlagttrafikanlaeg_forslag.geojson", driver="GeoJSON")
+
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
+        "planned_traffic": "planlagttrafikanlaeg_vedtaget.geojson", "planned_traffic_proposed": "planlagttrafikanlaeg_forslag.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
