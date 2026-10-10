@@ -35,9 +35,9 @@ export interface CatalogResult {
         @for (group of groups; track group) {
           <div mat-subheader>{{ texts.groupName(group) }}</div>
           @for (t of inGroup(group); track t.id) {
-            <mat-list-option [value]="t.id" [selected]="data.inUse.includes(t.id)" togglePosition="before">
-              <span matListItemTitle>{{ texts.templateName(t) }}</span>
-              <span matListItemLine>{{ texts.templateDescription(t) }}</span>
+            <!-- Three lines, so the note can wrap onto two rather than be cut off -->
+            <mat-list-option [value]="t.id" [selected]="data.inUse.includes(t.id)" togglePosition="before" lines="3">
+              <span matListItemTitle>{{ texts.templateName(t) }}</span>{{ texts.templateDescription(t) }}
             </mat-list-option>
           }
         }
@@ -52,9 +52,8 @@ export interface CatalogResult {
         }
         <div mat-subheader>{{ 'catalog.examples' | transloco }}</div>
         @for (t of examples; track t.id) {
-          <mat-list-option [value]="'example:' + t.id" togglePosition="before">
-            <span matListItemTitle>{{ texts.templateName(t) }}</span>
-            <span matListItemLine>{{ texts.templateDescription(t) }}</span>
+          <mat-list-option [value]="'example:' + t.id" togglePosition="before" lines="3">
+            <span matListItemTitle>{{ texts.templateName(t) }}</span>{{ texts.templateDescription(t) }}
           </mat-list-option>
         }
       </mat-selection-list>
