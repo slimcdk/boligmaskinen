@@ -1,0 +1,552 @@
+{
+  "footer": {
+    "language": "Language: {{ name }}",
+    "about": "About the data",
+    "jobs": "Data jobs",
+    "github": "Boligmaskinen on GitHub, version {{ version }}",
+    "version": "Version {{ version }}"
+  },
+  "common": {
+    "add": "Add",
+    "cancel": "Cancel",
+    "close": "Close",
+    "done": "Done",
+    "ok": "OK"
+  },
+  "panel": {
+    "emptyTitle": "Where would you like to live?",
+    "emptyText": "Pick what matters to you. The map colours every {{ cell }} m cell by how well it fits.",
+    "suggestions": "Suggestions",
+    "whatMatters": "What matters to you",
+    "nothingChosen": "Nothing chosen yet. Add a predefined block, an example of code, or one of the suggestions above.",
+    "yourPlaces": "Your places",
+    "addPlace": "Add place",
+    "placingHint": "Click or tap the map where the place is.",
+    "placeName": "Name of the place",
+    "removePlace": "Remove {{ name }}",
+    "placesHint": "Add work, family, friends or anything else you want to be close to. Each place gets a block with the travel time to it, and your other maps can add it under Add. Drag a pin to move it.",
+    "route": {
+      "routed": "Travel times from the road network",
+      "working": "Finding the travel times on the roads…",
+      "estimated": "Travel times estimated from the distance"
+    }
+  },
+  "groups": {
+    "Nature": "Nature",
+    "Peace and quiet": "Peace and quiet",
+    "Everyday life": "Everyday life",
+    "Area and economy": "Area and economy",
+    "Your places": "Your places",
+    "Examples": "Examples",
+    "My blocks": "My blocks"
+  },
+  "criteria": {
+    "forest": {
+      "name": "Forest",
+      "opposite": "Away from forest",
+      "note": "Nearest wood of at least 5 ha."
+    },
+    "water": {
+      "name": "Lake or sea",
+      "opposite": "Away from lakes and sea",
+      "note": "Nearest lake of at least 5 ha, or the coast."
+    },
+    "beach": {
+      "name": "Beach",
+      "opposite": "Away from beaches",
+      "note": "Nearest beach in OpenStreetMap."
+    },
+    "noise": {
+      "name": "Quiet",
+      "opposite": "Noisy",
+      "note": "Noise from roads, railways, airports and industry, Lden in dB."
+    },
+    "supermarket": {
+      "name": "Supermarket",
+      "opposite": "Away from supermarkets",
+      "note": "Nearest supermarket."
+    },
+    "school": {
+      "name": "School",
+      "opposite": "Away from schools",
+      "note": "Nearest folkeskole, friskole or private school."
+    },
+    "daycare": {
+      "name": "Daycare",
+      "opposite": "Away from daycare",
+      "note": "Nearest daycare unit."
+    },
+    "station": {
+      "name": "Train or light rail",
+      "opposite": "Away from railways",
+      "note": "Nearest station."
+    },
+    "no2": {
+      "name": "Clean air",
+      "opposite": "Polluted air",
+      "note": "Nitrogen dioxide (NO₂), yearly mean 2024 on a 1 km grid, from DCE."
+    },
+    "pm25": {
+      "name": "Few fine particles",
+      "opposite": "Many fine particles",
+      "note": "Fine particles (PM2.5), yearly mean 2024 on a 1 km grid, from DCE."
+    },
+    "turbine": {
+      "name": "Away from wind turbines",
+      "opposite": "Close to wind turbines",
+      "note": "Nearest turbine in operation."
+    },
+    "turbine_heights": {
+      "name": "Away from wind turbines, by height",
+      "opposite": "Close to wind turbines, by height",
+      "note": "Distance to the nearest turbine in its total heights; Danish rules keep 4 from a neighbour."
+    },
+    "solar": {
+      "name": "Away from solar parks",
+      "opposite": "Close to solar parks",
+      "note": "Nearest solar park of at least 1 ha, from OpenStreetMap."
+    },
+    "density": {
+      "name": "Rural rather than urban",
+      "opposite": "Urban rather than rural",
+      "note": "Number of addresses within 300 m."
+    },
+    "incomeTax": {
+      "name": "Low municipal tax",
+      "opposite": "High municipal tax",
+      "note": "Income tax per municipality, 2026."
+    },
+    "burglary": {
+      "name": "Few home burglaries",
+      "opposite": "Many home burglaries",
+      "note": "Reported per 1,000 residents per municipality, 2025."
+    },
+    "zone": {
+      "name": "Planning zone",
+      "note": "Homes in a sommerhusområde cannot be lived in all year."
+    }
+  },
+  "examples": {
+    "forest-or-water": {
+      "name": "Forest or water",
+      "description": "Full points near whichever of forest and water is nearer."
+    },
+    "family": {
+      "name": "School and daycare",
+      "description": "Both a school and a daycare within reach."
+    },
+    "quiet-and-green": {
+      "name": "Quiet and green",
+      "description": "Points only where it is both quiet and close to a forest."
+    },
+    "empty": {
+      "name": "New block",
+      "description": "Write your own formula."
+    }
+  },
+  "values": {
+    "forest": "Distance to a wood of at least 5 ha",
+    "water": "Distance to a lake of at least 5 ha, or the sea",
+    "beach": "Distance to a beach",
+    "noise": "Noise from roads, railways, airports and industry, Lden",
+    "no2": "Nitrogen dioxide (NO₂), yearly mean 2024 (no data at sea)",
+    "pm25": "Fine particles (PM2.5), yearly mean 2024 (no data at sea)",
+    "turbine": "Distance to a wind turbine in operation",
+    "turbine_heights": "Distance to a wind turbine in operation, in its total heights (25.4 or more where none is near)",
+    "solar": "Distance to a solar park of at least 1 ha",
+    "density": "Addresses within 300 m",
+    "supermarket": "Distance to a supermarket",
+    "school": "Distance to a folkeskole, friskole or private school",
+    "daycare": "Distance to a daycare unit",
+    "station": "Distance to a train or light rail station",
+    "zone": "Planning zone: BYZONE, LANDZONE or SOMMERHUS",
+    "income_tax": "Municipal income tax, 2026",
+    "land_tax": "Land tax, 2026",
+    "burglaries": "Home burglaries per 1,000 residents, 2025",
+    "population": "Residents of the municipality"
+  },
+  "places": {
+    "car": "Minutes to {{ place }} by car",
+    "bike": "Minutes to {{ place }} by bike",
+    "walk": "Minutes to {{ place }} on foot",
+    "transit": "Minutes to {{ place }} by train (estimate)",
+    "default": "Place {{ n }}"
+  },
+  "words": {
+    "Full points at": "Full points at",
+    "No points at": "No points at",
+    "Full points up to": "Full points up to",
+    "No points from": "No points from",
+    "Reach": "Reach",
+    "Travel by": "Travel by",
+    "heights": "heights",
+    "addresses": "addresses",
+    "per 1,000": "per 1,000",
+    "car": "car",
+    "bike": "bike",
+    "walk": "walk",
+    "train": "train"
+  },
+  "wording": {
+    "noData": "no data",
+    "hoursOrMore": "4 h or more",
+    "fullUpTo": "Full points up to {{ full }} · No points from {{ zero }}",
+    "noPointsBelow": "No points below {{ zero }} · Full points from {{ full }}",
+    "only": "Only {{ list }}",
+    "nothingAllowed": "Nothing allowed",
+    "customCode": "Custom code"
+  },
+  "mapPanel": {
+    "subtitle": "Pilot{{ region }} · {{ cells }} from open data",
+    "cells": "{{ size }} m cells",
+    "cellsUpClose": "{{ size }} m cells, {{ close }} m up close",
+    "hide": "Hide panel",
+    "loading": "Loading data",
+    "result": "Result",
+    "which": "Which cells to show",
+    "all": "All",
+    "top": "Percentile",
+    "abs": "Min. points",
+    "bestShare": "Show the best share of the cells",
+    "lowest": "Lowest points to show",
+    "allOffTitle": "Everything is switched off",
+    "allOffText": "Switch a group on, or give one of your preferences some weight, to colour the map.",
+    "hint": "Choose what matters to you, and the map colours every {{ cell }} m cell by how well it fits.",
+    "settings": "Map settings",
+    "colours": "Colours",
+    "heatmapColours": "Heatmap colours",
+    "scale": "Colour scale",
+    "smooth": "Smooth",
+    "steps": "Steps",
+    "smoothing": "Smoothing",
+    "off": "Off",
+    "light": "Light",
+    "strong": "Strong",
+    "cellsLabel": "Cells",
+    "homes": "Where homes are",
+    "land": "All land",
+    "showBelow": "Show cells below the limit in grey",
+    "opacity": "Opacity",
+    "heatmapOpacity": "Heatmap opacity",
+    "describeAll": "Points of the {{ considered }} cells that meet your requirements, median {{ median }}",
+    "describeLimit": "{{ shown }} of the {{ considered }} cells that meet your requirements, at least {{ limit }} points",
+    "summaryCells": {
+      "homes": "Where homes are",
+      "land": "All land"
+    },
+    "summarySmooth": {
+      "0": "no smoothing",
+      "1": "light smoothing",
+      "2": "strong smoothing"
+    },
+    "inSteps": "{{ palette }} in steps",
+    "topFormat": "Top {{ value }} %"
+  },
+  "palettes": {
+    "red-green": {
+      "name": "Red to green",
+      "note": "Hard to read with red-green colour blindness"
+    },
+    "orange": {
+      "name": "Orange"
+    },
+    "azure": {
+      "name": "Azure"
+    },
+    "violet": {
+      "name": "Violet"
+    },
+    "rose": {
+      "name": "Rose"
+    }
+  },
+  "blockRow": {
+    "hideSettings": "Hide settings for {{ name }}",
+    "showSettings": "Show settings for {{ name }}",
+    "needsAttention": "The code needs attention",
+    "required": "Required",
+    "requiredFor": "Required: {{ name }}",
+    "weightTip": "Weight in the weighting (0 turns the block off)",
+    "weightOf": "Weight of {{ name }}",
+    "turnAroundTip": "Turn around: full points at the other end",
+    "turnAround": "Turn around",
+    "codeTip": "See and change the code",
+    "code": "Code",
+    "more": "More",
+    "moreFor": "More for {{ name }}",
+    "asPreference": "Use as a preference",
+    "asRequirement": "Use as a requirement",
+    "moveToGroup": "Move to group",
+    "remove": "Remove",
+    "newGroup": "New group…",
+    "newGroupTitle": "Move to a new group",
+    "groupName": "Name of the group",
+    "newGroupName": "New group",
+    "move": "Move"
+  },
+  "group": {
+    "show": "Show the blocks in {{ name }}",
+    "hide": "Hide the blocks in {{ name }}",
+    "name": "Name of the group",
+    "one": "1 block",
+    "many": "{{ count }} blocks",
+    "off": ", switched off",
+    "use": "Use {{ name }}"
+  },
+  "maps": {
+    "first": "My map",
+    "base": "Map",
+    "copy": "{{ name }} (copy)",
+    "switcher": "Map: {{ name }}. Switch, add or change maps",
+    "new": "New map",
+    "duplicateThis": "Duplicate this map",
+    "renameThis": "Rename this map",
+    "shareThis": "Share this map",
+    "deleteThis": "Delete this map",
+    "name": "Name of the map",
+    "create": "Create",
+    "duplicateTitle": "Duplicate the map",
+    "duplicate": "Duplicate",
+    "renameTitle": "Rename the map",
+    "rename": "Rename",
+    "deleteTitle": "Delete \"{{ name }}\"?",
+    "deleteText": "Its blocks are deleted with it. Your places and the other maps stay.",
+    "delete": "Delete"
+  },
+  "catalog": {
+    "title": "What matters to you?",
+    "intro": "Every choice becomes a block. Blocks are code: their sliders are in the side panel, and you can read and change the code.",
+    "blocks": "Blocks",
+    "travelTo": "Travel time to {{ name }}",
+    "examples": "Examples of code",
+    "travelTime": "Travel time to {{ place }}"
+  },
+  "code": {
+    "blockName": "Name of the block",
+    "useAs": "Use the block as",
+    "preference": "Preference",
+    "requirement": "Requirement",
+    "hint": "A preference gives a score from 0 (bad) to 1 (good) in every cell; a requirement removes the cells where it is false or 0.",
+    "sliderExample": "let reach = slider(3000, 0, 10000, 100)  // Reach (m)",
+    "becomesSlider": "becomes a slider in the side panel,",
+    "aCheckbox": "a checkbox and",
+    "aChoice": "a choice.",
+    "reference": "Values and functions",
+    "values": "Values",
+    "valuesHint": "Click a name to put it in the code. Missing data counts as no data, not as 0.",
+    "functions": "Functions",
+    "constants": "Constants",
+    "reset": "Reset to the original",
+    "validRequirement": "Valid requirement",
+    "validPreference": "Valid: gives a score from 0 to 1",
+    "checking": "Checking…"
+  },
+  "functions": {
+    "ramp": "ramp(x, full, zero) is 1 at full, 0 at zero and linear between, in either direction",
+    "clamp": "clamp(x) keeps x between 0 and 1; clamp(x, lo, hi) between lo and hi",
+    "min": "min(a, b, …) is the smallest value",
+    "max": "max(a, b, …) is the largest value",
+    "abs": "abs(x) without its sign",
+    "sqrt": "sqrt(x) square root",
+    "pow": "pow(x, y) is x to the power of y, like x ** y",
+    "exp": "exp(x) is e to the power of x",
+    "log": "log(x) natural logarithm",
+    "round": "round(x) to the nearest whole number",
+    "floor": "floor(x) rounds down",
+    "ceil": "ceil(x) rounds up",
+    "known": "known(x) is true when x has data",
+    "fallback": "fallback(x, y) is y where x has no data",
+    "slider": "let name = slider(value, min, max, step) makes a slider",
+    "choice": "let name = choice(1, a, b, …) picks one of the values; the side panel shows the choice"
+  },
+  "constants": {
+    "BYZONE": "zone code for byzone",
+    "LANDZONE": "zone code for landzone",
+    "SOMMERHUS": "zone code for sommerhusområde"
+  },
+  "share": {
+    "title": "Share “{{ name }}”",
+    "text": "Whoever opens the link gets a copy of this map: its blocks and how the map shows them.",
+    "textPlace": "Whoever opens the link gets a copy of this map: its blocks and how the map shows them and the place its blocks use: {{ places }}.",
+    "textPlaces": "Whoever opens the link gets a copy of this map: its blocks and how the map shows them and the places its blocks use: {{ places }}.",
+    "othersStay": "Your other maps and places stay with you.",
+    "link": "Link",
+    "linkLabel": "Link to the map",
+    "copy": "Copy link",
+    "copied": "The link is copied.",
+    "selected": "The link is selected: copy it with Ctrl+C or ⌘C.",
+    "addTitle": "Add the map “{{ name }}”?",
+    "addBlock": "It has 1 block",
+    "addBlocks": "It has {{ n }} blocks",
+    "addPlace": ", and the place {{ places }}",
+    "addPlaces": ", and the places {{ places }}",
+    "addRest": ". It is added to your maps and opened as it was shared; your other maps stay as they are.",
+    "addAction": "Add map"
+  },
+  "sync": {
+    "saved": "Your maps are saved on the server",
+    "saving": "Saving your maps on the server…",
+    "offline": "The server cannot be reached. Your changes are kept in this browser and saved when it can be.",
+    "notSaved": "Not saved on the server",
+    "conflict": "“{{ name }}” was also changed on another device. The changes made here were kept.",
+    "renamed": "“{{ name }}” from this browser is now “{{ to }}”, next to the one already saved.",
+    "updated": "“{{ name }}” was changed on another device.",
+    "deleted": "“{{ name }}” was deleted on another device."
+  },
+  "errors": {
+    "The link is broken: the map in it cannot be read": "The link is broken: the map in it cannot be read",
+    "The link is broken: it does not hold a map this app knows": "The link is broken: it does not hold a map this app knows",
+    "The backend cannot be reached": "The backend cannot be reached",
+    "Set DATA_DIR to let the jobs fetch and build the data": "Set DATA_DIR to let the jobs fetch and build the data",
+    "Needs a Datafordeleren API key": "Needs a Datafordeleren API key",
+    "Needs approval from Geodatastyrelsen": "Needs approval from Geodatastyrelsen",
+    "Needs a licence for a listings feed": "Needs a licence for a listings feed"
+  },
+  "theme": {
+    "title": "Theme: {{ name }}",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "sheet": {
+    "show": "Show the panel",
+    "less": "Show less of the panel"
+  },
+  "histogram": {
+    "label": "Distribution of points across the cells considered",
+    "top": "100 points"
+  },
+  "heat": {
+    "noData": "No data where the map looks",
+    "pass": "{{ percent }} % of the cells pass",
+    "median": "Median score {{ score }}"
+  },
+  "popup": {
+    "points": "{{ points }} points",
+    "noScore": "No score yet",
+    "addSomething": "Add something to weigh",
+    "leftOut": "Left out",
+    "notMet": "A requirement is not met",
+    "homes": "Cell with homes",
+    "noHomes": "No address points in this cell",
+    "area": "area {{ points }} points",
+    "met": "✓ met",
+    "failed": "✕ not met",
+    "empty": "Pick what matters to you in the panel to score this spot.",
+    "municipality": "{{ name }} Kommune"
+  },
+  "map": {
+    "problem": "The map could not load: {{ problem }}"
+  },
+  "app": {
+    "placing": "Click or tap the map where the place is",
+    "mapCard": "The map",
+    "weighting": "Your weighting"
+  },
+  "version": {
+    "local": "local build",
+    "localTitle": "Built locally, not from git",
+    "release": "Release {{ version }}",
+    "commit": "Commit {{ commit }}",
+    "built": "{{ what }} · built {{ date }}"
+  },
+  "data": {
+    "loading": "Loading data…",
+    "loadingLayers": "Loading {{ n }} data layers…",
+    "loadedLayers": "Loading data layers… {{ done }} of {{ n }}",
+    "failed": "Could not load the data: {{ error }}"
+  },
+  "about": {
+    "how": "How the map is made",
+    "cells": "Denmark is divided into {{ cell }} m cells.",
+    "cellsDetail": "Denmark is divided into {{ cell }} m cells, and into {{ detail }} m cells for the map zoomed in.",
+    "scores": "Every cell gets a value for each data layer, and every block in your weighting turns those values into a score. The map shows the blocks averaged by their importance.",
+    "homes": "Homes are approximated by address points from OpenStreetMap, which are imported from the national address register. Cells in industrial areas are left out.",
+    "noise": "Noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, the major roads and railways elsewhere, Copenhagen Airport, and industry in the four cities. A cell has the loudest of them. Other places are estimated from road type and distance.",
+    "rules": "Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation; their distance is also given in each turbine's total height, of which Danish rules keep 4 from a neighbour. Tax and burglaries are per municipality, and the air per square kilometre.",
+    "travel": "Travel times to your places by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries, once the server has built its road network; each place says which. By train, and until then, they are estimated from the straight-line distance.",
+    "colours": "Colours are stretched over the points currently shown, so the map always shows the differences that matter. Outside Denmark the map shows Natural Earth's world map.",
+    "sourcesTitle": "Sources",
+    "sourcesIntro": "Every source the map uses: what it gives, its licence, and how it asks to be credited.",
+    "libraries": "The app itself is built with open-source libraries, under",
+    "librariesLink": "their licences",
+    "licence": "Licence",
+    "credit": "Credit",
+    "tables": "Tables",
+    "licenceTexts": "Licence texts",
+    "note": "Note",
+    "meta": "Data built {{ built }} · app {{ version }}",
+    "unknown": "unknown"
+  },
+  "aboutLinks": {
+    "Noto fonts": "Noto fonts",
+    "Icons": "Icons"
+  },
+  "time": {
+    "everyMinutes": "Every {{ n }} minutes",
+    "everyDay": "Every day at {{ time }}",
+    "everyWeekday": "Every {{ day }} at {{ time }}",
+    "monthly": "Day {{ day }} of every month at {{ time }}",
+    "yearly": "Every year on {{ date }} at {{ time }}",
+    "justNow": "just now",
+    "inAMoment": "in a moment",
+    "hours": "h"
+  },
+  "jobs": {
+    "subtitle": {
+      "loading": "Reading the jobs…",
+      "live": "Fetching and building the data on this server",
+      "preview": "Preview without a backend: the runs are simulated",
+      "unavailable": "The jobs cannot be shown"
+    },
+    "views": "Views",
+    "tasks": "Tasks",
+    "recentRuns": "Recent runs",
+    "filterLabel": "Show only the tasks that are",
+    "filter": {
+      "failing": "Failing",
+      "running": "Running",
+      "blocked": "Waiting for access",
+      "planned": "Not built yet"
+    },
+    "none": {
+      "failing": "No task is failing.",
+      "running": "No task is running.",
+      "blocked": "No task is waiting for access.",
+      "planned": "Every task is built.",
+      "all": "There are no tasks."
+    },
+    "task": "Task",
+    "schedule": "Schedule",
+    "lastRun": "Last run",
+    "nextRun": "Next run",
+    "actions": "Actions",
+    "running": "Running",
+    "progress": "{{ name }} progress",
+    "never": "Never",
+    "scheduleToggle": "Schedule {{ name }}",
+    "runNow": "Run {{ name }} now",
+    "runsHint": "The latest runs, with their results. Pick one to read its log.",
+    "started": "Started",
+    "duration": "Duration",
+    "result": "Result",
+    "status": "Status",
+    "noRuns": "No job has run yet.",
+    "logOf": "Log of {{ name }}",
+    "notBuilt": "Not built yet",
+    "notScheduled": "Not scheduled",
+    "off": "Off",
+    "statuses": {
+      "queued": "Queued",
+      "running": "Running",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "triggers": {
+      "schedule": "schedule",
+      "manual": "manual",
+      "after": "after"
+    }
+  }
+}

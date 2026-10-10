@@ -1,45 +1,45 @@
 @if (block(); as block) {
   <div mat-dialog-title class="title">
     <mat-icon>code</mat-icon>
-    <input class="name" [value]="block.name" (change)="rename($event)" aria-label="Name of the block" maxlength="60">
-    <mat-button-toggle-group class="role" hideSingleSelectionIndicator [value]="block.role" (change)="setRole($event.value)" aria-label="Use the block as">
-      <mat-button-toggle value="want">Preference</mat-button-toggle>
-      <mat-button-toggle value="must">Requirement</mat-button-toggle>
+    <input class="name" [value]="texts.blockName(block)" (change)="rename($event)" [attr.aria-label]="'code.blockName' | transloco" maxlength="60">
+    <mat-button-toggle-group class="role" hideSingleSelectionIndicator [value]="block.role" (change)="setRole($event.value)" [attr.aria-label]="'code.useAs' | transloco">
+      <mat-button-toggle value="want">{{ 'code.preference' | transloco }}</mat-button-toggle>
+      <mat-button-toggle value="must">{{ 'code.requirement' | transloco }}</mat-button-toggle>
     </mat-button-toggle-group>
   </div>
   <mat-dialog-content class="content">
     <div class="editor">
-      <textarea #editor class="code" spellcheck="false" autocomplete="off" [value]="draft()" (input)="onInput($event)" aria-label="Code" rows="16"></textarea>
+      <textarea #editor class="code" spellcheck="false" autocomplete="off" [value]="draft()" (input)="onInput($event)" [attr.aria-label]="'blockRow.code' | transloco" rows="16"></textarea>
       <p class="status" [class.error]="!status().ok" role="status"><mat-icon>{{ status().ok ? 'check_circle' : 'error' }}</mat-icon><span>{{ status().text }}</span></p>
       <p class="hint">
-        A preference gives a score from 0 (bad) to 1 (good) in every cell; a requirement removes the cells where it is false or 0.
-        <code>let reach = slider(3000, 0, 10000, 100)  // Reach (m)</code> becomes a slider in the side panel,
-        <code>let x = true</code> a checkbox and <code>choice(1, a, b)</code> a choice.
+        {{ 'code.hint' | transloco }}
+        <code>{{ 'code.sliderExample' | transloco }}</code> {{ 'code.becomesSlider' | transloco }}
+        <code>let x = true</code> {{ 'code.aCheckbox' | transloco }} <code>choice(1, a, b)</code> {{ 'code.aChoice' | transloco }}
       </p>
     </div>
-    <aside class="reference" aria-label="Values and functions">
-      <h3>Values</h3>
-      <p class="hint">Click a name to put it in the code. Missing data counts as no data, not as 0.</p>
+    <aside class="reference" [attr.aria-label]="'code.reference' | transloco">
+      <h3>{{ 'code.values' | transloco }}</h3>
+      <p class="hint">{{ 'code.valuesHint' | transloco }}</p>
       @for (g of groups(); track g.group) {
-        <h4>{{ g.group }}</h4>
+        <h4>{{ texts.groupName(g.group) }}</h4>
         @for (v of g.values; track v.name) {
           <button type="button" class="entry" (click)="insert(v.name)"><code>{{ v.name }}</code><span>{{ v.label }}</span></button>
         }
       }
-      <h3>Functions</h3>
+      <h3>{{ 'code.functions' | transloco }}</h3>
       @for (f of functions; track f.name) {
-        <button type="button" class="entry" (click)="insert(f.name + '(')"><code>{{ f.name }}</code><span>{{ f.help }}</span></button>
+        <button type="button" class="entry" (click)="insert(f.name + '(')"><code>{{ f.name }}</code><span>{{ 'functions.' + f.name | transloco }}</span></button>
       }
-      <h3>Constants</h3>
+      <h3>{{ 'code.constants' | transloco }}</h3>
       @for (c of constants; track c.name) {
-        <button type="button" class="entry" (click)="insert(c.name)"><code>{{ c.name }}</code><span>{{ c.help }}</span></button>
+        <button type="button" class="entry" (click)="insert(c.name)"><code>{{ c.name }}</code><span>{{ 'constants.' + c.name | transloco }}</span></button>
       }
     </aside>
   </mat-dialog-content>
   <mat-dialog-actions align="end">
     @if (canReset()) {
-      <button mat-button (click)="reset()"><mat-icon>restart_alt</mat-icon>Reset to the original</button>
+      <button mat-button (click)="reset()"><mat-icon>restart_alt</mat-icon>{{ 'code.reset' | transloco }}</button>
     }
-    <button mat-flat-button mat-dialog-close>Done</button>
+    <button mat-flat-button mat-dialog-close>{{ 'common.done' | transloco }}</button>
   </mat-dialog-actions>
 }

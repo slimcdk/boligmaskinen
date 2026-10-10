@@ -2,19 +2,19 @@
   <div class="map-area">
     <app-map-view [inset]="mapInset()" />
     @if (!mobile() && !panelOpen() && !store.placing()) {
-      <button #openButton mat-flat-button class="open-panel" (click)="openPanel()"><mat-icon>tune</mat-icon>What matters to you</button>
+      <button #openButton mat-flat-button class="open-panel" (click)="openPanel()"><mat-icon>tune</mat-icon>{{ 'panel.whatMatters' | transloco }}</button>
     }
     @if (store.placing()) {
       <div class="placing-hint" role="status">
-        <span>Click or tap the map where the place is</span>
-        <button mat-button (click)="store.placing.set(false)">Cancel</button>
+        <span>{{ 'app.placing' | transloco }}</span>
+        <button mat-button (click)="store.placing.set(false)">{{ 'common.cancel' | transloco }}</button>
       </div>
     }
   </div>
 
   @if (mobile()) {
     <!-- On a phone: the map panel as a card at the top, and the weighting as a bottom sheet -->
-    <section #mapCard class="card map-card phone" aria-label="The map">
+    <section #mapCard class="card map-card phone" [attr.aria-label]="'app.mapCard' | transloco">
       <app-map-panel [compact]="true" />
     </section>
     <app-bottom-sheet class="sheet" [(state)]="sheet" (settledHeight)="sheetHeight.set($event)">
@@ -23,10 +23,10 @@
   } @else {
     <!-- On a larger screen two panels float over the map, which runs under them to the window's edges -->
     <div #floating class="panels" [class.open]="panelOpen()" [inert]="!panelOpen()" tabindex="-1">
-      <section class="card map-card" aria-label="The map">
+      <section class="card map-card" [attr.aria-label]="'app.mapCard' | transloco">
         <app-map-panel (closePanel)="closePanel()" />
       </section>
-      <section class="card weighting-card" aria-label="Your weighting">
+      <section class="card weighting-card" [attr.aria-label]="'app.weighting' | transloco">
         <app-panel />
       </section>
     </div>

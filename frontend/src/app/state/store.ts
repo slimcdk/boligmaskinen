@@ -1,9 +1,10 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import {
   activeBlocks, Block, blockFrom, BlockTemplate, copyMap, DEFAULT_CRITERIA, DEFAULT_VIEW, emptyMap, formulaParams, groupNameFor, inGroup,
   LANGUAGE_VERSION, LIBRARY, MODES, newId, Place, placeTemplate, placeValueName, renameValues, Role, SavedMap, setParam, templateOf,
   tidyGroups, turnAround, uniqueName, upgradeBlock, ViewState,
 } from '@boligmaskinen/engine';
+import { I18n } from '../i18n/i18n';
 import { migrateV1, migrateV2, Migrated, SavedV1, SavedV2 } from './migrate';
 import { importShared, SharedMap } from './share';
 import { EMPTY_BASE, SyncBase } from './sync';
@@ -39,6 +40,7 @@ interface SavedV3 {
  */
 @Injectable({ providedIn: 'root' })
 export class Store {
+  private readonly i18n = inject(I18n);
   /** The data layers of the catalogue, for the predefined blocks. */
   readonly catalogue = DEFAULT_CRITERIA;
   readonly maps = signal<SavedMap[]>([emptyMap(FIRST_MAP)]);
@@ -240,7 +242,7 @@ export class Store {
     this.updateMap((m) => {
       const block = m.blocks.find((b) => b.id === blockId);
       if (!block) return m;
-      const placed = inGroup(m, block, name.trim() || uniqueName('New group', m.groups.map((g) => g.name)));
+      const placed = inGroup(m, block, name.trim() || uniqueName(this.i18n.t('blockRow.newGroupName'), m.groups.map((g) => g.name)));
       return { ...placed.map, blocks: placed.map.blocks.map((b) => (b.id === blockId ? placed.block : b)) };
     });
   }
@@ -250,8 +252,9 @@ export class Store {
   addPlace(lng: number, lat: number): Place {
     const used = new Set(this.places().map((p) => p.name));
     let n = 1;
-    while (used.has(`Place ${n}`)) n++;
-    const place: Place = { id: newId('place'), name: `Place ${n}`, lng, lat };
+    const named = (k: number) => this.i18n.t('places.default', { n: k });
+    while (used.has(named(n))) n++;
+    const place: Place = { id: newId('place'), name: named(n), lng, lat };
     this.places.update((list) => [...list, place]);
     this.addPlaceBlock(place);
     return place;

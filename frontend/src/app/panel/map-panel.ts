@@ -8,7 +8,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { DEFAULT_VIEW, ViewState } from '@boligmaskinen/engine';
+import { I18n } from '../i18n/i18n';
 import { PilotData } from '../data/pilot-data';
 import { PALETTES, rampGradient } from '../map/colours';
 import { HeatService } from '../map/heat.service';
@@ -24,7 +26,7 @@ import { Histogram } from './histogram';
   selector: 'app-map-panel',
   imports: [
     MatButtonModule, MatButtonToggleModule, MatCheckboxModule, MatExpansionModule, MatFormFieldModule, MatIconModule, MatProgressBarModule,
-    MatSelectModule, MatSliderModule, Histogram,
+    MatSelectModule, MatSliderModule, TranslocoPipe, Histogram,
   ],
   templateUrl: './map-panel.html',
   styleUrl: './map-panel.scss',
@@ -33,6 +35,7 @@ export class MapPanel {
   protected readonly store = inject(Store);
   protected readonly data = inject(PilotData);
   private readonly heat = inject(HeatService);
+  private readonly i18n = inject(I18n);
   private readonly theme = inject(ThemeService);
   /** On a phone the panel has no head: it is a card at the top, with the weighting in the sheet below. */
   readonly compact = input(false);
@@ -49,7 +52,9 @@ export class MapPanel {
   /** "200 m cells", and with detail tiles "200 m cells, 100 m up close". */
   protected readonly cells = computed(() => {
     const tiles = this.data.grid()?.meta.tiles;
-    return `${this.cell()} m cells${tiles && tiles.cellMetres < this.cell() ? `, ${tiles.cellMetres} m up close` : ''}`;
+    return tiles && tiles.cellMetres < this.cell()
+      ? this.i18n.t('mapPanel.cellsUpClose', { size: this.cell(), close: tiles.cellMetres })
+      : this.i18n.t('mapPanel.cells', { size: this.cell() });
   });
 
   /** There are preferences, but none of them counts: their groups are off, or their weight is 0. */
@@ -63,19 +68,25 @@ export class MapPanel {
   protected readonly resultDescription = computed(() => {
     const s = this.stats();
     if (!s?.hasPreferences) return '';
-    const cells = (n: number) => n.toLocaleString('en-US');
-    if (this.view().show === 'all') return `Points of the ${cells(s.considered)} cells that meet your requirements, median ${s.median}`;
-    return `${cells(s.shown)} of the ${cells(s.considered)} cells that meet your requirements, at least ${s.limit} points`;
+    const cells = (n: number) => n.toLocaleString(this.i18n.locale());
+    if (this.view().show === 'all') return this.i18n.t('mapPanel.describeAll', { considered: cells(s.considered), median: s.median });
+    return this.i18n.t('mapPanel.describeLimit', { shown: cells(s.shown), considered: cells(s.considered), limit: s.limit });
   });
 
   protected readonly mapSummary = computed(() => {
     const v = this.view();
-    const colours = v.palette === DEFAULT_VIEW.palette && v.bands === 'smooth' ? '' : ` · ${this.palette().name}${v.bands === 'steps' ? ' in steps' : ''}`;
-    return `${v.cells === 'homes' ? 'Where homes are' : 'All land'} · ${['no smoothing', 'light smoothing', 'strong smoothing'][v.smooth]}${colours}`;
+    const palette = this.palette().name;
+    const colours = v.palette === DEFAULT_VIEW.palette && v.bands === 'smooth' ? '' : ` · ${v.bands === 'steps' ? this.i18n.t('mapPanel.inSteps', { palette }) : palette}`;
+    return `${this.i18n.t(`mapPanel.summaryCells.${v.cells}`)} · ${this.i18n.t(`mapPanel.summarySmooth.${v.smooth}`)}${colours}`;
   });
 
   // The heatmap's colours, each with a swatch in the current light or dark mode
-  protected readonly palettes = computed(() => PALETTES.map((p) => ({ ...p, swatch: rampGradient(p.id, this.theme.scheme(), this.view().bands) })));
+  protected readonly palettes = computed(() => PALETTES.map((p) => ({
+    ...p,
+    name: this.i18n.t(`palettes.${p.id}.name`),
+    note: p.note && this.i18n.t(`palettes.${p.id}.note`),
+    swatch: rampGradient(p.id, this.theme.scheme(), this.view().bands),
+  })));
   protected readonly palette = computed(() => this.palettes().find((p) => p.id === this.view().palette) ?? this.palettes()[0]);
 
   protected setView(patch: Partial<ViewState>): void {
@@ -92,5 +103,5 @@ export class MapPanel {
   }
 
   protected percent = (value: number) => `${Math.round(value * 100)} %`;
-  protected best = (value: number) => `Top ${value} %`;
+  protected best = (value: number) => this.i18n.t('mapPanel.topFormat', { value });
 }

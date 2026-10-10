@@ -18,6 +18,8 @@ export default defineConfig({
     baseURL: env['BASE_URL'] ?? 'http://localhost:8080',
     channel: env['PLAYWRIGHT_CHANNEL'] ?? 'chrome',
     viewport: { width: 1440, height: 900 },
+    // The app speaks the browser's language; the tests read English unless they ask for Danish
+    locale: 'en-US',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     launchOptions: {

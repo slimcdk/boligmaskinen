@@ -291,6 +291,15 @@ test('two panels float over the map: the map above, the weighting below, and bot
   await expect(show).toBeFocused();
   await show.click();
   await expect(weighting).toBeVisible();
+
+  // Escape in them closes them too, but not when it closes a menu of theirs
+  await page.getByRole('button', { name: 'Theme: System' }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(weighting).toBeVisible();
+  await weighting.getByRole('button', { name: /^Map: / }).focus();
+  await page.keyboard.press('Escape');
+  await expect(weighting).toBeHidden();
 });
 
 test('OpenStreetMap is credited on the map until the map is used, or for five seconds', async ({ page }) => {

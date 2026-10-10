@@ -1,13 +1,13 @@
 <div class="line" [class.off]="!counts()">
   <button mat-icon-button class="expand" (click)="open.set(!open())" [attr.aria-expanded]="open()"
-          [attr.aria-label]="(open() ? 'Hide settings for ' : 'Show settings for ') + block().name">
+          [attr.aria-label]="(open() ? 'blockRow.hideSettings' : 'blockRow.showSettings') | transloco: { name: name() }">
     <mat-icon>{{ open() ? 'expand_less' : 'expand_more' }}</mat-icon>
   </button>
   <div class="text">
-    <div class="name">{{ block().name }}</div>
+    <div class="name">{{ name() }}</div>
     <div class="rule" [class.error]="problem()" [title]="problem() ?? summary()">
       @if (problem()) {
-        <mat-icon>error_outline</mat-icon>The code needs attention
+        <mat-icon>error_outline</mat-icon>{{ 'blockRow.needsAttention' | transloco }}
       } @else {
         <span class="summary">{{ summary() }}</span>
       }
@@ -15,11 +15,11 @@
   </div>
   @if (block().role === 'must') {
     <mat-slide-toggle class="required" labelPosition="before" [checked]="block().enabled !== false"
-                      (change)="store.setEnabled(block().id, $event.checked)" [aria-label]="'Required: ' + block().name">Required</mat-slide-toggle>
+                      (change)="store.setEnabled(block().id, $event.checked)" [aria-label]="'blockRow.requiredFor' | transloco: { name: name() }">{{ 'blockRow.required' | transloco }}</mat-slide-toggle>
   } @else {
-    <div class="weight" [matTooltip]="'Weight in the weighting (0 turns the block off)'" matTooltipTouchGestures="off">
+    <div class="weight" [matTooltip]="'blockRow.weightTip' | transloco" matTooltipTouchGestures="off">
       <mat-slider class="weight-slider" min="0" [max]="MAX_WEIGHT" step="1">
-        <input matSliderThumb [value]="block().weight" (input)="onWeight($event)" [attr.aria-label]="'Weight of ' + block().name">
+        <input matSliderThumb [value]="block().weight" (input)="onWeight($event)" [attr.aria-label]="'blockRow.weightOf' | transloco: { name: name() }">
       </mat-slider>
       <span class="weight-value">{{ block().weight }}</span>
     </div>
@@ -46,33 +46,33 @@
         <p class="note">{{ preview() }}</p>
       }
       @if (canTurnAround()) {
-        <button mat-icon-button (click)="turnAround()" matTooltip="Turn around: full points at the other end" aria-label="Turn around">
+        <button mat-icon-button (click)="turnAround()" [matTooltip]="'blockRow.turnAroundTip' | transloco" [attr.aria-label]="'blockRow.turnAround' | transloco">
           <mat-icon>swap_horiz</mat-icon>
         </button>
       }
-      <button mat-icon-button (click)="editCode()" matTooltip="See and change the code" aria-label="Code"><mat-icon>code</mat-icon></button>
-      <button mat-icon-button [matMenuTriggerFor]="more" matTooltip="More" [attr.aria-label]="'More for ' + block().name"><mat-icon>more_vert</mat-icon></button>
+      <button mat-icon-button (click)="editCode()" [matTooltip]="'blockRow.codeTip' | transloco" [attr.aria-label]="'blockRow.code' | transloco"><mat-icon>code</mat-icon></button>
+      <button mat-icon-button [matMenuTriggerFor]="more" [matTooltip]="'blockRow.more' | transloco" [attr.aria-label]="'blockRow.moreFor' | transloco: { name: name() }"><mat-icon>more_vert</mat-icon></button>
     </div>
   </div>
 }
 
 <mat-menu #more="matMenu">
   @if (block().role === 'must') {
-    <button mat-menu-item (click)="setRole('want')"><mat-icon>tune</mat-icon><span>Use as a preference</span></button>
+    <button mat-menu-item (click)="setRole('want')"><mat-icon>tune</mat-icon><span>{{ 'blockRow.asPreference' | transloco }}</span></button>
   } @else {
-    <button mat-menu-item (click)="setRole('must')"><mat-icon>filter_alt</mat-icon><span>Use as a requirement</span></button>
+    <button mat-menu-item (click)="setRole('must')"><mat-icon>filter_alt</mat-icon><span>{{ 'blockRow.asRequirement' | transloco }}</span></button>
   }
-  <button mat-menu-item [matMenuTriggerFor]="groups"><mat-icon>drive_file_move</mat-icon><span>Move to group</span></button>
+  <button mat-menu-item [matMenuTriggerFor]="groups"><mat-icon>drive_file_move</mat-icon><span>{{ 'blockRow.moveToGroup' | transloco }}</span></button>
   <mat-divider />
-  <button mat-menu-item (click)="remove()"><mat-icon>delete</mat-icon><span>Remove</span></button>
+  <button mat-menu-item (click)="remove()"><mat-icon>delete</mat-icon><span>{{ 'blockRow.remove' | transloco }}</span></button>
 </mat-menu>
 <mat-menu #groups="matMenu">
   @for (g of store.groups(); track g.id) {
     @let here = g.id === block().group;
     <button mat-menu-item role="menuitemradio" [attr.aria-checked]="here" (click)="store.moveToGroup(block().id, g.id)">
-      <mat-icon>{{ here ? 'check' : '' }}</mat-icon><span>{{ g.name }}</span>
+      <mat-icon>{{ here ? 'check' : '' }}</mat-icon><span>{{ texts.groupName(g.name) }}</span>
     </button>
   }
   <mat-divider />
-  <button mat-menu-item (click)="newGroup()"><mat-icon>add</mat-icon><span>New group…</span></button>
+  <button mat-menu-item (click)="newGroup()"><mat-icon>add</mat-icon><span>{{ 'blockRow.newGroup' | transloco }}</span></button>
 </mat-menu>

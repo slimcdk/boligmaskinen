@@ -38,8 +38,8 @@ These hold for every milestone.
 
 **Done: the prototype (milestone 0), the backend foundation (milestone 1) and the data pipeline
 as jobs (milestone 2). Milestone 3 is done but for public transport and the sources that need
-access; milestone 7 but for the Danish interface and a first release. Of milestone 4, scoring in
-the database is ready for the homes.**
+access; milestone 7 but for a first release. Of milestone 4, scoring in the database is ready for
+the homes.**
 
 - All of Denmark: 17 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
   10, with a world map around it. Nature, noise from roads, railways, airports and industry, air
@@ -54,6 +54,7 @@ the database is ready for the homes.**
   browser has them.
 - Material 3 in light and dark mode, on desktops, tablets and phones, with a finger's 48 px on
   touch screens; axe finds no WCAG 2.2 AA violations in the main views.
+- In Danish and English: the app follows the browser's language, and the footer switches it.
 - One image, for amd64 and arm64: the Node backend serves the app, the data pack and the API,
   with PostGIS beside it, and its data jobs fetch every source and build the data pack and the
   road network every night, each step in under 1 GB of memory. A new install builds its own data
@@ -66,7 +67,7 @@ the database is ready for the homes.**
   which the test instance on a home server runs.
 
 **Not yet:** public transport, data about homes, homes for sale and prices, and alerts, which wait
-for the access in Track A; and the Danish interface.
+for the access in Track A.
 
 ## Track A: access applications (start now, runs alongside)
 
@@ -214,7 +215,8 @@ explanation.
 **Goal:** someone else can install, run and trust it.
 
 - **Danish interface.** Every text goes through translation keys. Transloco allows
-  switching language in the app; choose before the texts multiply.
+  switching language in the app; choose before the texts multiply. Done (2026-10-10): Danish
+  and English, after the browser's language, with a switch in the footer.
 - **Accessibility, WCAG 2.2 AA.** Keyboard use, labels, and contrast in both themes.
   axe runs in Playwright. Done (2026-10-10).
 - **Security and upkeep:** done (2026-10-10).

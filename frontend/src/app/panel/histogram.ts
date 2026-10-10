@@ -1,4 +1,5 @@
-import { Component, ElementRef, effect, inject, input, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, effect, inject, input, viewChild } from '@angular/core';
+import { I18n } from '../i18n/i18n';
 import { rampOf, Rgb } from '../map/colours';
 import { Store } from '../state/store';
 import { ThemeService } from '../theme/theme.service';
@@ -17,7 +18,7 @@ function themeColour(element: HTMLElement, token: string, fallback: string): str
 /** Distribution of points across the cells considered, coloured like the map. */
 @Component({
   selector: 'app-histogram',
-  template: '<canvas #canvas role="img" [attr.aria-label]="description() || \'Distribution of points across the cells considered\'"></canvas>',
+  template: '<canvas #canvas role="img" [attr.aria-label]="description() || label()"></canvas>',
   styles: [':host { display: block; } canvas { width: 100%; height: 44px; display: block; }'],
 })
 export class Histogram {
@@ -31,15 +32,17 @@ export class Histogram {
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly theme = inject(ThemeService);
   private readonly store = inject(Store);
+  private readonly i18n = inject(I18n);
+  protected readonly label = computed(() => this.i18n.t('histogram.label'));
 
   constructor() {
     effect(() => {
       const view = this.store.view();
-      this.draw(this.histogram(), this.limit(), this.showLimit(), this.lo(), this.hi(), rampOf(view.palette, this.theme.scheme(), view.bands));
+      this.draw(this.histogram(), this.limit(), this.showLimit(), this.lo(), this.hi(), rampOf(view.palette, this.theme.scheme(), view.bands), this.i18n.t('histogram.top'));
     });
   }
 
-  private draw(histogram: Uint32Array, limit: number, showLimit: boolean, lo: number, hi: number, ramp: Rgb[]): void {
+  private draw(histogram: Uint32Array, limit: number, showLimit: boolean, lo: number, hi: number, ramp: Rgb[], top: string): void {
     const canvas = this.canvas().nativeElement;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const width = canvas.clientWidth || 300;
@@ -67,6 +70,7 @@ export class Histogram {
     g.fillStyle = themeColour(canvas, '--mat-sys-on-surface-variant', '#666');
     g.font = '10px Roboto, system-ui, sans-serif';
     g.fillText('0', 0, height - 0.5);
-    g.fillText('100 points', width - 50, height - 0.5);
+    g.textAlign = 'right';
+    g.fillText(top, width, height - 0.5);
   }
 }

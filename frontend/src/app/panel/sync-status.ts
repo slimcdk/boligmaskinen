@@ -1,6 +1,8 @@
 import { Component, computed, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { I18n } from '../i18n/i18n';
 import { ProfileSync } from '../state/profile-sync';
 
 /**
@@ -9,13 +11,13 @@ import { ProfileSync } from '../state/profile-sync';
  */
 @Component({
   selector: 'app-sync-status',
-  imports: [MatIconModule, MatTooltipModule],
+  imports: [MatIconModule, MatTooltipModule, TranslocoPipe],
   template: `
     @if (state(); as s) {
       <span class="status" [class.offline]="s.offline" role="img" [attr.aria-label]="s.text" [matTooltip]="s.text" matTooltipTouchGestures="off">
         <mat-icon>{{ s.icon }}</mat-icon>
         @if (s.offline) {
-          <span class="words" aria-hidden="true">Not saved on the server</span>
+          <span class="words" aria-hidden="true">{{ 'sync.notSaved' | transloco }}</span>
         }
       </span>
     }
@@ -40,14 +42,15 @@ import { ProfileSync } from '../state/profile-sync';
 })
 export class SyncStatus {
   private readonly sync = inject(ProfileSync);
+  private readonly i18n = inject(I18n);
   protected readonly state = computed(() => {
     switch (this.sync.status()) {
       case 'saved':
-        return { icon: 'cloud_done', text: 'Your maps are saved on the server', offline: false };
+        return { icon: 'cloud_done', text: this.i18n.t('sync.saved'), offline: false };
       case 'saving':
-        return { icon: 'cloud_sync', text: 'Saving your maps on the server…', offline: false };
+        return { icon: 'cloud_sync', text: this.i18n.t('sync.saving'), offline: false };
       case 'offline':
-        return { icon: 'cloud_off', text: 'The server cannot be reached. Your changes are kept in this browser and saved when it can be.', offline: true };
+        return { icon: 'cloud_off', text: this.i18n.t('sync.offline'), offline: true };
       default:
         return null;
     }

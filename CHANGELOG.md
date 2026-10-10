@@ -26,6 +26,7 @@ Everything so far: there is no release yet. The test instance follows `master`.
   and population, and air quality (NO₂ and PM2.5).
 - Material 3 in light and dark mode, on desktops, tablets and phones. axe finds no WCAG 2.2 AA
   violations in the main views.
+- In Danish or English: the app follows the browser's language, and the footer switches it.
 
 ### The data
 

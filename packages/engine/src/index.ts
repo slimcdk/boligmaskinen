@@ -13,4 +13,5 @@ export * from './profile.ts';
 export * from './sql.ts';
 export * from './travel.ts';
 export * from './types.ts';
+export * from './wording.ts';
 export * from './values.ts';

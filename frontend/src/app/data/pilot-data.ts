@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Grid, GridMeta, LayerName, Municipality } from '@boligmaskinen/engine';
+import { I18n } from '../i18n/i18n';
 import { loadByteContainer } from './byte-container';
 
 /** The current data pack: its meta.json says which pack that is (public/data-pack in development). */
@@ -18,8 +19,9 @@ export type LoadState = 'loading' | 'ready' | 'error';
 /** Loads the feature grid of the data pack: all of Denmark, or a pilot region. */
 @Injectable({ providedIn: 'root' })
 export class PilotData {
+  private readonly i18n = inject(I18n);
   readonly state = signal<LoadState>('loading');
-  readonly message = signal('Loading data…');
+  readonly message = signal(this.i18n.t('data.loading'));
   readonly grid = signal<Grid | null>(null);
   /** Where the loaded pack's files are (packBase). */
   base = DATA_BASE;
@@ -30,12 +32,12 @@ export class PilotData {
       const base = packBase(meta);
       const names = Object.keys(meta.files) as LayerName[];
       let loaded = 0;
-      this.message.set(`Loading ${names.length} data layers…`);
+      this.message.set(this.i18n.t('data.loadingLayers', { n: names.length }));
       const entries = await Promise.all(
         names.map(async (name) => {
           const bytes = await loadByteContainer(`${base}data/${meta.files[name]}`);
           if (bytes.length !== meta.width * meta.height) throw new Error(`${name}: unexpected size ${bytes.length}`);
-          this.message.set(`Loading data layers… ${++loaded} of ${names.length}`);
+          this.message.set(this.i18n.t('data.loadedLayers', { done: ++loaded, n: names.length }));
           return [name, bytes] as const;
         }),
       );
@@ -60,7 +62,7 @@ export class PilotData {
       this.state.set('ready');
     } catch (error) {
       console.error(error);
-      this.message.set(`Could not load the data: ${(error as Error).message}`);
+      this.message.set(this.i18n.t('data.failed', { error: (error as Error).message }));
       this.state.set('error');
     }
   }

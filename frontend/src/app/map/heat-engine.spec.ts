@@ -42,7 +42,7 @@ describe('the heat engine', () => {
     const result = engine.render(request([block('ramp(forest, 300, 3000)', { id: 'forest' })]), pixels);
     expect(result.stats).toMatchObject({ hasPreferences: true, considered: 4, shown: 4, limit: 0 });
     expect([...result.stats.histogram.entries()].filter(([, n]) => n).map(([score]) => score)).toEqual([0, 50, 100]);
-    expect(result.previews).toEqual([['forest', 'Median score 1.00']]);
+    expect(result.previews).toEqual([['forest', { kind: 'median', score: 1 }]]);
     expect(result.issues).toEqual([]);
     // The cells with homes are coloured; land without homes and the sea are not
     expect(Array.from(pixels, (p) => p !== 0)).toEqual([true, true, true, true, false, false, false, false]);
@@ -56,7 +56,7 @@ describe('the heat engine', () => {
     const blocks = [block('ramp(forest, 300, 3000)'), block('zone == BYZONE', { id: 'byzone', role: 'must' })];
     const result = engine.render(request(blocks, { show: 'abs', abs: 90, showBelow: true }), pixels);
     expect(result.stats).toMatchObject({ considered: 2, shown: 1, limit: 90 });
-    expect(result.previews).toContainEqual(['byzone', '50 % of the cells pass']);
+    expect(result.previews).toContainEqual(['byzone', { kind: 'pass', percent: 50 }]);
     // Cell 2 scores 50, below the limit, so it is grey; cells 1 and 3 are not in byzone
     expect(pixels[2]).not.toBe(0);
     expect(pixels[2] >>> 24).toBeLessThan(pixels[0] >>> 24);
@@ -88,10 +88,13 @@ describe('the heat engine', () => {
     const blocks = [block('ramp(forest, 300, 3000)', { name: 'Forest' }), block('zone == BYZONE', { id: 'byzone', name: 'Byzone', role: 'must' })];
     engine.render(request(blocks), new Uint32Array(8));
     expect(engine.explain(0, { blocks, places: [] })).toEqual({
-      title: '100 points', subtitle: 'Cell with homes · Aarhus Kommune',
-      rows: [{ name: 'Forest', value: '0 m', result: '4.0 / 4', failed: false }, { name: 'Byzone', value: 'Byzone', result: '✓ met', failed: false }],
+      points: 100, leftOut: false, homes: true, municipality: 'Aarhus', area: null,
+      rows: [
+        { id: blocks[0].id, role: 'want', input: { name: 'forest', value: 0 }, score: 1, weight: 4 },
+        { id: 'byzone', role: 'must', input: { name: 'zone', value: 1 }, score: 1, weight: 4 },
+      ],
     });
-    expect(engine.explain(3, { blocks, places: [] })).toMatchObject({ title: 'Left out', subtitle: 'A requirement is not met · Aarhus Kommune' });
+    expect(engine.explain(3, { blocks, places: [] })).toMatchObject({ leftOut: true, municipality: 'Aarhus' });
     expect(engine.explain(6, { blocks, places: [] })).toBeNull();
     expect(engine.explain(-1, { blocks, places: [] })).toBeNull();
   });
@@ -102,10 +105,10 @@ describe('the heat engine', () => {
     const blocks = [block('work_car <= 10', { id: 'near', role: 'must' }), block('ramp(forest, 300, 3000)', { id: 'forest' })];
     const ask = () => engine.render({ ...request(blocks), places: [place] }, new Uint32Array(8)).previews.find(([id]) => id === 'near')![1];
     // Estimated from the distance, every cell is a few minutes away by car
-    expect(ask()).toBe('100 % of the cells pass');
+    expect(ask()).toEqual({ kind: 'pass', percent: 100 });
     engine.setTravel('10.00200,56.00100', { car: Uint8Array.of(5, 8, 12, 40, 5, 5, 255, 255) });
-    expect(ask()).toBe('50 % of the cells pass');
-    expect(engine.explain(2, { blocks, places: [place] })!.rows.find((r) => r.name === 'Test')).toBeTruthy();
+    expect(ask()).toEqual({ kind: 'pass', percent: 50 });
+    expect(engine.explain(2, { blocks, places: [place] })!.rows.find((r) => r.id === 'near')).toMatchObject({ input: { name: 'work_car', value: 12 }, score: 0 });
   });
 });
 

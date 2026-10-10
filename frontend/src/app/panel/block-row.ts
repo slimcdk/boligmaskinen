@@ -7,6 +7,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { I18n } from '../i18n/i18n';
+import { Texts } from '../i18n/texts';
 import { HeatService } from '../map/heat.service';
 import { Store } from '../state/store';
 import { Block, blockSummary, FormulaParam, formulaParams, MAX_WEIGHT, Role, turnAround } from '@boligmaskinen/engine';
@@ -19,7 +22,7 @@ import { ParamControl } from './param-control';
   selector: 'app-block-row',
   imports: [
     MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, MatSlideToggleModule, MatSliderModule,
-    MatTooltipModule, ParamControl,
+    MatTooltipModule, TranslocoPipe, ParamControl,
   ],
   templateUrl: './block-row.html',
   styleUrl: './block-row.scss',
@@ -28,6 +31,8 @@ export class BlockRow {
   protected readonly store = inject(Store);
   private readonly heat = inject(HeatService);
   private readonly dialog = inject(MatDialog);
+  private readonly i18n = inject(I18n);
+  protected readonly texts = inject(Texts);
   readonly block = input.required<Block>();
   /** True when the block's group is switched off. */
   readonly groupOff = input(false);
@@ -45,7 +50,9 @@ export class BlockRow {
     }
     return rows;
   });
-  protected readonly summary = computed(() => blockSummary(this.block(), this.params()));
+  /** Its name, a predefined block's in the language in use. */
+  protected readonly name = computed(() => this.texts.blockName(this.block()));
+  protected readonly summary = computed(() => blockSummary(this.block(), this.params(), this.texts.wording()));
   protected readonly problem = computed(() => this.heat.issues().get(this.block().id) ?? null);
   protected readonly preview = computed(() => this.heat.preview().get(this.block().id) ?? '');
   /** Blocks with a ramp (`full` and `zero`) can give full points at the other end instead. */
@@ -75,7 +82,8 @@ export class BlockRow {
 
   protected newGroup(): void {
     const id = this.block().id;
-    const data: NameDialogData = { title: 'Move to a new group', label: 'Name of the group', value: this.store.freeGroupName('New group'), action: 'Move' };
+    const t = (key: string) => this.i18n.t(key);
+    const data: NameDialogData = { title: t('blockRow.newGroupTitle'), label: t('blockRow.groupName'), value: this.store.freeGroupName(t('blockRow.newGroupName')), action: t('blockRow.move') };
     this.dialog.open<NameDialog, NameDialogData, string>(NameDialog, { data, width: '400px', maxWidth: '92vw', autoFocus: 'first-tabbable' })
       .afterClosed().subscribe((name) => name && this.store.moveToNewGroup(id, name));
   }

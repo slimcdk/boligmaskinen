@@ -3,6 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { I18n } from '../i18n/i18n';
 
 export interface ShareDialogData {
   name: string;
@@ -17,24 +19,20 @@ export interface ShareDialogData {
  */
 @Component({
   selector: 'app-share-dialog',
-  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule],
+  imports: [MatButtonModule, MatDialogModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
   template: `
-    <h2 mat-dialog-title>Share “{{ data.name }}”</h2>
+    <h2 mat-dialog-title>{{ 'share.title' | transloco: { name: data.name } }}</h2>
     <mat-dialog-content>
-      <p>Whoever opens the link gets a copy of this map: its blocks and how the map shows them{{ data.places.length ? '' : '.' }}
-        @if (data.places.length) {
-          and {{ data.places.length === 1 ? 'the place' : 'the places' }} its blocks use: {{ data.places.join(', ') }}.
-        }
-        Your other maps and places stay with you.</p>
+      <p>{{ text | transloco: { places: data.places.join(', ') } }} {{ 'share.othersStay' | transloco }}</p>
       <mat-form-field class="full" subscriptSizing="dynamic">
-        <mat-label>Link</mat-label>
-        <input #field matInput readonly [value]="data.link" (focus)="field.select()" aria-label="Link to the map">
+        <mat-label>{{ 'share.link' | transloco }}</mat-label>
+        <input #field matInput readonly [value]="data.link" (focus)="field.select()" [attr.aria-label]="'share.linkLabel' | transloco">
       </mat-form-field>
       <p class="status" role="status">{{ status() }}</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Close</button>
-      <button mat-flat-button (click)="copy(field)">Copy link</button>
+      <button mat-button mat-dialog-close>{{ 'common.close' | transloco }}</button>
+      <button mat-flat-button (click)="copy(field)">{{ 'share.copy' | transloco }}</button>
     </mat-dialog-actions>
   `,
   styles: [`
@@ -45,16 +43,18 @@ export interface ShareDialogData {
 })
 export class ShareDialog {
   protected readonly data = inject<ShareDialogData>(MAT_DIALOG_DATA);
+  private readonly i18n = inject(I18n);
   protected readonly status = signal('');
+  protected readonly text = ['share.text', 'share.textPlace'][this.data.places.length] ?? 'share.textPlaces';
 
   protected async copy(field: HTMLInputElement): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.data.link);
-      this.status.set('The link is copied.');
+      this.status.set(this.i18n.t('share.copied'));
     } catch {
       field.focus();
       field.select();
-      this.status.set('The link is selected: copy it with Ctrl+C or ⌘C.');
+      this.status.set(this.i18n.t('share.selected'));
     }
   }
 }

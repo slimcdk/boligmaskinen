@@ -1,15 +1,16 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Grid, mercatorFrame, MercatorFrame, Place, ValueInfo } from '@boligmaskinen/engine';
+import { I18n } from '../i18n/i18n';
 import { loadByteContainer } from '../data/byte-container';
 import { PilotData } from '../data/pilot-data';
 import { Store } from '../state/store';
 import { ThemeService } from '../theme/theme.service';
 import { Bounds, corners, DETAIL_ZOOM, mosaic, sameRange, tileKeys, TileRange, tilesFor } from './detail';
-import { Breakdown, HeatEngine, HeatMessage, HeatRequest, HeatResult, HeatStats } from './heat-engine';
+import { Breakdown, HeatEngine, HeatMessage, HeatRequest, HeatResult, HeatStats, Preview } from './heat-engine';
 import { positionOf, resample, RoutedTimes } from './travel';
 import { TravelService } from './travel.service';
 
-export type { Breakdown, HeatStats } from './heat-engine';
+export type { Breakdown, BreakdownRow, HeatStats } from './heat-engine';
 
 /** How a place's travel times are found: on the road network, being found there, or estimated from the distance. */
 export type RouteState = 'routed' | 'working' | 'estimated';
@@ -31,6 +32,7 @@ const TILE_CACHE = 60;
 export class HeatService {
   private readonly data = inject(PilotData);
   private readonly store = inject(Store);
+  private readonly i18n = inject(I18n);
   private readonly theme = inject(ThemeService);
   private readonly travel = inject(TravelService);
 
@@ -38,8 +40,9 @@ export class HeatService {
   /** Increments every time the canvas has new pixels. */
   readonly frame = signal(0);
   readonly stats = signal<HeatStats | null>(null);
+  private readonly previews = signal<Map<string, Preview>>(new Map());
   /** Each block's result in words, e.g. "Median score 0.62" or "84 % of the cells pass". */
-  readonly preview = signal<Map<string, string>>(new Map());
+  readonly preview = computed(() => new Map([...this.previews()].map(([id, preview]) => [id, this.describe(preview)])));
   /** Blocks that cannot run, with the reason. */
   readonly issues = signal<Map<string, string>>(new Map());
 
@@ -225,7 +228,7 @@ export class HeatService {
       this.detailFrame.update((f) => f + 1);
     }
     this.issues.set(new Map(result.issues));
-    this.preview.set(new Map(result.previews));
+    this.previews.set(new Map(result.previews));
     this.stats.set(result.stats);
     this.frame.update((f) => f + 1);
     this.busy = false;
@@ -294,6 +297,17 @@ export class HeatService {
       this.explaining.set(id, resolve);
       this.post({ type: 'explain', id, cell, detail, request });
     });
+  }
+
+  private describe(preview: Preview): string {
+    switch (preview.kind) {
+      case 'noData':
+        return this.i18n.t('heat.noData');
+      case 'pass':
+        return this.i18n.t('heat.pass', { percent: preview.percent });
+      case 'median':
+        return this.i18n.t('heat.median', { score: this.i18n.number(preview.score, 2) });
+    }
   }
 
   /** Raster cell index of the region's grid under a longitude/latitude, or -1. */
