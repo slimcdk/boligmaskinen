@@ -46,12 +46,14 @@ FEATURE_TAGS = [
     ("boundary", "administrative"),
     *[("highway", key) for key in ROAD_CLASSES],
     ("power", "plant"), ("power", "generator"),
+    ("aeroway", "aerodrome"),
 ]
 
 # Every theme, with the columns it has besides the geometry, so each layer exists even when empty
 THEMES: dict[str, list[str]] = {
     "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [], "solar": [],
     "supermarket": ["name"], "station": ["name"], "municipality": ["name", "ref"], "country": [], "road": ["road_class"],
+    "aerodrome": ["name", "kind"],
 }
 
 
@@ -85,7 +87,20 @@ def classify(tags) -> str | None:
             tags.get("power") == "generator" and tags.get("generator:source") == "solar"
             and tags.get("location") not in ("roof", "rooftop") and tags.get("generator:place") not in ("roof", "rooftop")):
         return "solar"
+    if tags.get("aeroway") == "aerodrome" and tags.get("disused") != "yes" and tags.get("abandoned") != "yes":
+        return "aerodrome"
     return None
+
+
+def aerodrome_kind(tags) -> str:
+    """An air station (military), an airport (one with an IATA code, as airlines name them), or another
+    airfield: a public, private, gliding or microlight field, or a seaplane base."""
+    if (tags.get("military") == "airfield" or tags.get("landuse") == "military"
+            or "military" in (tags.get("aerodrome:type"), tags.get("aerodrome"))):
+        return "air_station"
+    if tags.get("iata"):
+        return "airport"
+    return "airfield"
 
 
 def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
@@ -106,11 +121,11 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
             continue
         kind = obj.type_str()
         try:
-            if kind == "n" and theme in ("supermarket", "station", "beach"):
+            if kind == "n" and theme in ("supermarket", "station", "beach", "aerodrome"):
                 geom = wkb.create_point(obj)
             elif kind == "w" and theme in ("coastline", "road"):
                 geom = wkb.create_linestring(obj)
-            elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar"):
+            elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar", "aerodrome"):
                 geom = wkb.create_multipolygon(obj)
             else:
                 continue
@@ -120,8 +135,10 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
         row["geometry"].append(bytes.fromhex(geom))
         if theme == "road":
             row["road_class"].append(ROAD_CLASSES[obj.tags["highway"]])
-        if theme in ("municipality", "station", "supermarket"):
+        if theme in ("municipality", "station", "supermarket", "aerodrome"):
             row["name"].append(obj.tags.get("name", ""))
+        if theme == "aerodrome":
+            row["kind"].append(aerodrome_kind(obj.tags))
         if theme == "municipality":
             row["ref"].append(obj.tags.get("ref", ""))  # the municipality code Danmarks Statistik uses
     return rows

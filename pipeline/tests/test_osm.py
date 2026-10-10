@@ -30,6 +30,10 @@ def extract(tmp_path_factory):
         Node(id=22, location=(10.15, 56.15), tags={"amenity": "bench"}),  # nothing the map uses
         Node(id=23, location=(10.12, 56.02)), Node(id=24, location=(10.14, 56.02)), Node(id=25, location=(10.14, 56.03)), Node(id=26, location=(10.12, 56.03)),
         Node(id=27, location=(10.16, 56.02)), Node(id=28, location=(10.161, 56.02)), Node(id=29, location=(10.161, 56.021)), Node(id=30, location=(10.16, 56.021)),
+        Node(id=31, location=(10.03, 56.17)), Node(id=32, location=(10.05, 56.17)), Node(id=33, location=(10.05, 56.18)), Node(id=34, location=(10.03, 56.18)),
+        Node(id=35, location=(10.17, 56.17)), Node(id=36, location=(10.19, 56.17)), Node(id=37, location=(10.19, 56.18)), Node(id=38, location=(10.17, 56.18)),
+        Node(id=39, location=(10.08, 56.19), tags={"aeroway": "aerodrome", "aerodrome": "gliding", "name": "Svæveflyveplads"}),
+        Node(id=40, location=(10.09, 56.19), tags={"aeroway": "aerodrome", "disused": "yes", "name": "Gammel flyveplads"}),
     ]
     ways = [
         Way(id=100, nodes=[1, 2, 3, 4, 1]),
@@ -39,6 +43,8 @@ def extract(tmp_path_factory):
         Way(id=104, nodes=[23, 24, 25, 26, 23], tags={"power": "plant", "plant:source": "solar"}),
         # Panels on a roof are no solar park
         Way(id=105, nodes=[27, 28, 29, 30, 27], tags={"power": "generator", "generator:source": "solar", "location": "roof"}),
+        Way(id=106, nodes=[31, 32, 33, 34, 31], tags={"aeroway": "aerodrome", "aerodrome": "international", "iata": "AAR", "name": "Lufthavn"}),
+        Way(id=107, nodes=[35, 36, 37, 38, 35], tags={"aeroway": "aerodrome", "military": "airfield", "landuse": "military", "name": "Flyvestation"}),
     ]
     relations = [
         Relation(id=1000, members=[("w", 100, "outer")],
@@ -64,11 +70,15 @@ def test_extracts_a_layer_per_theme(extract):
     assert [name for name, _ in pyogrio.list_layers(out / "layers.gpkg")] == list(osm.THEMES)
     assert {theme: counts[theme] for theme in osm.THEMES} == {
         "forest": 1, "industrial": 0, "water": 0, "coastline": 0, "beach": 0, "solar": 1,
-        "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1,
+        "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1, "aerodrome": 3,
     }
     municipality = pyogrio.read_dataframe(out / "layers.gpkg", layer="municipality")
     assert (municipality["name"][0], municipality["ref"][0]) == ("Aarhus Kommune", "751")
     assert pyogrio.read_dataframe(out / "layers.gpkg", layer="road")["road_class"].tolist() == ["motorway"]
+    # An airport by its IATA code, an air station by its military tags, and any other field; not a disused one
+    aerodromes = pyogrio.read_dataframe(out / "layers.gpkg", layer="aerodrome")
+    assert sorted(zip(aerodromes["name"], aerodromes["kind"], aerodromes.geom_type)) == [
+        ("Flyvestation", "air_station", "MultiPolygon"), ("Lufthavn", "airport", "MultiPolygon"), ("Svæveflyveplads", "airfield", "Point")]
     # The node locations were in a temporary file, which is gone
     assert sorted(path.name for path in out.iterdir()) == ["addresses.npy", "counts.json", "layers.gpkg"]
     assert json.loads((out / "counts.json").read_text()) == counts

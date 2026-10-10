@@ -124,6 +124,21 @@
     "zone": {
       "name": "Planning zone",
       "note": "Homes in a sommerhusområde cannot be lived in all year."
+    },
+    "airport": {
+      "name": "Away from airports",
+      "opposite": "Close to an airport",
+      "note": "Nearest airport with an IATA code, such as Billund or Kastrup, from OpenStreetMap."
+    },
+    "airfield": {
+      "name": "Away from airfields",
+      "opposite": "Close to an airfield",
+      "note": "Nearest airfield of any kind, down to gliding and microlight fields, from OpenStreetMap."
+    },
+    "air_station": {
+      "name": "Away from air stations",
+      "opposite": "Close to an air station",
+      "note": "Nearest of the air force's stations: Aalborg, Karup and Skrydstrup."
     }
   },
   "examples": {
@@ -163,7 +178,10 @@
     "income_tax": "Municipal income tax, 2026",
     "land_tax": "Land tax, 2026",
     "burglaries": "Home burglaries per 1,000 residents, 2025",
-    "population": "Residents of the municipality"
+    "population": "Residents of the municipality",
+    "airport": "Distance to an airport (one with an IATA code)",
+    "airfield": "Distance to an airfield of any kind, also gliding and microlight fields",
+    "air_station": "Distance to a military air station"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",

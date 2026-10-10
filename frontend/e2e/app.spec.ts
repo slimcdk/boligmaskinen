@@ -131,6 +131,21 @@ test('the newest values score the map: the air, solar parks and turbines by thei
   await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
 });
 
+test('airports, airfields and air stations score the map', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  for (const name of [/^Away from airports/, /^Away from airfields/, /^Away from air stations/]) {
+    await page.getByRole('option', { name }).click();
+  }
+  await page.getByRole('button', { name: 'Done' }).click();
+  for (const name of ['Away from airports', 'Away from airfields', 'Away from air stations']) {
+    // Each reads a layer of the test data pack, so none says it has no data
+    await expect(block(page, name).locator('.rule')).not.toHaveClass(/error/);
+  }
+  await expect(block(page, 'Away from airports').locator('.rule')).toHaveText('No points below 3.0 km · Full points from 10 km');
+  await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
+});
+
 test('a requirement removes the cells that do not meet it', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Quiet' }).click();

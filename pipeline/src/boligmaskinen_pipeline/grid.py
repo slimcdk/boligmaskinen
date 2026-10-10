@@ -12,7 +12,7 @@ Usage:
 <inputs.json> names the file of every source (relative paths are read from the JSON file's folder):
 
     osm_layers    layers.gpkg from the osm step        osm_addresses  addresses.npy from the osm step
-                  (forests, lakes, beaches, solar parks, …)
+                  (forests, lakes, beaches, solar parks, airfields, …)
     noise         eu_2022_vej_4m.shp (Miljøstyrelsen)  zones          zonekort.geojson (Plandata)
     noise_rail, noise_air, noise_industry  Miljøstyrelsen's maps of railways, airports and industry (optional)
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
@@ -29,6 +29,7 @@ import csv
 import gzip
 import json
 import re
+import tempfile
 import time
 from collections.abc import Iterator
 from datetime import date
@@ -83,7 +84,10 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
-          "turbine_heights", "solar", "density", "zone", "municipality", "no2", "pm25", "mask"]
+          "turbine_heights", "solar", "airport", "airfield", "air_station", "density", "zone", "municipality", "no2", "pm25", "mask"]
+
+# The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)
+AERODROME_LAYERS = {"airport": {"airport"}, "air_station": {"air_station"}, "airfield": {"airport", "air_station", "airfield"}}
 TILE = 256  # cells per side of a detail tile
 
 
@@ -271,6 +275,25 @@ def large_areas(gpkg: Path, layer: str, minimum: float) -> Iterator:
         yield from frame.geometry[frame.area >= minimum]
 
 
+class ParkedLayers(dict):
+    """The finished layers, each on disk in $TMPDIR and read back as a memory map until the display
+    grid and the detail tiles are written. Their pages are the files', which the kernel can drop and
+    read again, so twenty layers of all of Denmark do not add 400 MB to the step's memory."""
+
+    def __init__(self):
+        super().__init__()
+        self.folder = tempfile.TemporaryDirectory(prefix="grid-layers-")
+
+    def __setitem__(self, name: str, layer: np.ndarray) -> None:
+        path = Path(self.folder.name) / f"{name}.npy"
+        np.save(path, layer)
+        super().__setitem__(name, np.load(path, mmap_mode="r"))
+
+    def close(self) -> None:
+        self.clear()
+        self.folder.cleanup()
+
+
 def region_spec(region: str) -> dict:
     """A named region, or the municipalities whose codes are listed."""
     if region in REGIONS:
@@ -337,7 +360,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     del territory
 
     # --- Nature ------------------------------------------------------------------------------
-    layers: dict[str, np.ndarray] = {}
+    layers = ParkedLayers()
     layers["forest"] = encode_distance(grid.distance_to(grid.burn(large_areas(gpkg, "forest", 50_000))))  # woods of at least 5 ha
     lakes = grid.burn(large_areas(gpkg, "water", 50_000)).astype(bool)  # lakes of at least 5 ha
     layers["water"] = encode_distance(grid.distance_to(lakes | sea))
@@ -403,6 +426,21 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
     layers["solar"] = encode_distance(grid.distance_to(solar))
     step(f"Solar parks cover {solar.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.42)
     del solar
+
+    # --- Airports, air stations and every other airfield (OpenStreetMap) ----------------------
+    aerodromes = read_layer(gpkg, "aerodrome")
+    kinds = aerodromes["kind"].to_numpy() if "kind" in aerodromes.columns else np.array([], dtype=str)
+    for name, wanted in AERODROME_LAYERS.items():
+        chosen = aerodromes.geometry[np.isin(kinds, list(wanted))]
+        points = (chosen.geom_type == "Point").to_numpy()
+        # An aerodrome mapped as an area counts from its edge; one mapped as a point, from the point
+        mask = grid.burn(chosen[~points], all_touched=True).astype(bool)
+        mask |= grid.burn_points(chosen[points].x.to_numpy(), chosen[points].y.to_numpy()) > 0
+        layers[name] = encode_distance(grid.distance_to(mask))
+    counted = {kind: int((kinds == kind).sum()) for kind in ("airport", "air_station", "airfield")}
+    step(f"Aerodromes: {counted['airport']} airports, {counted['air_station']} air stations and "
+         f"{counted['airfield']} other airfields", 0.43)
+    del aerodromes, kinds, chosen, mask
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])
@@ -610,6 +648,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         },
     }
     (out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+    layers.close()
     step("Done", 1)
     return meta
 
