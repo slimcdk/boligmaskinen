@@ -169,6 +169,11 @@
       "name": "Away from planned roads and railways",
       "opposite": "Close to planned roads and railways",
       "note": "Nearest road or railway the municipal plans lay out, adopted or proposed, from Plandata.dk."
+    },
+    "new_local_plan": {
+      "name": "Away from new local plans",
+      "opposite": "Close to new local plans",
+      "note": "Nearest local plan of the last two years, proposed or adopted: building or change to come, from Plandata.dk."
     }
   },
   "examples": {
@@ -221,7 +226,8 @@
     "pharmacy": "Distance to a pharmacy",
     "library": "Distance to a public library",
     "power_line": "Distance to an overhead power line of 132 kV or more",
-    "planned_road": "Distance to a road or railway the municipal plans lay out, adopted or proposed"
+    "planned_road": "Distance to a road or railway the municipal plans lay out, adopted or proposed",
+    "new_local_plan": "Distance to a local plan of the last two years, proposed or adopted (0 inside one)"
   },
   "places": {
     "car": "Minutes to {{ place }} by car",

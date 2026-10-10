@@ -41,7 +41,7 @@ as jobs (milestone 2). Milestone 3 is done but for public transport and the sour
 access; milestone 7 but for a first release. Of milestone 4, scoring in the database is ready for
 the homes.**
 
-- All of Denmark: 26 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
+- All of Denmark: 27 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
   10, with a world map around it. Nature, protected areas and Natura 2000, noise from roads,
   railways, airports and industry, air quality, wind turbines (also by their height), solar parks,
   airports and airfields, everyday services, planning zones and municipal statistics.
@@ -151,7 +151,7 @@ what they took (#69).
    - When a place is added, the app finds its travel times (`POST /api/travel`). Done
      (2026-10-10) for car, bike and walk; the place says whether its times come from the roads.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
-   districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too, and Miljøstyrelsen's protected areas and Natura 2000 from Danmarks Miljøportal; pharmacies, libraries and the overhead power lines of 132 kV or more from OpenStreetMap, where they are nearly all mapped; and the roads and railways the municipal plans lay out, from Plandata.dk. And
+   districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too, and Miljøstyrelsen's protected areas and Natura 2000 from Danmarks Miljøportal; pharmacies, libraries and the overhead power lines of 132 kV or more from OpenStreetMap, where they are nearly all mapped; and the roads and railways the municipal plans lay out and the local plans of the last two years, from Plandata.dk. And
    drinking water quality (hardness per supply area, PFAS, nitrate); see
    [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The GeoFA school
    districts were fetched on 2026-10-10 (1,409 districts, 143 MB of GeoJSON) but not used: a

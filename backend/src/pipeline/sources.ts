@@ -295,6 +295,8 @@ export const AIR_LAYERS = [
 interface WfsLayer {
   name: string;
   layer: string;
+  /** Only the features that match, in GeoServer's CQL, e.g. datovedt>=20241010. */
+  filter?: string;
   /** Says what the features are, or throws when they are not what the layer has. */
   check: (features: { geometry?: unknown; properties?: Record<string, unknown> }[]) => string;
 }
@@ -305,8 +307,9 @@ interface WfsLayer {
  */
 async function fetchWfs(w: Work, source: string, base: string, licence: string, layers: WfsLayer[], count: number): Promise<JobOutcome> {
   const fetched: Archived[] = [];
-  for (const [i, { name, layer, check }] of layers.entries()) {
-    const url = `${base}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=${count}`;
+  for (const [i, { name, layer, filter, check }] of layers.entries()) {
+    const url = `${base}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=${count}`
+      + (filter ? `&CQL_FILTER=${encodeURIComponent(filter)}` : '');
     fetched.push(await w.archive.download(w.context, {
       source, name, url, licence, progress: [i / layers.length, (i + 1) / layers.length],
       normalize: (content) => {
@@ -361,7 +364,19 @@ const PLANNED_LAYERS: WfsLayer[] = [
   { name: 'planlagttrafikanlaeg_forslag.geojson', layer: 'pdk:theme_pdk_planlagttrafikanlaeg_forslag', check: areas('proposed', 0) },
 ];
 
-const fetchPlans = (w: Work) => fetchWfs(w, 'plans', w.urls.plans, LICENCES.plandata, PLANNED_LAYERS, 20_000);
+/** The local plans of the last two years, proposed or adopted: building to come, or change. */
+function localPlanLayers(since: string): WfsLayer[] {
+  return [
+    { name: 'lokalplan_forslag.geojson', layer: 'pdk:theme_pdk_lokalplan_forslag', filter: `datoforsl>=${since}`, check: areas('proposed local plans', 0) },
+    { name: 'lokalplan_vedtaget.geojson', layer: 'pdk:theme_pdk_lokalplan_vedtaget', filter: `datovedt>=${since}`, check: areas('adopted local plans', 100) },
+  ];
+}
+
+function fetchPlans(w: Work): Promise<JobOutcome> {
+  // Two years back, as Plandata writes a date: 20241010
+  const since = w.day(new Date(Date.now() - 730 * 86_400_000).toISOString()).replaceAll('-', '');
+  return fetchWfs(w, 'plans', w.urls.plans, LICENCES.plandata, [...PLANNED_LAYERS, ...localPlanLayers(since)], 20_000);
+}
 
 /** Natural Earth's world map, and the layers built from it. */
 export const NATURAL_EARTH = [
@@ -423,8 +438,8 @@ const SOURCES: SourceJob[] = [
     description: 'Nitrogen dioxide and fine particles: yearly means on a 1 km grid from DCE’s model.',
   },
   {
-    id: 'plans', name: 'Planned roads and railways', source: 'Plandata.dk', schedule: '35 3 * * *', then: ['grid'], fetch: fetchPlans,
-    description: 'The roads and railways the municipal plans lay out, adopted or proposed, from the WFS.',
+    id: 'plans', name: 'Plans', source: 'Plandata.dk', schedule: '35 3 * * *', then: ['grid'], fetch: fetchPlans,
+    description: 'The roads and railways the municipal plans lay out, and the local plans of the last two years, adopted or proposed, from the WFS.',
   },
   {
     id: 'protected', name: 'Protected areas', source: 'Miljøstyrelsen, Danmarks Miljøportal', schedule: '0 5 3 * *', then: ['grid'], fetch: fetchProtected,

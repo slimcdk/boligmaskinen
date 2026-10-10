@@ -34,6 +34,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'turbine_heights', label: 'Distance to a wind turbine in operation, in its total heights (25.4 or more where none is near)', unit: 'heights', group: 'Peace and quiet', kind: 'scaled', layer: 'turbine_heights' },
   { name: 'solar', label: 'Distance to a solar park of at least 1 ha', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'solar' },
   { name: 'planned_road', label: 'Distance to a road or railway the municipal plans lay out, adopted or proposed', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'planned_road' },
+  { name: 'new_local_plan', label: 'Distance to a local plan of the last two years, proposed or adopted (0 inside one)', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'new_local_plan' },
   { name: 'power_line', label: 'Distance to an overhead power line of 132 kV or more', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'power_line' },
   { name: 'airport', label: 'Distance to an airport (one with an IATA code)', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'airport' },
   { name: 'airfield', label: 'Distance to an airfield of any kind, also gliding and microlight fields', unit: 'm', group: 'Peace and quiet', kind: 'distance', layer: 'airfield' },

@@ -23,6 +23,8 @@ Usage:
                   layers are left out)
     planned_traffic, planned_traffic_proposed
                   the traffic the municipal plans plan, adopted and proposed, from Plandata.dk (optional)
+    local_plans_proposed, local_plans_adopted
+                  the local plans of the last two years, proposed and adopted, from Plandata.dk (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -75,7 +77,7 @@ CODES = re.compile(r"^\d{3}(,\d{3})*$")
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
 # Sources a build can do without: their layers have no data then
 OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
-                   "planned_traffic", "planned_traffic_proposed"]
+                   "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -90,7 +92,7 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
-          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "density", "zone",
+          "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
 # The areas of Miljøstyrelsen's layers each distance is to, by input; a layer whose sources are not all
@@ -518,6 +520,27 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         del planned
     else:
         warn("No source for planned_road: the layer is left out")
+
+    # --- Local plans of the last two years, proposed or adopted (Plandata.dk) ------------------
+    # The job fetches only those; a cell is inside one when its centre is, or a point inside it is
+    keys = ["local_plans_proposed", "local_plans_adopted"]
+    if all(inputs.get(key) for key in keys):
+        plans = np.zeros(grid.shape, dtype=bool)
+        found["new_local_plan"] = 0
+        for key in keys:
+            frame = gpd.read_file(inputs[key], columns=[])
+            frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
+            frame = frame[frame.geometry.notna() & ~frame.geometry.is_empty]
+            found["new_local_plan"] += len(frame)
+            plans |= grid.burn(frame.geometry).astype(bool)
+            inner = frame.geometry.representative_point()
+            plans |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
+            del frame, inner
+        layers["new_local_plan"] = encode_distance(grid.distance_to(plans))
+        step(f"New local plans: {found['new_local_plan']:,} of the last two years", 0.447)
+        del plans
+    else:
+        warn("No source for new_local_plan: the layer is left out")
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])

@@ -176,10 +176,14 @@ def sources(tmp_path_factory) -> Path:
     planned([("1", box(571_000, 6_215_000, 571_100, 6_225_000)), ("4", box(577_000, 6_215_000, 577_100, 6_225_000))]
             ).to_file(root / "planlagttrafikanlaeg_vedtaget.geojson", driver="GeoJSON")
     planned([("2", box(570_000, 6_219_000, 580_000, 6_219_100))]).to_file(root / "planlagttrafikanlaeg_forslag.geojson", driver="GeoJSON")
+    # --- Plandata's local plans of the last two years: one proposed, one adopted ---
+    planned([("", box(578_000, 6_216_000, 578_400, 6_216_400))]).to_file(root / "lokalplan_forslag.geojson", driver="GeoJSON")
+    planned([("", box(572_000, 6_223_000, 572_300, 6_223_300))]).to_file(root / "lokalplan_vedtaget.geojson", driver="GeoJSON")
 
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
         "planned_traffic": "planlagttrafikanlaeg_vedtaget.geojson", "planned_traffic_proposed": "planlagttrafikanlaeg_forslag.geojson",
+        "local_plans_proposed": "lokalplan_forslag.geojson", "local_plans_adopted": "lokalplan_vedtaget.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
