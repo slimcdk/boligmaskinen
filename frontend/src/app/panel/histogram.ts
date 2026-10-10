@@ -15,11 +15,23 @@ function themeColour(element: HTMLElement, token: string, fallback: string): str
   return colour || fallback;
 }
 
+/** The axis labels' type: M3's label-small, read back from its token like the colours. */
+function labelFont(element: HTMLElement): string {
+  element.style.font = 'var(--mat-sys-label-small)';
+  const { fontWeight, fontSize, fontFamily } = getComputedStyle(element);
+  element.style.removeProperty('font');
+  return fontSize && fontFamily ? `${fontWeight} ${fontSize} ${fontFamily}` : '500 11px Roboto, system-ui, sans-serif';
+}
+
+/** The canvas's height, and the strip at its foot that holds the labels, descenders and all. */
+const HEIGHT = 48;
+const LABELS = 14;
+
 /** Distribution of points across the cells considered, coloured like the map. */
 @Component({
   selector: 'app-histogram',
   template: '<canvas #canvas role="img" [attr.aria-label]="description() || label()"></canvas>',
-  styles: [':host { display: block; } canvas { width: 100%; height: 44px; display: block; }'],
+  styles: [`:host { display: block; } canvas { width: 100%; height: ${HEIGHT}px; display: block; }`],
 })
 export class Histogram {
   readonly histogram = input.required<Uint32Array>();
@@ -46,7 +58,8 @@ export class Histogram {
     const canvas = this.canvas().nativeElement;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const width = canvas.clientWidth || 300;
-    const height = 44;
+    const height = HEIGHT;
+    const base = height - LABELS;
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     const g = canvas.getContext('2d')!;
@@ -57,20 +70,21 @@ export class Histogram {
     const barWidth = width / 101;
     const muted = themeColour(canvas, '--mat-sys-outline-variant', '#ccc');
     for (let score = 0; score <= 100; score++) {
-      const barHeight = (histogram[score] / max) * (height - 12);
+      const barHeight = (histogram[score] / max) * (base - 2);
       const t = Math.max(0, Math.min(1, (score - lo) / Math.max(1, hi - lo)));
       const [r, gr, b] = ramp[Math.round(t * 100)];
       g.fillStyle = score >= limit ? `rgb(${r},${gr},${b})` : muted;
-      g.fillRect(score * barWidth, height - 10 - barHeight, Math.max(1, barWidth - 0.5), barHeight);
+      g.fillRect(score * barWidth, base - barHeight, Math.max(1, barWidth - 0.5), barHeight);
     }
     if (showLimit) {
       g.fillStyle = themeColour(canvas, '--mat-sys-on-surface', '#000');
-      g.fillRect(limit * barWidth, 0, 1.5, height - 8);
+      g.fillRect(limit * barWidth, 0, 1.5, base + 2);
     }
     g.fillStyle = themeColour(canvas, '--mat-sys-on-surface-variant', '#666');
-    g.font = '10px Roboto, system-ui, sans-serif';
-    g.fillText('0', 0, height - 0.5);
+    g.font = labelFont(canvas);
+    g.textBaseline = 'bottom';
+    g.fillText('0', 0, height);
     g.textAlign = 'right';
-    g.fillText(top, width, height - 0.5);
+    g.fillText(top, width, height);
   }
 }

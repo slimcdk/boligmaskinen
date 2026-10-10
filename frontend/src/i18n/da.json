@@ -15,7 +15,6 @@
   },
   "panel": {
     "emptyTitle": "Hvor vil du gerne bo?",
-    "emptyText": "Vælg det, der betyder noget for dig. Kortet farver hver celle på {{ cell }} m efter, hvor godt den passer.",
     "suggestions": "Forslag",
     "whatMatters": "Det betyder noget for dig",
     "nothingChosen": "Intet valgt endnu. Tilføj en færdig blok, et eksempel på kode eller et af forslagene ovenfor.",

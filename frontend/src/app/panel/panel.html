@@ -9,7 +9,6 @@
   @if (noPreferences()) {
     <div class="empty">
       <h2>{{ 'panel.emptyTitle' | transloco }}</h2>
-      <p>{{ 'panel.emptyText' | transloco: { cell: cell() } }}</p>
       @if (suggestions().length) {
         <mat-chip-set [attr.aria-label]="'panel.suggestions' | transloco">
           @for (c of suggestions(); track c.id) {

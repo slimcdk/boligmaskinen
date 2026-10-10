@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { BuildInfoService } from '../data/build-info';
-import { PilotData } from '../data/pilot-data';
 import { LanguageMenu } from '../i18n/language-menu';
 import { Texts } from '../i18n/texts';
 import { HeatService } from '../map/heat.service';
@@ -31,7 +30,6 @@ import { SyncStatus } from './sync-status';
 })
 export class Panel {
   protected readonly store = inject(Store);
-  private readonly data = inject(PilotData);
   /** How each place's travel times are found. */
   protected readonly routes = inject(HeatService).routes;
   /** The names of predefined blocks and groups in the language in use. */
@@ -54,9 +52,6 @@ export class Panel {
     const present = this.store.templatesInUse();
     return SUGGESTED.filter((id) => !present.has(id)).map((id) => this.store.catalogue.find((c) => c.id === id)!).filter(Boolean);
   });
-
-  /** The size of a data cell, as the panel describes it. */
-  protected readonly cell = computed(() => this.data.grid()?.meta.cellMetres ?? 100);
 
   protected openCatalog(): void {
     const data: CatalogData = { inUse: [...this.store.templatesInUse()], places: this.store.places() };
