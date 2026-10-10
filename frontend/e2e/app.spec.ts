@@ -116,6 +116,21 @@ test('the code editor checks the code and applies it', async ({ page }) => {
   await expect(row.locator('.rule')).not.toHaveClass(/error/);
 });
 
+test('the newest values score the map: the air, solar parks and turbines by their height', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  for (const name of [/^Clean air/, /^Away from solar parks/, /^Away from wind turbines, by height/]) {
+    await page.getByRole('option', { name }).click();
+  }
+  await page.getByRole('button', { name: 'Done' }).click();
+  for (const name of ['Clean air', 'Away from solar parks', 'Away from wind turbines, by height']) {
+    // Each reads a layer of the test data pack, so none says it has no data
+    await expect(block(page, name).locator('.rule')).not.toHaveClass(/error/);
+  }
+  await expect(block(page, 'Away from wind turbines, by height').locator('.rule')).toHaveText('No points below 4 heights · Full points from 10 heights');
+  await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
+});
+
 test('a requirement removes the cells that do not meet it', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Quiet' }).click();
