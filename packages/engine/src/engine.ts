@@ -5,7 +5,7 @@
  * Every criterion reads one 8-bit layer. Its curve and weight are baked into a
  * 256-entry lookup table, so scoring a cell is a handful of table lookups.
  */
-import { CONCENTRATION_SCALE, type CriterionKind, type LayerName, type Municipality, type MunicipalField, type Role, type ViewState } from './types.ts';
+import { RAW_STEPS, type CriterionKind, type LayerName, type Municipality, type MunicipalField, type Role, type ViewState } from './types.ts';
 
 /** Everything the engine needs to know about one criterion or place. */
 export interface ScoringItem {
@@ -18,7 +18,7 @@ export interface ScoringItem {
   layer: Uint8Array;
   allowed?: number[];
   field?: MunicipalField;
-  /** The layer's name, for the layers whose encoding depends on it (concentrations). */
+  /** The layer's name, for the layers whose encoding depends on it (scaled values). */
   layerName?: LayerName;
 }
 
@@ -47,9 +47,9 @@ export interface ScoreResult {
 /** Decode a raw cell value into its real-world value, or null when the value is missing. */
 export function decodeValue(item: Pick<ScoringItem, 'kind' | 'field'> & { layerName?: LayerName; layer?: unknown }, raw: number, ctx: DecodeContext): number | null {
   switch (item.kind) {
-    case 'concentration': {
+    case 'scaled': {
       const name = item.layerName ?? (typeof item.layer === 'string' ? (item.layer as LayerName) : undefined);
-      return raw === 0 ? null : (raw - 1) / (CONCENTRATION_SCALE[name!] ?? 1);
+      return raw === 0 ? null : (raw - 1) / (RAW_STEPS[name!] ?? 1);
     }
     case 'distance':
       return ctx.distanceMax * Math.pow(raw / 255, 2);

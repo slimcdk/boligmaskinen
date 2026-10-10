@@ -72,7 +72,7 @@ export const SOURCES: DataSource[] = [
   },
   {
     name: 'Energistyrelsen', url: 'https://ens.dk/analyser-og-statistik/data-oversigt-over-energisektoren',
-    uses: 'Wind turbines in operation, from the master data register.',
+    uses: 'Wind turbines in operation, with their height, from the master data register.',
     licence: { name: "Energistyrelsen's terms: free to use with the source named", url: 'https://ens.dk/om-os/datapolitik' },
     credit: 'Source: Energistyrelsen',
     note: 'The distance to the nearest turbine is our own calculation.',
@@ -136,7 +136,7 @@ export const SOURCES: DataSource[] = [
         <p>Denmark is divided into {{ cell() }} m cells{{ detail() ? ', and into ' + detail() + ' m cells for the map zoomed in' : '' }}. Every cell gets a value for each data layer, and every block in your weighting turns those values into a score. The map shows the blocks averaged by their importance.</p>
         <p>Homes are approximated by address points from OpenStreetMap, which are imported from the national address register. Cells in industrial areas are left out.</p>
         <p>Noise comes from Miljøstyrelsen's 2022 noise mapping where it exists: every road in Copenhagen, Aarhus, Odense and Aalborg, the major roads and railways elsewhere, Copenhagen Airport, and industry in the four cities. A cell has the loudest of them. Other places are estimated from road type and distance.</p>
-        <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation. Tax and burglaries are per municipality, and the air per square kilometre.</p>
+        <p>Forests and lakes count from 5 ha. Schools are folkeskoler, friskoler and private schools. Wind turbines are those in operation; their distance is also given in each turbine's total height, of which Danish rules keep 4 from a neighbour. Tax and burglaries are per municipality, and the air per square kilometre.</p>
         <p>Travel times to your places by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries, once the server has built its road network; each place says which. By train, and until then, they are estimated from the straight-line distance.</p>
         <p>Colours are stretched over the points currently shown, so the map always shows the differences that matter. Outside Denmark the map shows Natural Earth's world map.</p>
       </section>

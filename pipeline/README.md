@@ -143,7 +143,7 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 | Planning zone | Plandata.dk zone map | |
 | Schools | STIL Institutionsregisteret | Folkeskoler, friskoler and private schools |
 | Daycare | STIL Dagtilbudsregisteret | Active units |
-| Wind turbines | Energistyrelsen, stamdataregister | Turbines in operation |
+| Wind turbines | Energistyrelsen, stamdataregister | Turbines in operation: the distance, and the distance in each turbine's total height (hub and half the rotor) |
 | Income tax, burglaries | Danmarks Statistik (PSKAT, STRAF22, FOLK1A) | Per municipality |
 | Air quality: NO₂ and PM2.5 | DCE's model for 2024, through Danmarks Miljøportal | Yearly means on a 1 km grid; the sea has no data |
 | Land and sea | OpenStreetMap municipalities and the national boundary | Municipalities follow the coastline; the national boundary includes the territorial sea |

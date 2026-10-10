@@ -20,10 +20,10 @@ Everything so far: there is no release yet. The test instance follows `master`.
   the distance.
 - Maps and places are saved on the server, so every browser has them, and a map can be shared as
   a link.
-- 16 values of open data: forests, lakes and the sea, beaches, noise (of roads, railways, airports
-  and industry), wind turbines, solar parks, address density, supermarkets, schools, daycare,
-  stations, planning zones, municipal tax, land tax, burglaries and population, and air quality
-  (NO₂ and PM2.5).
+- 17 values of open data: forests, lakes and the sea, beaches, noise (of roads, railways, airports
+  and industry), wind turbines (by distance, and by their height), solar parks, address density,
+  supermarkets, schools, daycare, stations, planning zones, municipal tax, land tax, burglaries
+  and population, and air quality (NO₂ and PM2.5).
 - Material 3 in light and dark mode, on desktops, tablets and phones. axe finds no WCAG 2.2 AA
   violations in the main views.
 

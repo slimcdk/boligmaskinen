@@ -73,13 +73,17 @@ OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry"]
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
 CONCENTRATIONS = {"no2": ("NO2", 4), "pm25": ("PM2_5", 10)}
+# The distance to a wind turbine in its total heights (Danish rules keep 4 from a neighbour's home):
+# raw 1 + heights × 10, so up to 25.4 heights; raw 0 is no data
+TURBINE_HEIGHT_STEPS = 10
+TURBINE_HEIGHTS_MAX = 25
 
 ROAD_NOISE_AT_10M = {"motorway": 76.0, "trunk": 72.0, "primary": 69.0, "secondary": 65.0}
 NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
-          "solar", "density", "zone", "municipality", "no2", "pm25", "mask"]
+          "turbine_heights", "solar", "density", "zone", "municipality", "no2", "pm25", "mask"]
 TILE = 256  # cells per side of a detail tile
 
 
@@ -207,6 +211,25 @@ def concentration(grid: "Grid", source: Path | None, prop: str, steps: int) -> n
     inside_y = (cy >= 0) & (cy < table.shape[0])
     layer = table[np.clip(cy, 0, table.shape[0] - 1)[:, None], np.clip(cx, 0, table.shape[1] - 1)[None, :]]
     return np.where(inside_y[:, None] & inside_x[None, :], layer, 0).astype(np.uint8)
+
+
+def in_heights(grid: "Grid", xs: np.ndarray, ys: np.ndarray, heights: np.ndarray) -> np.ndarray:
+    """The distance to the nearest turbine in its total heights, as a layer: raw 1 + heights × 10.
+
+    The turbines are taken 10 m of height at a time, each group in the heights of its tallest, so
+    a turbine never counts as farther away than it is, and the distance transform runs once a group.
+    """
+    known = ~np.isnan(heights)
+    xs, ys, heights = xs[known], ys[known], np.maximum(heights[known], 5.0)
+    nearest = np.full(grid.shape, np.inf, dtype=np.float32)
+    for top in np.unique(np.ceil(heights / 10) * 10):
+        group = (heights > top - 10) & (heights <= top)
+        distance = grid.distance_to(grid.burn_points(xs[group], ys[group]) > 0, limit=TURBINE_HEIGHTS_MAX * top)
+        distance /= top
+        np.minimum(nearest, distance, out=nearest)
+        del distance
+    raw = np.clip(np.round(1 + nearest * TURBINE_HEIGHT_STEPS), 1, 255)
+    return np.where(np.isfinite(nearest), raw, 255).astype(np.uint8)
 
 
 def read_inputs(path: Path) -> dict[str, Path]:
@@ -357,17 +380,23 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
 
     # --- Wind turbines (Energistyrelsen) -------------------------------------------------------
     sheet = openpyxl.load_workbook(inputs["turbines"], read_only=True, data_only=True).worksheets[0]
-    turbine_x, turbine_y = [], []
+    turbine_x, turbine_y, turbine_height = [], [], []
+    number = lambda value: float(str(value).replace(",", ".")) if value not in (None, "") else float("nan")  # noqa: E731
     for values in sheet.iter_rows(min_row=4, values_only=True):
         decommissioned, x, y = values[3], values[13], values[14]
         if decommissioned or not x or not y:
             continue
-        turbine_x.append(float(str(x).replace(",", ".")))
-        turbine_y.append(float(str(y).replace(",", ".")))
-    layers["turbine"] = encode_distance(grid.distance_to(grid.burn_points(np.array(turbine_x), np.array(turbine_y)) > 0))
+        turbine_x.append(number(x))
+        turbine_y.append(number(y))
+        # The total height: the hub's and half the rotor (columns 6 and 5, in metres)
+        turbine_height.append(number(values[6]) + number(values[5]) / 2)
+    turbine_x, turbine_y, turbine_height = np.array(turbine_x), np.array(turbine_y), np.array(turbine_height)
+    layers["turbine"] = encode_distance(grid.distance_to(grid.burn_points(turbine_x, turbine_y) > 0))
+    layers["turbine_heights"] = in_heights(grid, turbine_x, turbine_y, turbine_height)
     found["turbines"] = len(turbine_x)
-    del sheet, turbine_x, turbine_y
-    step(f"Wind turbines in operation: {found['turbines']:,}", 0.4)
+    unknown = int(np.isnan(turbine_height).sum())
+    del sheet, turbine_x, turbine_y, turbine_height
+    step(f"Wind turbines in operation: {found['turbines']:,}; {unknown} without a height, which count as distance only", 0.4)
 
     # --- Solar parks (OpenStreetMap): plants and panels on the ground of at least 1 ha ------------
     solar = grid.burn(large_areas(gpkg, "solar", 10_000), all_touched=True).astype(bool)
