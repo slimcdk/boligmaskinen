@@ -94,6 +94,14 @@ export const EXAMPLES: BlockTemplate[] = [
     ].join('\n'),
   },
   {
+    id: 'free-to-build', name: 'Free to build', group: 'Examples', role: 'must', weight: 1,
+    description: 'A requirement: not inside a protected area (fredning), where building is limited.',
+    code: [
+      '// Not inside a protected area (fredning), where building is limited',
+      'protected_area > 0',
+    ].join('\n'),
+  },
+  {
     id: 'empty', name: 'New block', group: 'Examples', role: 'want', weight: 2,
     description: 'Write your own formula.',
     code: [

@@ -192,8 +192,8 @@ describeWithDatabase('an install that fetches already', () => {
     mkdirSync(join(dataDir, 'data-pack', 'data'), { recursive: true });
     writeFileSync(join(dataDir, 'data-pack', 'data', 'meta.json'), '{"built":"2026-10-09"}');
     const setup = await buildApp({ staticDir: '/nonexistent', dataPackDir: null, databaseUrl: database.url, version: null, logLevel: false, jobs: [] });
-    // Every source but the air was fetched before the update
-    for (const source of Object.keys(FETCH_JOBS).filter((id) => id !== 'air')) {
+    // Every source but the air and the protected areas was fetched before the update
+    for (const source of Object.keys(FETCH_JOBS).filter((id) => id !== 'air' && id !== 'protected')) {
       await setup.db!.query(
         `insert into source_file (source, name, url, licence, path, bytes, sha256, fingerprint) values ($1, 'file', 'https://example.dk', 'CC BY 4.0', $2, 1, 'x', 'x')`,
         [source, `raw/${source}/file`],
@@ -208,6 +208,7 @@ describeWithDatabase('an install that fetches already', () => {
       const runs = (await app.inject('/api/jobs')).json().runs as JobRun[];
       expect(runs.map((r) => [r.jobId, r.log[0].text])).toEqual([
         ['roads', 'There is no road network yet, so it is built now'],
+        ['protected', 'A source that has not been fetched yet, so it is fetched now'],
         ['air', 'A source that has not been fetched yet, so it is fetched now'],
       ]);
     } finally {

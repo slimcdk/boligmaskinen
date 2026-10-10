@@ -18,6 +18,9 @@ Usage:
     institutions  institutions.json (STIL)             daycare        dagtilbud CSV (STIL)
     turbines      vinddata.xlsx (Energistyrelsen)      tax, burglaries, population  PSKAT, STRAF22, FOLK1A (DST)
     no2, pm25     DCE's air quality on a 1 km grid, as GeoJSON (optional: without them the layers have no data)
+    protected_areas, natura2000_habitats, natura2000_birds
+                  Miljøstyrelsen's fredninger and Natura 2000 areas, as GeoJSON (optional: without them the
+                  layers are left out)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -69,7 +72,7 @@ CODES = re.compile(r"^\d{3}(,\d{3})*$")
 
 INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "daycare", "turbines", "tax", "burglaries", "population"]
 # Sources a build can do without: their layers have no data then
-OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry"]
+OPTIONAL_INPUTS = ["no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -84,7 +87,17 @@ NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "turbine",
-          "turbine_heights", "solar", "airport", "airfield", "air_station", "density", "zone", "municipality", "no2", "pm25", "mask"]
+          "turbine_heights", "solar", "airport", "airfield", "air_station", "protected_area", "natura2000", "density", "zone",
+          "municipality", "no2", "pm25", "mask"]
+
+# The areas of Miljøstyrelsen's layers each distance is to, by input; a layer whose sources are not all
+# there is left out, so a block that reads it says it has no data
+PROTECTED_LAYERS = {"protected_area": ["protected_areas"], "natura2000": ["natura2000_habitats", "natura2000_birds"]}
+# The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
+IN_FORCE = 3
+# A fredning of land ("Arealfredning"): landscapes and nature. The other kind, a kirkefredning, keeps the
+# view of a church free, and there is one by almost every village, so it says little about a place
+AREA_FREDNING = 1
 
 # The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)
 AERODROME_LAYERS = {"airport": {"airport"}, "air_station": {"air_station"}, "airfield": {"airport", "air_station", "airfield"}}
@@ -442,6 +455,31 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
          f"{counted['airfield']} other airfields", 0.43)
     del aerodromes, kinds, chosen, mask
 
+    # --- Protected areas and Natura 2000 (Miljøstyrelsen, through Danmarks Miljøportal) --------
+    # Inside one, the distance is 0. A cell is inside when its centre is, and an area smaller than a
+    # cell still has the cell of a point inside it
+    for name, keys in PROTECTED_LAYERS.items():
+        if not all(inputs.get(key) for key in keys):
+            warn(f"No source for {name}: the layer is left out")
+            continue
+        area = np.zeros(grid.shape, dtype=bool)
+        found[name] = 0
+        for key in keys:
+            frame = gpd.read_file(inputs[key], columns=["Statuskode", "Fred_tkode"] if key == "protected_areas" else ["Statuskode"])
+            frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
+            kept = frame["Statuskode"] == IN_FORCE
+            if key == "protected_areas":
+                kept &= frame["Fred_tkode"] == AREA_FREDNING
+            frame = frame[kept]
+            found[name] += len(frame)
+            area |= grid.burn(frame.geometry).astype(bool)
+            inner = frame.geometry.representative_point()
+            area |= grid.burn_points(inner.x.to_numpy(), inner.y.to_numpy()) > 0
+            del frame, inner
+        layers[name] = encode_distance(grid.distance_to(area))
+        step(f"{name}: {found[name]:,} areas in force cover {area.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.44)
+        del area
+
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])
     zones = zones.set_crs("EPSG:25832", allow_override=True)
@@ -581,8 +619,9 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         homes = ndimage.maximum_filter(homes, size=int(np.ceil(factor)) + 1) & region_land
     layers["mask"] = region_land.astype(np.uint8) | (homes.astype(np.uint8) << 1)
 
+    present = [name for name in LAYERS if name in layers]
     files = {}
-    for name in LAYERS:
+    for name in present:
         data = sample(layers[name])
         path = out / f"{name}.u8.gz"
         path.write_bytes(gzip.compress(data.tobytes(), compresslevel=9, mtime=0))
@@ -600,7 +639,7 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         detail = cell / np.cos(lat_mid)
         columns, rows_count = int(np.ceil((mx1 - mx0) / detail / TILE)), int(np.ceil((my1 - my0) / detail / TILE))
         (out / "tiles").mkdir(exist_ok=True)
-        detail_layers = {**{name: layers[name] for name in LAYERS if name != "mask"}, "mask": detail_mask}
+        detail_layers = {**{name: layers[name] for name in present if name != "mask"}, "mask": detail_mask}
         available = []
         offsets = (np.arange(TILE) + 0.5) * detail
         for ty in range(rows_count):
@@ -615,13 +654,13 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
                 mask = np.where(tinside, detail_layers["mask"][trows, tcols], 0)
                 if not (mask & 1).any():
                     continue
-                data = b"".join(np.where(tinside, detail_layers[name][trows, tcols], 0).astype(np.uint8).tobytes() for name in LAYERS)
+                data = b"".join(np.where(tinside, detail_layers[name][trows, tcols], 0).astype(np.uint8).tobytes() for name in present)
                 (out / "tiles" / f"{tx}-{ty}.u8.gz").write_bytes(gzip.compress(data, compresslevel=6, mtime=0))
                 available.append(f"{tx}-{ty}")
             progress(0.95 + 0.04 * (ty + 1) / rows_count)
         tiles = {
             "cellMetres": cell, "size": TILE, "columns": columns, "rows": rows_count,
-            "origin": {"x": float(mx0), "y": float(my1)}, "pixel": float(detail), "layers": LAYERS, "available": available,
+            "origin": {"x": float(mx0), "y": float(my1)}, "pixel": float(detail), "layers": present, "available": available,
         }
         step(f"Detail tiles at {cell} m: {len(available)} of {columns} × {rows_count} have land "
              f"({sum((out / 'tiles' / f'{key}.u8.gz').stat().st_size for key in available) / 1e6:.1f} MB)", 0.99)

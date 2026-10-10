@@ -5,6 +5,8 @@ import type { AddressInfo } from 'node:net';
 export interface Request {
   method: string;
   path: string;
+  /** The path with its query. */
+  url: string;
   headers: IncomingMessage['headers'];
   body: string;
 }
@@ -67,7 +69,8 @@ export class TestServer {
   private async handle(incoming: IncomingMessage, response: ServerResponse): Promise<void> {
     const chunks: Buffer[] = [];
     for await (const chunk of incoming) chunks.push(chunk as Buffer);
-    const request = { method: incoming.method ?? 'GET', path: (incoming.url ?? '/').split('?')[0], headers: incoming.headers, body: Buffer.concat(chunks).toString('utf8') };
+    const url = incoming.url ?? '/';
+    const request = { method: incoming.method ?? 'GET', path: url.split('?')[0], url, headers: incoming.headers, body: Buffer.concat(chunks).toString('utf8') };
     this.requests.push(request);
     const handler = this.routes.get(`${request.method} ${request.path}`);
     if (!handler) {

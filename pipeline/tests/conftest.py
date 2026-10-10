@@ -153,8 +153,20 @@ def sources(tmp_path_factory) -> Path:
     air[["NO2", "geometry"]].to_file(root / "no2.geojson", driver="GeoJSON")
     air[["PM2_5", "geometry"]].to_file(root / "pm25.geojson", driver="GeoJSON")
 
+    # --- Miljøstyrelsen's fredninger: one of land in force, a proposal that does not count yet, one
+    # smaller than a cell, and the land around a church; Natura 2000 in the south-west and north-east ---
+    def areas(rows: list[tuple]) -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame([{"Statuskode": status, "Fred_tkode": kind, "geometry": geometry} for status, kind, geometry in rows],
+                                geometry="geometry", crs="EPSG:25832")
+    areas([(3, 1, box(574_000, 6_222_500, 575_000, 6_223_500)), (1, 1, box(576_000, 6_216_500, 576_500, 6_217_000)),
+           (3, 1, box(577_510, 6_220_510, 577_560, 6_220_560)), (3, 2, box(576_000, 6_219_000, 576_100, 6_219_100))]
+          ).to_file(root / "fredede_omr.geojson", driver="GeoJSON")
+    areas([(3, None, box(570_000, 6_215_000, 571_000, 6_216_000))]).drop(columns="Fred_tkode").to_file(root / "habitat_omr.geojson", driver="GeoJSON")
+    areas([(3, None, box(579_000, 6_224_000, 580_000, 6_225_000))]).drop(columns="Fred_tkode").to_file(root / "fugle_bes_omr.geojson", driver="GeoJSON")
+
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
+        "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json",

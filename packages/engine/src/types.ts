@@ -2,8 +2,8 @@
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
-  | 'station' | 'turbine' | 'turbine_heights' | 'solar' | 'airport' | 'airfield' | 'air_station' | 'density' | 'zone'
-  | 'municipality' | 'no2' | 'pm25' | 'mask';
+  | 'station' | 'turbine' | 'turbine_heights' | 'solar' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
+  | 'natura2000' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
@@ -148,6 +148,8 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'forest', group: 'Nature', name: 'Forest', opposite: 'Away from forest', note: 'Nearest wood of at least 5 ha.', kind: 'distance', layer: 'forest', role: 'want', weight: 4, full: 300, zero: 3000 },
   { id: 'water', group: 'Nature', name: 'Lake or sea', opposite: 'Away from lakes and sea', note: 'Nearest lake of at least 5 ha, or the coast.', kind: 'distance', layer: 'water', role: 'want', weight: 2, full: 300, zero: 3000 },
   { id: 'beach', group: 'Nature', name: 'Beach', opposite: 'Away from beaches', note: 'Nearest beach in OpenStreetMap.', kind: 'distance', layer: 'beach', role: 'want', weight: 1, full: 1000, zero: 10000 },
+  { id: 'natura2000', group: 'Nature', name: 'Near protected nature', opposite: 'Away from protected nature', note: 'Nearest Natura 2000 area, for habitats or birds, from Miljøstyrelsen.', kind: 'distance', layer: 'natura2000', role: 'want', weight: 1, full: 1000, zero: 5000 },
+  { id: 'protected_area', group: 'Nature', name: 'Near a protected area', opposite: 'Away from protected areas', note: 'Nearest fredning of land in force, of landscapes and nature, from Miljøstyrelsen.', kind: 'distance', layer: 'protected_area', role: 'want', weight: 1, full: 500, zero: 3000 },
   { id: 'noise', group: 'Peace and quiet', name: 'Quiet', opposite: 'Noisy', note: 'Noise from roads, railways, airports and industry, Lden in dB.', kind: 'noise', layer: 'noise', role: 'want', weight: 4, full: 45, zero: 65 },
   { id: 'supermarket', group: 'Everyday life', name: 'Supermarket', opposite: 'Away from supermarkets', note: 'Nearest supermarket.', kind: 'distance', layer: 'supermarket', role: 'want', weight: 2, full: 500, zero: 5000 },
   { id: 'school', group: 'Everyday life', name: 'School', opposite: 'Away from schools', note: 'Nearest folkeskole, friskole or private school.', kind: 'distance', layer: 'school', role: 'want', weight: 2, full: 1000, zero: 5000 },
