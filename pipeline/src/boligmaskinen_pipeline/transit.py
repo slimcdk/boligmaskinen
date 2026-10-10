@@ -27,6 +27,7 @@ import io
 import json
 import time
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -184,9 +185,23 @@ def latest_departures(timetable: dict[str, np.ndarray], egress: np.ndarray, dead
     return np.array(latest, dtype=np.float64)
 
 
-def build(feed_path: Path, network: Path) -> dict:
-    """Write the timetable of a weekday into the network's folder; returns what transit.json says."""
-    started = time.time()
+@dataclass
+class Day:
+    """A weekday of a feed: its stops, and the stop times of its trips."""
+    date: datetime.date
+    # The last day the feed runs, as YYYY-MM-DD
+    until: str
+    trips: int
+    stop_index: dict[str, int]
+    # The stops' positions in EPSG:25832, one row per stop
+    stop_xy: np.ndarray
+    # One row per stop time, by trip and then by sequence: trip, sequence, stop, arrival, departure
+    times: np.ndarray
+    transfers: pd.DataFrame
+
+
+def read_day(feed_path: Path) -> Day:
+    """The busiest weekday of the feed (busiest_weekday), without the services one has to book."""
     feed = zipfile.ZipFile(feed_path)
     calendar = read(feed, "calendar.txt")
     dates = read(feed, "calendar_dates.txt", usecols=["service_id", "date", "exception_type"])
@@ -198,13 +213,11 @@ def build(feed_path: Path, network: Path) -> dict:
     trips = trips[trips["service_id"].isin(services_on(calendar, dates, day))]
     trip_index = {trip_id: index for index, trip_id in enumerate(trips["trip_id"])}
     log(f"Timetable of {day.isoformat()} ({DAY_NAMES[day.weekday()].title()}): {len(trip_index):,} trips")
-    progress(0.2)
 
     stops = read(feed, "stops.txt", usecols=["stop_id", "stop_lat", "stop_lon"])
     stop_index = {stop_id: index for index, stop_id in enumerate(stops["stop_id"])}
     x, y = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True).transform(
         stops["stop_lon"].astype(float).to_numpy(), stops["stop_lat"].astype(float).to_numpy())
-    stop_xy = np.column_stack([x, y])
 
     # The day's stop times, a quarter of a million at a time
     parts = []
@@ -216,26 +229,37 @@ def build(feed_path: Path, network: Path) -> dict:
                                       chunk["stop_id"].map(stop_index).to_numpy(np.int32), seconds(chunk["arrival_time"]), seconds(chunk["departure_time"])]))
     times = np.concatenate(parts) if parts else np.zeros((0, 5), dtype=np.int32)
     del parts
-    times = times[np.lexsort((times[:, 1], times[:, 0]))]
+    validity = [*calendar.get("end_date", []), *dates.get("date", [])]
+    return Day(date=day, until=datetime.datetime.strptime(max(validity), "%Y%m%d").date().isoformat(), trips=len(trip_index),
+               stop_index=stop_index, stop_xy=np.column_stack([x, y]), times=times[np.lexsort((times[:, 1], times[:, 0]))],
+               transfers=read(feed, "transfers.txt"))
+
+
+def build(feed_path: Path, network: Path) -> dict:
+    """Write the timetable of a weekday into the network's folder; returns what transit.json says."""
+    started = time.time()
+    day = read_day(feed_path)
+    stop_index, stop_xy, times = day.stop_index, day.stop_xy, day.times
+    progress(0.2)
     trip, stop, arrival, departure = times[:, 0], times[:, 2], times[:, 3], times[:, 4]
     # A connection is a trip's way from one stop to the next
     same = (trip[1:] == trip[:-1]) & (arrival[1:] >= departure[:-1])
     connections = {"dep-stop": stop[:-1][same], "arr-stop": stop[1:][same], "dep": departure[:-1][same], "arr": arrival[1:][same], "trip": trip[:-1][same]}
-    del times
     # The latest arrival first, and of those the latest departure
     order = np.lexsort((-connections["dep"].astype(np.int64), -connections["arr"].astype(np.int64)))
     for name, values in connections.items():
         np.save(network / f"transit-{name}.npy", np.ascontiguousarray(values[order], dtype=np.int32))
     count = len(order)
-    del connections, order, trip, stop, arrival, departure, trips
+    del connections, order, trip, stop, arrival, departure, times
+    day.times = np.zeros((0, 5), dtype=np.int32)
     progress(0.6)
 
-    transfers = read(feed, "transfers.txt")
+    transfers = day.transfers
     indptr, origin, duration = footpaths(stop_xy, stop_index, transfers)
     np.save(network / "transit-foot-indptr.npy", indptr)
     np.save(network / "transit-foot-from.npy", origin)
     np.save(network / "transit-foot-seconds.npy", duration)
-    np.save(network / "transit-buffer.npy", buffers(len(stops), stop_index, transfers))
+    np.save(network / "transit-buffer.npy", buffers(len(stop_index), stop_index, transfers))
 
     # Each stop's nearest nodes of the walk network
     starts = np.flatnonzero(np.load(network / "walk-start.npy"))
@@ -244,16 +268,15 @@ def build(feed_path: Path, network: Path) -> dict:
     k = min(STOP_NEAREST, len(starts))
     metres, index = tree.query(stop_xy, k=k, workers=-1)
     del tree
-    metres, index = metres.reshape(len(stops), k), index.reshape(len(stops), k)
+    metres, index = metres.reshape(len(stop_index), k), index.reshape(len(stop_index), k)
     stop_nodes = np.where(metres <= STOP_MAX_M, starts[index], -1).astype(np.int32)
     np.save(network / "transit-stop-nodes.npy", stop_nodes)
     np.save(network / "transit-stop-metres.npy", metres.astype(np.float32))
     progress(0.9)
 
-    validity = [*calendar.get("end_date", []), *dates.get("date", [])]
     summary = {
-        "day": day.isoformat(), "until": datetime.datetime.strptime(max(validity), "%Y%m%d").date().isoformat(),
-        "stops": len(stops), "trips": len(trip_index), "connections": count, "footpaths": len(origin),
+        "day": day.date.isoformat(), "until": day.until,
+        "stops": len(stop_index), "trips": day.trips, "connections": count, "footpaths": len(origin),
         "stopsOffFoot": int((stop_nodes[:, 0] < 0).sum()),
     }
     (network / "transit.json").write_text(json.dumps(summary), encoding="utf-8")

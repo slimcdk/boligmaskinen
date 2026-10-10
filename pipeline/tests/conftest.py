@@ -200,6 +200,23 @@ def sources(tmp_path_factory) -> Path:
                       {"Statuskode": 3, "Omr_tkode": 2, "geometry": box(578_000, 6_223_000, 579_000, 6_224_000)},
                       {"Statuskode": 1, "Omr_tkode": 1, "geometry": box(578_000, 6_217_000, 578_500, 6_217_500)}],
                      geometry="geometry", crs="EPSG:25832").to_file(root / "raastofomr.geojson", driver="GeoJSON")
+    # --- Rejseplanen's timetables: a bus every 10 minutes along the middle, by two stops 600 m apart
+    # to a last stop in the east, and a booked service from that last stop ---
+    stops = {"S1": (571_000, 6_219_500), "S2": (571_600, 6_219_500), "S3": (575_000, 6_219_500)}
+    hhmm = lambda minutes: f"{minutes // 60}:{minutes % 60:02d}:00"
+    trips, stop_times = ["route_id,service_id,trip_id"], ["trip_id,arrival_time,departure_time,stop_id,stop_sequence"]
+    for leaves in range(6 * 60 + 30, 9 * 60 + 1, 10):
+        trips.append(f"A,WEEK,a{leaves}")
+        stop_times += [f"a{leaves},{hhmm(leaves + 2 * n)},{hhmm(leaves + 2 * n)},{stop},{n}" for n, stop in enumerate(stops)]
+    trips.append("B,WEEK,booked")
+    stop_times += ["booked,7:30:00,7:30:00,S3,0", "booked,7:40:00,7:40:00,S2,1"]
+    with zipfile.ZipFile(root / "GTFS.zip", "w") as feed:
+        feed.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\n" + "".join(
+            f"{stop},{stop},{lonlat(*xy)[1]:.6f},{lonlat(*xy)[0]:.6f}\n" for stop, xy in stops.items()))
+        feed.writestr("routes.txt", "route_id,route_type\nA,3\nB,715\n")
+        feed.writestr("trips.txt", "\n".join(trips) + "\n")
+        feed.writestr("stop_times.txt", "\n".join(stop_times) + "\n")
+        feed.writestr("calendar.txt", "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nWEEK,1,1,1,1,1,0,0,20261005,20261230\n")
 
     inputs = {
         "no2": "no2.geojson", "pm25": "pm25.geojson",
@@ -208,7 +225,7 @@ def sources(tmp_path_factory) -> Path:
         "supply_areas": "forsyningomraade_vedtaget.geojson",
         "consequence_zones": "konsekvensomraade_vedtaget.geojson", "consequence_zones_plants": "tekniskanlaegkonsekvensomraade_vedtaget.geojson",
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
-        "raw_material_areas": "raastofomr.geojson",
+        "raw_material_areas": "raastofomr.geojson", "transit": "GTFS.zip",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",

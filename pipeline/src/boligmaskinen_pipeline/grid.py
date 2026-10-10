@@ -31,6 +31,7 @@ Usage:
                   the plans' zones around businesses and technical plants, from Plandata.dk (optional)
     raw_material_areas
                   the regions' raw material areas, from Danmarks Miljøportal (optional)
+    transit       Rejseplanen's GTFS feed, for the departures near every cell (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -59,6 +60,7 @@ from rasterio.features import rasterize
 from rasterio.transform import from_origin
 from scipy import ndimage
 
+from . import transit
 from .memory import release
 from .progress import log, progress, warn
 
@@ -85,7 +87,7 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 # Sources a build can do without: their layers have no data then
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
-                   "consequence_zones", "consequence_zones_plants", "raw_material_areas"]
+                   "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -99,7 +101,7 @@ ROAD_NOISE_AT_10M = {"motorway": 76.0, "trunk": 72.0, "primary": 69.0, "secondar
 NOISE_FLOOR = 40.0
 MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "LdenGreaterThan75": 77}
 
-LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "pharmacy", "library", "turbine",
+LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "departures", "pharmacy", "library", "turbine",
           "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
           "municipality", "no2", "pm25", "mask"]
 
@@ -115,6 +117,11 @@ PLANNED_ROADS = {"1", "2"}
 # later ("Råstofinteresseområde")
 EXTRACTION_AREA = 1
 EXTRACTION_INTEREST = 2
+# Public transport near a cell: the trips that leave a stop within DEPARTURES_M of it between
+# DEPARTURES_FROM and DEPARTURES_TO on the timetable's weekday, per hour
+DEPARTURES_M = 500
+DEPARTURES_FROM = 7 * 3600
+DEPARTURES_TO = 9 * 3600
 # The heat plans' kind of supply area that is district heating ("Fjernvarme"); the others are
 # individual natural gas, other, and areas to be decided
 DISTRICT_HEATING = "1"
@@ -266,6 +273,34 @@ def jsonstat_values(path: Path) -> dict[str, float]:
     sizes = dataset["dimension"]["size"]
     stride = int(np.prod(sizes[1:]))
     return {code: values[index * stride] for code, index in areas.items()}
+
+
+def departures_per_hour(grid: "Grid", feed: Path) -> tuple[np.ndarray, int]:
+    """Departures per hour from the stops within DEPARTURES_M of every cell, between DEPARTURES_FROM and
+    DEPARTURES_TO on the feed's weekday: each trip once, however many of its stops are near (255 for
+    255 or more). Returns the layer, and how many trips leave a stop then."""
+    day = transit.read_day(feed)
+    trip, stop, departure = day.times[:, 0], day.times[:, 2], day.times[:, 4]
+    # A trip leaves every stop but its last
+    leaves = np.zeros(len(trip), dtype=bool)
+    leaves[:-1] = trip[1:] == trip[:-1]
+    keep = leaves & (departure >= DEPARTURES_FROM) & (departure < DEPARTURES_TO)
+    trip, stop = trip[keep], stop[keep]
+    cols = ((day.stop_xy[:, 0] - grid.x0) // grid.cell).astype(np.int64)
+    rows = ((grid.y1 - day.stop_xy[:, 1]) // grid.cell).astype(np.int64)
+    radius = grid.cells(DEPARTURES_M)
+    dr, dc = np.mgrid[-radius:radius + 1, -radius:radius + 1]
+    disk = dr ** 2 + dc ** 2 <= radius ** 2
+    dr, dc = dr[disk], dc[disk]
+    counts = np.zeros(grid.shape, dtype=np.int32)
+    firsts = np.flatnonzero(np.r_[True, trip[1:] != trip[:-1]]) if len(trip) else np.zeros(0, dtype=np.int64)
+    for first, end in zip(firsts, np.r_[firsts[1:], len(trip)]):
+        r = (rows[stop[first:end]][:, None] + dr).ravel()
+        c = (cols[stop[first:end]][:, None] + dc).ravel()
+        inside = (r >= 0) & (r < grid.height) & (c >= 0) & (c < grid.width)
+        counts.flat[np.unique(r[inside] * grid.width + c[inside])] += 1
+    hours = (DEPARTURES_TO - DEPARTURES_FROM) / 3600
+    return np.clip(np.round(counts / hours), 0, 255).astype(np.uint8), len(firsts)
 
 
 def area_cells(grid: "Grid", source: Path, area: AreaSource, all_touched: bool) -> tuple[np.ndarray, int]:
@@ -583,6 +618,13 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         layers[layer.name] = encode_distance(grid.distance_to(cells))
         step(f"{layer.what}: {count:,} cover {cells.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.44)
         del cells, kept
+
+    # --- Public transport: departures near every cell (Rejseplanen) ----------------------------
+    if inputs.get("transit"):
+        layers["departures"], trips = departures_per_hour(grid, inputs["transit"])
+        step(f"Public transport: {trips:,} trips leave a stop between 7 and 9", 0.445)
+    else:
+        warn("No source for departures: the layer is left out")
 
     # --- Planning zones (Plandata) -----------------------------------------------------------
     zones = gpd.read_file(inputs["zones"])

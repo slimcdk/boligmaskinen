@@ -112,6 +112,11 @@
       "opposite": "By frem for land",
       "note": "Antal adresser inden for 300 m."
     },
+    "departures": {
+      "name": "Hyppig offentlig transport",
+      "opposite": "Lidt offentlig transport",
+      "note": "Afgange i timen mellem 7 og 9 på en hverdag fra stoppestederne inden for 500 m, hver tur én gang, fra Rejseplanen."
+    },
     "incomeTax": {
       "name": "Lav kommuneskat",
       "opposite": "Høj kommuneskat",
@@ -249,6 +254,7 @@
     "school": "Afstand til en folkeskole, friskole eller privatskole",
     "daycare": "Afstand til et dagtilbud",
     "station": "Afstand til en tog- eller letbanestation",
+    "departures": "Afgange i timen fra stoppestederne inden for 500 m, hverdage kl. 7–9",
     "zone": "Planzone: BYZONE, LANDZONE eller SOMMERHUS",
     "income_tax": "Kommunal indkomstskat, 2026",
     "land_tax": "Grundskyld, 2026",
@@ -290,6 +296,7 @@
     "heights": "højder",
     "addresses": "adresser",
     "per 1,000": "pr. 1.000",
+    "per hour": "i timen",
     "car": "bil",
     "bike": "cykel",
     "walk": "gang",
@@ -594,7 +601,7 @@
       },
       "transit": {
         "name": "Rejseplanen",
-        "uses": "Køreplanerne for alle busser, tog, metro, letbaner og færger som GTFS-feed til rejsetiderne til dine steder med offentlig transport.",
+        "uses": "Køreplanerne for alle busser, tog, metro, letbaner og færger som GTFS-feed: til rejsetiderne til dine steder med offentlig transport og afgangene nær hver celle.",
         "note": "Ændret: rejsetider fundet på køreplanen for en hverdag."
       },
       "mst": {

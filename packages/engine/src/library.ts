@@ -27,7 +27,7 @@ interface Scale { min: number; max: number; step: number; unit: string }
 function scaleOf(c: Criterion): Scale {
   switch (c.kind) {
     case 'noise': return { min: 35, max: 80, step: 1, unit: 'dB' };
-    case 'count': return { min: 0, max: 255, step: 5, unit: 'addresses' };
+    case 'count': return { min: 0, max: c.max ?? 255, step: c.step ?? 5, unit: c.unit ?? 'addresses' };
     case 'municipal':
     case 'scaled': return { min: c.min ?? 0, max: c.max ?? 10, step: c.step ?? 0.1, unit: c.unit ?? '' };
     default: return { min: 0, max: 20000, step: 50, unit: 'm' };

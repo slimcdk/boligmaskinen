@@ -377,7 +377,7 @@ close and others far away, so the block is turned around rather than written twi
 | Childcare and schools by the numbers | Childcare price, children per adult, and class size | `nursery_price` (kr. a year; in use since 2026-10-10), `childcare_ratio`, `class_size` (in use since 2026-10-10) | DST RES88, BOERN8, KVOTIEN per municipality | Per institution later from the registers |
 | Income in the area | Mean income | `income` (kr.; in use since 2026-10-10: mean disposable income per resident of the municipality) | DST INDKP101 per municipality (free); per parish or postcode only paid | Both ways |
 | Fewer cars | Cars per household | `cars_per_household` | DST BIL800 per municipality | A rough proxy for how well a place does without a car |
-| Frequent public transport | Departures per hour from the stops within 500 m on a weekday morning | `departures` (per hour) | Rejseplanen's GTFS feed, in use for the travel times since 2026-10-10 | How well a place does without a car, beside the travel time to a place |
+| Frequent public transport | Departures per hour from the stops within 500 m on a weekday morning | `departures` (per hour; in use since 2026-10-10: between 7 and 9, each trip once) | Rejseplanen's GTFS feed, in use for the travel times since 2026-10-10 | How well a place does without a car, beside the travel time to a place |
 
 Not a block: residents' origin (DST KMSTA001 per parish). Weighing a place by its residents' origin would be discrimination in housing, so it is left out on purpose.
 
