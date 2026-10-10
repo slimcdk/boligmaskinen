@@ -186,7 +186,8 @@ explanation.
 
 1. **Alerts** on absolute points ("tell me when a home for sale gets 80 points"), by
    e-mail (SMTP) or push (ntfy or Web Push). The maps they watch are already saved on the server.
-2. **Share a weighting** as a link.
+2. **Share a weighting** as a link. Done (2026-10-10): "Share this map" gives a link with the
+   map's blocks, its view and the places it uses.
 
 **Done when:** a new listing above the threshold sends a notification.
 

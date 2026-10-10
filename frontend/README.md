@@ -24,6 +24,11 @@ The block language has its own reference: [`../docs/block-language.md`](../docs/
   detail tiles around the view (`map/detail.ts`) and draws the grid's own 100 m cells there, with
   the limit and the colour scale of the whole map, so the two look the same. A click explains the
   spot from the cells the map shows.
+- **Sharing a map.** "Share this map" in the map menu gives a link that holds the map's blocks and
+  groups, how the map shows them, and the places its blocks use, compressed after `#share=`
+  (`state/share.ts`). Opening it offers to add a copy as a new map; a place that is there already
+  is used, another one comes in under a name of its own, and the code follows. The browser's
+  clipboard only works over HTTPS, so on a LAN the link is selected for copying by hand.
 - **Off the main thread.** The weighting, the smoothing and the colours are computed in a Web
   Worker, which holds the data layers. The page sends it the blocks and draws the pixels it sends
   back, so the panel answers while a slider moves. When something changes during a drawing, only
