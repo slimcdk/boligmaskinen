@@ -87,6 +87,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `noise` | Noise, Lden in dB: the loudest of roads, railways, airports and industry where Miljøstyrelsen maps them, else an estimate from the roads (railways, airports and industry added 2026-10-10, which keeps the language version) |
 | `no2`, `pm25` | Nitrogen dioxide and fine particles, yearly means 2024 in µg/m³ on a 1 km grid (added 2026-10-10; additions keep the language version) |
 | `water_hardness` | The hardness of the drinking water from the public waterworks, °dH; missing where homes have wells of their own (GEUS; added 2026-10-10, which keeps the language version) |
+| `elevation` | The height above sea level in whole metres, from −10 m: the low part of the cell in the Copernicus model of the surface, so mostly the ground, though treetops may lift it in a forest; missing at sea. A control in it says "(m a.s.l.)" (added 2026-10-12, which keeps the language version) |
 | `turbine` | Distance to a wind turbine in operation |
 | `turbine_heights` | The same distance in the turbine's total height, the nearest in those terms: 4 is what Danish rules keep from a neighbour; 25.4 or more where none is that near (added 2026-10-10, which keeps the language version) |
 | `solar` | Distance to a solar park of at least 1 ha: a plant, or panels on the ground (OpenStreetMap; added 2026-10-10, which keeps the language version) |

@@ -88,6 +88,10 @@ describe('helpers', () => {
     expect(blockSummary(water)).toBe('Full points up to 8 °dH · No points from 18 °dH');
     const departures = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'departures')!));
     expect(blockSummary(departures)).toBe('No points below 2 per hour · Full points from 12 per hour');
+    const high = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'elevation')!));
+    expect(blockSummary(high)).toBe('No points below 2 m a.s.l. · Full points from 10 m a.s.l.');
+    // Metres above sea level are heights, not distances: neither rounded to 10 m nor "inside the area" at 0
+    expect(blockSummary({ ...high, code: high.code.replace('slider(2,', 'slider(0,').replace('slider(10,', 'slider(13,') })).toBe('No points below 0 m a.s.l. · Full points from 13 m a.s.l.');
     const pits = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'extraction_area')!));
     expect(blockSummary(pits)).toBe('No points below 200 m · Full points from 1.0 km');
     const later = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'extraction_interest')!));

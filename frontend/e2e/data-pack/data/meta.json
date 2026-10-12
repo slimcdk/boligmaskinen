@@ -49,6 +49,7 @@
   "no2": "no2.png",
   "pm25": "pm25.png",
   "water_hardness": "water_hardness.png",
+  "elevation": "elevation.png",
   "mask": "mask.png"
  },
  "municipalities": [

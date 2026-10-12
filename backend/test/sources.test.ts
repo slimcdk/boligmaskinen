@@ -6,7 +6,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { migrate } from '../src/db/migrate.ts';
 import type { JobDefinition, JobOutcome } from '../src/jobs/types.ts';
-import { NEEDS_DATA_DIR, type SourceUrls, sourceJobs } from '../src/pipeline/sources.ts';
+import { ELEVATION_TILES, NEEDS_DATA_DIR, type SourceUrls, sourceJobs } from '../src/pipeline/sources.ts';
 import { createTestDatabase, describeWithDatabase } from './database.ts';
 import { runContext } from './sources/context.ts';
 import { TestServer } from './sources/server.ts';
@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'elevation', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -48,7 +48,7 @@ describeWithDatabase('the source jobs', () => {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`, transit: `${base}/transit/GTFS.zip`,
-      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`,
+      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -100,6 +100,20 @@ describeWithDatabase('the source jobs', () => {
     expect(server.to('/api/access/datafile/83762')).toHaveLength(1);
     server.file('/geus/api/datasets/:persistentId/', { content: dataset([{ id: 1, filename: 'something else.pdf' }]) });
     await expect(run('water')).rejects.toThrow(/Found no ZIP file for QGIS in the dataset/);
+  });
+
+  it('Elevation: fetches the tiles with Danish land, again only those that changed, and keeps no tile that is not a TIFF', async () => {
+    const tiff = (text: string) => Buffer.concat([Buffer.from('II*\u0000', 'latin1'), Buffer.from(text)]);
+    for (const tile of ELEVATION_TILES) server.file(`/dem/${tile}/${tile}.tif`, { content: tiff(tile), etag: `"${tile}"` });
+    expect(ELEVATION_TILES).toHaveLength(22);
+    expect(ELEVATION_TILES).toContain('Copernicus_DSM_COG_10_N56_00_E010_00_DEM');
+    expect(await run('elevation')).toMatchObject({ changed: true, result: '22 tiles of 1°, 968 B' });
+    expect(await run('elevation')).toMatchObject({ changed: false, result: expect.stringMatching(/^Unchanged since \d{4}-\d\d-\d\d$/) });
+    // The second run asked about every tile, and the server said they had not changed
+    const aarhus = '/dem/Copernicus_DSM_COG_10_N56_00_E010_00_DEM/Copernicus_DSM_COG_10_N56_00_E010_00_DEM.tif';
+    expect(server.to(aarhus).map((r) => r.headers['if-none-match'] ?? null)).toEqual([null, '"Copernicus_DSM_COG_10_N56_00_E010_00_DEM"']);
+    server.file(aarhus, { content: '<Error><Code>AccessDenied</Code></Error>', etag: '"denied"' });
+    await expect(run('elevation')).rejects.toThrow(/did not give what it should: not a TIFF file/);
   });
 
   it('Planning zones: a new time stamp alone is no change, and an error page is not kept', async () => {

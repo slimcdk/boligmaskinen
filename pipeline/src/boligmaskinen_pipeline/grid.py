@@ -36,6 +36,7 @@ Usage:
                   GEUS's drinking water hardness per supply area: a GeoPackage, or a ZIP file with one (optional)
     forest_lines, church_lines, lake_lines, stream_lines
                   the building lines around forests, churches, lakes and streams, from Danmarks Miljøportal (optional)
+    elevation     a list of the Copernicus elevation model's tiles (GLO-30 GeoTIFFs) over the region (optional)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
 <out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
@@ -60,10 +61,12 @@ import numpy as np
 import openpyxl
 import pandas as pd
 import pyogrio
+import rasterio
 import shapely
 from pyproj import Transformer
 from rasterio.features import rasterize
 from rasterio.transform import from_origin
+from rasterio.warp import Resampling, reproject, transform_bounds
 from scipy import ndimage
 
 from . import transit
@@ -94,7 +97,7 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
                    "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit", "water_hardness",
-                   "forest_lines", "church_lines", "lake_lines", "stream_lines"]
+                   "forest_lines", "church_lines", "lake_lines", "stream_lines", "elevation"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -110,7 +113,7 @@ MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "Ld
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "departures", "pharmacy", "library", "turbine",
           "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "building_line", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
-          "municipality", "no2", "pm25", "water_hardness", "mask"]
+          "municipality", "no2", "pm25", "water_hardness", "elevation", "mask"]
 
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
 IN_FORCE = 3
@@ -127,6 +130,9 @@ EXTRACTION_INTEREST = 2
 # The drinking water's hardness in °dH, in the public waterworks' supply areas: raw 1 + °dH × this,
 # up to 50.8 °dH; raw 0 is no data, as where homes have wells of their own
 HARDNESS_STEPS = 5
+# The height above sea level in whole metres: raw 1 + metres - ELEVATION_MIN, so from -10 m (some land
+# lies below the sea) to 244 m; raw 0 is no data, as at sea
+ELEVATION_MIN = -10
 # Public transport near a cell: the trips that leave a stop within DEPARTURES_M of it between
 # DEPARTURES_FROM and DEPARTURES_TO on the timetable's weekday, per hour
 DEPARTURES_M = 500
@@ -308,6 +314,36 @@ def water_hardness(grid: "Grid", source: Path) -> tuple[np.ndarray, int]:
     return grid.burn(areas.geometry.to_list(), values=raw), len(areas)
 
 
+def elevation(grid: "Grid", tiles: list[Path]) -> np.ndarray:
+    """The height above sea level of every cell, as raw 1 + metres - ELEVATION_MIN, from the tiles of the
+    Copernicus elevation model (GLO-30, about 30 m).
+
+    The model is of the surface, roofs and treetops too, so a cell takes the first quartile of the
+    model's points in it: between houses that is mostly the ground, while a forest's treetops may
+    still lift it. The model gives the sea a height of 0, which is left out, so a cell on the coast
+    has the height of its land; a cell all at sea has no data (raw 0).
+    """
+    heights = np.full(grid.shape, np.nan, dtype=np.float32)
+    # GDAL keeps up to 5 % of the machine's memory of blocks it has read, more than a container may have
+    for tile in tiles:
+        with rasterio.Env(GDAL_CACHEMAX=64), rasterio.open(tile) as src:
+            # The cells the tile covers, and a little more: its edge is warped too
+            left, bottom, right, top = transform_bounds(src.crs, "EPSG:25832", *src.bounds)
+            c0, c1 = max(0, int((left - grid.x0) // grid.cell)), min(grid.width, int(np.ceil((right - grid.x0) / grid.cell)) + 1)
+            r0, r1 = max(0, int((grid.y1 - top) // grid.cell)), min(grid.height, int(np.ceil((grid.y1 - bottom) / grid.cell)) + 1)
+            if c0 >= c1 or r0 >= r1:
+                continue
+            window = np.full((r1 - r0, c1 - c0), np.nan, dtype=np.float32)
+            reproject(source=src.read(1), destination=window, src_transform=src.transform, src_crs=src.crs, src_nodata=0,
+                      dst_transform=from_origin(grid.x0 + c0 * grid.cell, grid.y1 - r0 * grid.cell, grid.cell, grid.cell),
+                      dst_crs="EPSG:25832", dst_nodata=np.nan, resampling=Resampling.q1)
+        # Tiles meet at their edges, where each has a part of a cell: the lower holds, as within a cell
+        heights[r0:r1, c0:c1] = np.fmin(heights[r0:r1, c0:c1], window)
+        del window
+    raw = np.clip(np.round(heights - ELEVATION_MIN) + 1, 1, 255)
+    return np.where(np.isnan(heights), 0, raw).astype(np.uint8)
+
+
 def departures_per_hour(grid: "Grid", feed: Path) -> tuple[np.ndarray, int]:
     """Departures per hour from the stops within DEPARTURES_M of every cell, between DEPARTURES_FROM and
     DEPARTURES_TO on the feed's weekday: each trip once, however many of its stops are near (255 for
@@ -417,14 +453,18 @@ def in_heights(grid: "Grid", xs: np.ndarray, ys: np.ndarray, heights: np.ndarray
     return np.where(np.isfinite(nearest), raw, 255).astype(np.uint8)
 
 
-def read_inputs(path: Path) -> dict[str, Path]:
-    """The source files named in inputs.json; every one has to be there."""
+def read_inputs(path: Path) -> dict[str, Path | list[Path]]:
+    """The source files named in inputs.json, a file or a list of files each; every one has to be there."""
     named = json.loads(path.read_text(encoding="utf-8"))
     missing = [key for key in INPUTS if key not in named]
     if missing:
         raise SystemExit(f"{path} does not name: {', '.join(missing)}")
-    files = {key: (path.parent / named[key]).resolve() for key in INPUTS + OPTIONAL_INPUTS if key in named}
-    absent = [f"{key} ({file})" for key, file in files.items() if not file.exists()]
+
+    def resolve(value: str | list[str]) -> Path | list[Path]:
+        return [resolve(item) for item in value] if isinstance(value, list) else (path.parent / value).resolve()
+
+    files = {key: resolve(named[key]) for key in INPUTS + OPTIONAL_INPUTS if key in named}
+    absent = [f"{key} ({file})" for key, value in files.items() for file in (value if isinstance(value, list) else [value]) if not file.exists()]
     if absent:
         raise SystemExit(f"Missing source files: {', '.join(absent)}")
     return files
@@ -484,7 +524,7 @@ def region_spec(region: str) -> dict:
     raise SystemExit(f"The region has to be one of {', '.join(REGIONS)}, or municipality codes such as 751,706, not {region!r}")
 
 
-def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: int = 100, display: int | None = None) -> dict:
+def build(inputs: dict[str, Path | list[Path]], out: Path, region_id: str = "denmark", cell: int = 100, display: int | None = None) -> dict:
     """Build every layer of the region into `out`; returns meta.json's content."""
     spec = region_spec(region_id)
     display = max(cell, display or (200 if region_id == "denmark" else 100))
@@ -772,6 +812,17 @@ def build(inputs: dict[str, Path], out: Path, region_id: str = "denmark", cell: 
         del hardness
     else:
         warn("No source for water_hardness: the layer is left out")
+
+    # --- The height above sea level (the Copernicus elevation model) ------------------------------
+    if inputs.get("elevation"):
+        layers["elevation"] = elevation(grid, inputs["elevation"])
+        raw = layers["elevation"][region_land]
+        heights = raw[raw > 0].astype(np.int32) - 1 + ELEVATION_MIN
+        step(f"Elevation from {len(inputs['elevation'])} tiles: {heights.size:,} of {raw.size:,} land cells, "
+             + (f"from {heights.min()} to {heights.max()} m, {(heights < 3).sum() * cell * cell / 1e6:,.0f} km² below 3 m" if heights.size else "none"), 0.79)
+        del raw, heights
+    else:
+        warn("No source for elevation: the layer is left out")
 
     # --- Sample onto a Web Mercator display grid ------------------------------------------------
     to_merc = Transformer.from_crs("EPSG:25832", "EPSG:3857", always_xy=True)

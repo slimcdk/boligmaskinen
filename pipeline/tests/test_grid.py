@@ -37,6 +37,13 @@ class Built:
         return int(self.layers[layer][row, col])
 
 
+def named_inputs(sources: Path) -> dict:
+    """inputs.json's files with absolute paths, a list of them for a source of several files."""
+    def absolute(value):
+        return [absolute(item) for item in value] if isinstance(value, list) else str((sources.parent / value).resolve())
+    return {key: absolute(value) for key, value in json.loads(sources.read_text(encoding="utf-8")).items()}
+
+
 def decode_distance(value: int) -> float:
     return (value / 255) ** 2 * grid.DIST_MAX
 
@@ -195,6 +202,25 @@ def test_knows_the_hardness_of_the_drinking_water(aarhus: Built):
     assert aarhus.at("water_hardness", 575_000, 6_222_500) == 0
 
 
+def test_takes_the_height_above_sea_level_from_the_elevation_model(aarhus: Built):
+    height = lambda x, y: aarhus.at("elevation", x, y) - 1 + grid.ELEVATION_MIN
+    # The ground in each tile: roofs on a fifth of the model's points do not lift it
+    assert height(572_500, 6_219_000) == 20
+    assert height(578_000, 6_219_000) == 50
+    # Land below the sea keeps its height, and a cell on the coast has the height of its land, as the
+    # model's 0 at sea is left out
+    assert height(571_500, 6_224_500) == -3
+    assert height(579_950, 6_219_050) == 50
+
+
+def test_has_no_height_at_sea(sources: Path):
+    tiles = grid.read_inputs(sources)["elevation"]
+    assert [tile.name for tile in tiles] == ["west.tif", "east.tif"] and all(tile.is_absolute() for tile in tiles)
+    assert (grid.elevation(grid.Grid(581_000, 6_219_000, 582_000, 6_220_000, 100), tiles) == 0).all()
+    # Nor where no tile reaches
+    assert (grid.elevation(grid.Grid(700_000, 6_219_000, 701_000, 6_220_000, 100), tiles) == 0).all()
+
+
 def test_counts_the_departures_near_every_cell(aarhus: Built):
     # A bus every 10 minutes from 7 to 9 is 6 an hour by its first two stops, each trip once where both are near
     assert aarhus.at("departures", 571_000, 6_219_500) == 6
@@ -205,16 +231,15 @@ def test_counts_the_departures_near_every_cell(aarhus: Built):
 
 
 def test_leaves_out_the_protected_areas_and_plans_without_their_sources(sources: Path, tmp_path: Path):
-    named = json.loads(sources.read_text(encoding="utf-8"))
     left_out = ("protected_areas", "natura2000_habitats", "natura2000_birds", "planned_traffic", "planned_traffic_proposed",
                 "local_plans_proposed", "local_plans_adopted", "supply_areas", "consequence_zones", "consequence_zones_plants", "raw_material_areas",
-                "transit", "water_hardness", "forest_lines", "church_lines", "lake_lines", "stream_lines")
-    kept = {key: str((sources.parent / value).resolve()) for key, value in named.items() if key not in left_out}
+                "transit", "water_hardness", "forest_lines", "church_lines", "lake_lines", "stream_lines", "elevation")
+    kept = {key: value for key, value in named_inputs(sources).items() if key not in left_out}
     (tmp_path / "inputs.json").write_text(json.dumps(kept), encoding="utf-8")
     meta = grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
     assert list(meta["files"]) == [name for name in grid.LAYERS
                                    if name not in ("protected_area", "natura2000", "planned_road", "new_local_plan", "district_heating", "consequence_zone",
-                                                   "extraction_area", "extraction_interest", "departures", "water_hardness", "building_line")]
+                                                   "extraction_area", "extraction_interest", "departures", "water_hardness", "building_line", "elevation")]
 
 
 def test_knows_the_zones_and_the_municipality(aarhus: Built):
@@ -256,7 +281,7 @@ def test_puts_the_air_quality_of_each_square_on_its_cells(aarhus: Built, sources
     assert aarhus.at("no2", 570_500, 6_219_500) == 1 + 5 * 4
     assert aarhus.at("pm25", 576_500, 6_222_500) == 1 + 55
     # Without the source, the layers have no data and the build goes on
-    named = {key: str(sources.parent / path) for key, path in json.loads(sources.read_text()).items() if key not in ("no2", "pm25")}
+    named = {key: path for key, path in named_inputs(sources).items() if key not in ("no2", "pm25")}
     (tmp_path / "inputs.json").write_text(json.dumps(named))
     grid.build(grid.read_inputs(tmp_path / "inputs.json"), tmp_path / "out", "aarhus")
     assert not np.frombuffer(gzip.decompress((tmp_path / "out" / "no2.u8.gz").read_bytes()), dtype=np.uint8).any()
@@ -281,12 +306,16 @@ def test_builds_a_region_of_listed_municipalities(sources, tmp_path):
 
 
 def test_says_what_is_missing(sources, tmp_path):
-    named = {key: str(sources.parent / path) for key, path in json.loads(sources.read_text()).items()}
+    named = named_inputs(sources)
     (tmp_path / "inputs.json").write_text(json.dumps({key: path for key, path in named.items() if key != "noise"}))
     with pytest.raises(SystemExit, match="does not name: noise"):
         grid.read_inputs(tmp_path / "inputs.json")
     (tmp_path / "inputs.json").write_text(json.dumps({**named, "zones": str(tmp_path / "nowhere.geojson")}))
     with pytest.raises(SystemExit, match=r"Missing source files: zones \("):
+        grid.read_inputs(tmp_path / "inputs.json")
+    # Every file of a source of several
+    (tmp_path / "inputs.json").write_text(json.dumps({**named, "elevation": [named["elevation"][0], str(tmp_path / "nowhere.tif")]}))
+    with pytest.raises(SystemExit, match=r"Missing source files: elevation \(.*nowhere\.tif\)"):
         grid.read_inputs(tmp_path / "inputs.json")
     with pytest.raises(SystemExit, match="The region has to be one of"):
         grid.build(grid.read_inputs(sources), tmp_path / "out", "Aarhus")

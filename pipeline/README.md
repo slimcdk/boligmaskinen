@@ -180,5 +180,6 @@ uv run python -I -m boligmaskinen_pipeline pack --grid "$WORK/work/test-grid" \
 | Departures of public transport | Rejseplanen's GTFS feed | CC BY 4.0. Per hour between 7 and 9 on the feed's busiest weekday, from the stops within 500 m of a cell, each trip once |
 | Air quality: NO₂ and PM2.5 | DCE's model for 2024, through Danmarks Miljøportal | Yearly means on a 1 km grid; the sea has no data |
 | Drinking water hardness | GEUS, "Drikkevandets hårdhed i Danmark" | CC BY 4.0. Per supply area of the public waterworks, in steps of 0.2 °dH; no data where homes have wells of their own |
+| Height above sea level | The Copernicus elevation model GLO-30 (AWS open data) | The Copernicus DEM licence, free with its notice. The first quartile of the model's 30 m points in each cell, without the sea at 0, in whole metres from −10 m: mostly the ground, though treetops may lift a cell in a forest |
 | Land and sea | OpenStreetMap municipalities and the national boundary | Municipalities follow the coastline; the national boundary includes the territorial sea |
 | World map | Natural Earth 1:50m | Public domain; land, lakes, borders and names outside Denmark |

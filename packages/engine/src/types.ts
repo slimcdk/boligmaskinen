@@ -3,16 +3,19 @@
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
   | 'station' | 'departures' | 'pharmacy' | 'library' | 'turbine' | 'turbine_heights' | 'solar' | 'power_line' | 'airport' | 'airfield' | 'air_station' | 'protected_area'
-  | 'natura2000' | 'building_line' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'water_hardness' | 'mask';
+  | 'natura2000' | 'building_line' | 'planned_road' | 'new_local_plan' | 'consequence_zone' | 'extraction_area' | 'extraction_interest' | 'district_heating' | 'density' | 'zone' | 'municipality' | 'no2' | 'pm25' | 'water_hardness' | 'elevation' | 'mask';
 
 /** How a raw 8-bit cell value is decoded into a real-world value. */
 export type CriterionKind = 'distance' | 'noise' | 'count' | 'municipal' | 'category' | 'minutes' | 'scaled';
 
 /**
- * Raw steps per unit of a scaled layer: raw 0 is no data, raw r is (r - 1) / steps. The air's are per
- * µg/m³; a turbine's distance is in its total heights.
+ * Raw steps per unit of a scaled layer: raw 0 is no data, raw r is (r - 1) / steps + its offset. The
+ * air's are per µg/m³; a turbine's distance is in its total heights; the height above sea level is in
+ * whole metres from -10 m, as some land lies below the sea.
  */
-export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10, water_hardness: 5 };
+export const RAW_STEPS: Partial<Record<LayerName, number>> = { no2: 4, pm25: 10, turbine_heights: 10, water_hardness: 5, elevation: 1 };
+/** The value of raw 1 in a scaled layer, where it is not 0. */
+export const RAW_OFFSET: Partial<Record<LayerName, number>> = { elevation: -10 };
 
 /** Numbers Danmarks Statistik gives per municipality. */
 export type MunicipalField = 'incomeTax' | 'landTax' | 'burglariesPer1000' | 'population' | 'income' | 'nurseryPrice' | 'classSize';
@@ -155,6 +158,12 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'water', group: 'Nature', name: 'Lake or sea', opposite: 'Away from lakes and sea', note: 'Nearest lake of at least 5 ha, or the coast.', kind: 'distance', layer: 'water', role: 'want', weight: 2, full: 300, zero: 3000 },
   { id: 'beach', group: 'Nature', name: 'Beach', opposite: 'Away from beaches', note: 'Nearest beach in OpenStreetMap.', kind: 'distance', layer: 'beach', role: 'want', weight: 1, full: 1000, zero: 10000 },
   { id: 'natura2000', group: 'Nature', name: 'Near protected nature', opposite: 'Away from protected nature', note: 'Nearest Natura 2000 area, for habitats or birds, from Miljøstyrelsen.', kind: 'distance', layer: 'natura2000', role: 'want', weight: 1, full: 1000, zero: 5000 },
+  {
+    // Copernicus' surface model also measures roofs and treetops; the cell's lowest quarter is mostly the ground
+    id: 'elevation', group: 'Nature', name: 'High ground', opposite: 'Low ground',
+    note: 'Height above sea level, from the Copernicus elevation model of 30 m: the low part of each cell, mostly the ground between houses; in a forest the treetops may lift it.',
+    kind: 'scaled', layer: 'elevation', unit: 'm a.s.l.', min: -10, max: 175, step: 1, role: 'want', weight: 1, full: 10, zero: 2,
+  },
   { id: 'protected_area', group: 'Nature', name: 'Near a protected area', opposite: 'Away from protected areas', note: 'Nearest fredning of land in force, of landscapes and nature, from Miljøstyrelsen.', kind: 'distance', layer: 'protected_area', role: 'want', weight: 1, full: 500, zero: 3000 },
   { id: 'noise', group: 'Peace and quiet', name: 'Quiet', opposite: 'Noisy', note: 'Noise from roads, railways, airports and industry, Lden in dB.', kind: 'noise', layer: 'noise', role: 'want', weight: 4, full: 45, zero: 65 },
   { id: 'supermarket', group: 'Everyday life', name: 'Supermarket', opposite: 'Away from supermarkets', note: 'Nearest supermarket.', kind: 'distance', layer: 'supermarket', role: 'want', weight: 2, full: 500, zero: 5000 },

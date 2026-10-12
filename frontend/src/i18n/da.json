@@ -156,6 +156,11 @@
       "opposite": "Væk fra beskyttet natur",
       "note": "Nærmeste Natura 2000-område for naturtyper eller fugle, fra Miljøstyrelsen."
     },
+    "elevation": {
+      "name": "Højt beliggende",
+      "opposite": "Lavt beliggende",
+      "note": "Højde over havet fra Copernicus' højdemodel på 30 m: den lave del af hver celle, mest jorden mellem husene; i en skov kan trætoppene løfte den."
+    },
     "protected_area": {
       "name": "Nær et fredet område",
       "opposite": "Væk fra fredede områder",
@@ -256,6 +261,7 @@
     "noise": "Støj fra veje, jernbaner, lufthavne og virksomheder, Lden",
     "no2": "Kvælstofdioxid (NO₂), årsmiddel 2024 (ingen data på havet)",
     "pm25": "Fine partikler (PM2,5), årsmiddel 2024 (ingen data på havet)",
+    "elevation": "Højde over havet, cellens lave del i en overflademodel (ingen data på havet; i en skov kan trætoppene løfte den)",
     "water_hardness": "Drikkevandets hårdhed fra de almene vandværker (ingen data, hvor boligerne har egen brønd)",
     "turbine": "Afstand til en vindmølle i drift",
     "turbine_heights": "Afstand til en vindmølle i drift, i dens totalhøjder (25,4 eller mere, hvor ingen er nær)",
@@ -309,6 +315,7 @@
     "addresses": "adresser",
     "per 1,000": "pr. 1.000",
     "per hour": "i timen",
+    "m a.s.l.": "m o.h.",
     "car": "bil",
     "bike": "cykel",
     "walk": "gang",
@@ -620,6 +627,10 @@
         "uses": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra den nationale boringsdatabase Jupiter (prøver til og med 2023).",
         "note": "Ændret: lagt på kortets celler på 100 m."
       },
+      "elevation": {
+        "uses": "Højden over havet fra højdemodellen GLO-30 på omkring 30 m, en model af overfladen, også tage og trætoppe.",
+        "note": "Ændret: lagt på kortets celler på 100 m som den laveste fjerdedel af modellens punkter i hver. De organisationer, der ved lov eller delegation har ansvaret for Copernicus-programmet, har intet ansvar for nogen brug af Copernicus WorldDEM-30."
+      },
       "mst": {
         "uses": "Støj fra veje, jernbaner, lufthavne og industri fra den strategiske støjkortlægning 2022 (Lden).",
         "note": "Ændret: lagt på kortets celler på 100 m. Hvor den ikke har data, er støjen vores eget skøn."
@@ -835,6 +846,10 @@
       "water": {
         "name": "Drikkevand",
         "description": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra GEUS' landsdækkende datasæt (Jupiter)."
+      },
+      "elevation": {
+        "name": "Højdemodel",
+        "description": "Landets højde fra Copernicus' højdemodel på 30 m (GLO-30): de 22 felter på 1°, der har dansk land, omkring 310 MB, hentes igen, kun når et af dem ændres."
       },
       "plans": {
         "name": "Planer",
