@@ -9,6 +9,8 @@ interface Meta {
   height?: number;
   cellMetres?: number;
   files?: Record<string, string>;
+  /** Points the map measures distances to: chargers.json. */
+  sites?: Record<string, string>;
   basemap?: { parts?: number };
   tiles?: { available?: string[] };
 }
@@ -51,6 +53,7 @@ export async function checkDataPack(context: JobContext): Promise<JobOutcome> {
 
   const expected = [
     ...Object.values(meta.files ?? {}).map((file) => `data/${file}`),
+    ...Object.values(meta.sites ?? {}).map((file) => `data/${file}`),
     ...Array.from({ length: meta.basemap?.parts ?? 0 }, (_, i) => `basemap/part-${i}.png`),
     ...(meta.tiles?.available ?? []).map((key) => `tiles/${key}.png`),
     'data/municipalities.json', 'fonts.json', 'style-layers.json', 'style-layers-dark.json',

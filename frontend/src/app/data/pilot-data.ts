@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { Grid, GridMeta, LayerName, Municipality } from '@boligmaskinen/engine';
+import { Grid, GridMeta, LayerName, Municipality, sitesFrom, SitesFile } from '@boligmaskinen/engine';
 import { I18n } from '../i18n/i18n';
 import { loadByteContainer } from './byte-container';
 
@@ -42,6 +42,7 @@ export class PilotData {
         }),
       );
       const layers = Object.fromEntries(entries) as Record<LayerName, Uint8Array>;
+      const sites = await this.loadSites(base, meta);
       const municipalities: (Municipality | undefined)[] = [];
       for (const m of meta.municipalities) municipalities[m.index] = m;
 
@@ -57,7 +58,7 @@ export class PilotData {
       this.base = base;
       this.grid.set({
         meta, width: meta.width, height: meta.height, layers, municipalities,
-        homeCells: Uint32Array.from(homes), landCells: Uint32Array.from(land),
+        homeCells: Uint32Array.from(homes), landCells: Uint32Array.from(land), sites,
       });
       this.state.set('ready');
     } catch (error) {
@@ -65,5 +66,20 @@ export class PilotData {
       this.message.set(this.i18n.t('data.failed', { error: (error as Error).message }));
       this.state.set('error');
     }
+  }
+
+  /** The points the map measures distances to itself, such as the chargers; a block that reads them has no data without. */
+  private async loadSites(base: string, meta: GridMeta): Promise<Grid['sites']> {
+    const sites: NonNullable<Grid['sites']> = {};
+    for (const [name, file] of Object.entries(meta.sites ?? {}) as [keyof NonNullable<Grid['sites']>, string][]) {
+      try {
+        const response = await fetch(`${base}data/${file}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        sites[name] = sitesFrom((await response.json()) as SitesFile);
+      } catch (error) {
+        console.error(`Could not load ${file}`, error);
+      }
+    }
+    return sites;
   }
 }

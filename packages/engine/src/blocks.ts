@@ -189,9 +189,18 @@ export function blockSummary(block: Block, params: FormulaParam[] = formulaParam
       : (inside(ramp.zero) ? wording.noPointsInside : wording.noPointsBelow);
     parts.push(fill(template, { full: at(ramp.full), zero: at(ramp.zero) }));
   }
-  if (flags.length) {
+  // With a ramp, switches that are all on say nothing new, such as every provider of chargers. Of many
+  // switches, those on are named when they are few, else those off
+  if (flags.length && !(ramp && flags.every((p) => p.value))) {
     const on = flags.filter((p) => p.value).map((p) => word(wording, p.label));
-    parts.unshift(on.length ? (block.role === 'must' ? fill(wording.only, { list: on.join(', ') }) : on.join(', ')) : wording.nothingAllowed);
+    const off = flags.filter((p) => !p.value).map((p) => word(wording, p.label));
+    if (flags.length > 3 && off.length && off.length <= 3 && off.length < on.length) {
+      parts.unshift(fill(wording.allBut, { list: off.join(', ') }));
+    } else {
+      const list = on.length > 3 ? fill(wording.andMore, { list: on.slice(0, 3).join(', '), n: String(on.length - 3) }) : on.join(', ');
+      const none = block.role === 'must' ? wording.nothingAllowed : wording.noneTicked;
+      parts.unshift(on.length ? (block.role === 'must' ? fill(wording.only, { list }) : list) : none);
+    }
   }
   if (!parts.length) {
     const comment = block.code.split('\n').map((l) => l.trim()).find((l) => l.startsWith('//'));

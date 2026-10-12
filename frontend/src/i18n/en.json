@@ -176,6 +176,11 @@
       "opposite": "Away from libraries",
       "note": "Nearest public library, from OpenStreetMap."
     },
+    "charger": {
+      "name": "EV charger",
+      "opposite": "Away from EV chargers",
+      "note": "Nearest public charger for electric cars of the providers ticked, from GeoFA, where the operators report them, and OpenStreetMap."
+    },
     "power_line": {
       "name": "Away from power lines",
       "opposite": "Close to power lines",
@@ -284,6 +289,19 @@
     "protected_area": "Distance to a protected area, a fredning of land in force (0 inside one)",
     "pharmacy": "Distance to a pharmacy",
     "library": "Distance to a public library",
+    "charger": "Distance to a public charger for electric cars",
+    "charger_clever": "Distance to a public charger for electric cars run by Clever",
+    "charger_norlys": "Distance to a public charger for electric cars run by Norlys",
+    "charger_ok": "Distance to a public charger for electric cars run by OK",
+    "charger_spirii": "Distance to a public charger for electric cars run by Spirii",
+    "charger_ewii": "Distance to a public charger for electric cars run by EWII",
+    "charger_eon": "Distance to a public charger for electric cars run by E.ON",
+    "charger_tesla": "Distance to a public charger for electric cars run by Tesla",
+    "charger_circle_k": "Distance to a public charger for electric cars run by Circle K",
+    "charger_uno_x": "Distance to a public charger for electric cars run by Uno-X",
+    "charger_shell": "Distance to a public charger for electric cars run by Shell",
+    "charger_q8": "Distance to a public charger for electric cars run by Q8",
+    "charger_other": "Distance to a public charger for electric cars run by another operator",
     "power_line": "Distance to an overhead power line of 132 kV or more",
     "planned_road": "Distance to a road or railway the municipal plans lay out, adopted or proposed",
     "new_local_plan": "Distance to a local plan of the last two years, proposed or adopted (0 inside one)",
@@ -316,6 +334,7 @@
     "per 1,000": "per 1,000",
     "per hour": "per hour",
     "m a.s.l.": "m a.s.l.",
+    "Other providers": "Other providers",
     "car": "car",
     "bike": "bike",
     "walk": "walk",
@@ -330,7 +349,10 @@
     "fullInside": "Full points inside the area · No points from {{ zero }}",
     "noPointsInside": "No points inside the area · Full points from {{ full }}",
     "only": "Only {{ list }}",
+    "andMore": "{{ list }} and {{ n }} more",
+    "allBut": "All but {{ list }}",
     "nothingAllowed": "Nothing allowed",
+    "noneTicked": "None ticked",
     "customCode": "Custom code"
   },
   "mapPanel": {
@@ -498,7 +520,8 @@
   "constants": {
     "BYZONE": "zone code for byzone",
     "LANDZONE": "zone code for landzone",
-    "SOMMERHUS": "zone code for sommerhusområde"
+    "SOMMERHUS": "zone code for sommerhusområde",
+    "FAR": "farther than any distance: min(a ? d1 : FAR, b ? d2 : FAR) is the nearer of the distances switched on"
   },
   "share": {
     "title": "Share “{{ name }}”",

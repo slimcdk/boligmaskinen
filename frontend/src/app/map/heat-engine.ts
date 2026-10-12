@@ -1,10 +1,10 @@
 import {
-  Block, BlockInputs, boxBlur, compileCached, DATA_VALUES, DecodeContext, decodeValue, evaluateBlocks, Grid,
-  lowerLimit, mercatorFrame, MercatorFrame, minutesLayer, percentile, Place, placeValues, Role, total, ValueInfo, ViewState,
+  Block, BlockInputs, boxBlur, compileCached, DATA_VALUES, DecodeContext, decodeValue, distanceLayer, evaluateBlocks, Grid,
+  lowerLimit, mercatorFrame, MercatorFrame, minutesLayer, percentile, Place, placeValues, pointsOf, Role, total, ValueInfo, ViewState,
 } from '@boligmaskinen/engine';
 import type { Scheme } from '../theme/theme.service';
 import { BELOW_LIMIT, rampOf, Rgb, stepped } from './colours';
-import { positionOf, RoutedTimes } from './travel';
+import { positionOf, resample, RoutedTimes } from './travel';
 
 export interface HeatStats {
   hasPreferences: boolean;
@@ -117,8 +117,14 @@ export class HeatEngine {
   private readonly placeLayers = new Map<string, Uint8Array>();
   /** Travel times found on the road network, per place position and mode; they replace the estimates. */
   private readonly routed = new Map<string, Uint8Array>();
+  /** The distances to the data pack's points, such as the chargers of an operator, per value name. */
+  private readonly siteLayers = new Map<string, Uint8Array>();
 
-  constructor(grid: Grid) {
+  /**
+   * `region` is the engine of the region's grid when this one draws the grid's own cells around the
+   * view: it takes the distances to points from there, as they reach beyond the view.
+   */
+  constructor(grid: Grid, private readonly region: HeatEngine | null = null) {
     this.grid = grid;
     this.frame = mercatorFrame(grid);
   }
@@ -137,8 +143,26 @@ export class HeatEngine {
     for (const key of [...this.valueCache.keys()]) if (key.endsWith(`|${position}`)) this.valueCache.delete(key);
   }
 
-  /** The 8-bit layer behind a value: a data layer, or the travel time to a place. */
+  /** The distances to the points a value reads, found the first time a block reads them; null without the points. */
+  siteLayer(info: ValueInfo): Uint8Array | null {
+    let layer = this.siteLayers.get(info.name);
+    if (layer) return layer;
+    if (this.region) {
+      const regional = this.region.siteLayer(info);
+      if (!regional) return null;
+      layer = resample(this.region.grid, this.grid, regional);
+    } else {
+      const sites = this.grid.sites?.[info.sites!.file];
+      if (!sites) return null;
+      layer = distanceLayer(this.grid, this.frame, pointsOf(sites, info.sites!.operators));
+    }
+    this.siteLayers.set(info.name, layer);
+    return layer;
+  }
+
+  /** The 8-bit layer behind a value: a data layer, the distance to points, or the travel time to a place. */
   private layerOf(info: ValueInfo, places: Place[]): Uint8Array | null {
+    if (info.sites) return this.siteLayer(info);
     if (!info.place) return this.grid.layers[info.kind === 'municipal' ? 'municipality' : info.layer!];
     const place = places.find((p) => p.id === info.place!.id);
     if (!place) return null;

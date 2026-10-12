@@ -38,6 +38,12 @@ def extract(tmp_path_factory):
         Node(id=42, location=(10.14, 56.13), tags={"amenity": "library", "name": "Hovedbiblioteket"}),
         Node(id=43, location=(10.15, 56.13), tags={"amenity": "library", "access": "private", "name": "Skolens bibliotek"}),
         Node(id=44, location=(10.01, 56.19)), Node(id=45, location=(10.19, 56.19)), Node(id=46, location=(10.01, 56.01)), Node(id=47, location=(10.19, 56.01)),
+        # Chargers: by its operator, by its brand, one for bicycles only, and one at a company's car park
+        Node(id=48, location=(10.16, 56.13), tags={"amenity": "charging_station", "operator": "Clever"}),
+        Node(id=49, location=(10.17, 56.13), tags={"amenity": "charging_station", "brand": "Tesla", "access": "customers"}),
+        Node(id=50, location=(10.18, 56.13), tags={"amenity": "charging_station", "bicycle": "yes", "motorcar": "no"}),
+        Node(id=51, location=(10.19, 56.13), tags={"amenity": "charging_station", "operator": "E.ON", "access": "private"}),
+        Node(id=52, location=(10.06, 56.14)), Node(id=53, location=(10.061, 56.14)), Node(id=54, location=(10.061, 56.1405)), Node(id=55, location=(10.06, 56.1405)),
     ]
     ways = [
         Way(id=100, nodes=[1, 2, 3, 4, 1]),
@@ -52,6 +58,8 @@ def extract(tmp_path_factory):
         # A 150 kV line with a 60 kV circuit on the same masts counts; a 60 kV line alone does not
         Way(id=108, nodes=[44, 45], tags={"power": "line", "voltage": "150000;60000"}),
         Way(id=109, nodes=[46, 47], tags={"power": "line", "voltage": "60000"}),
+        # A charger drawn as the car park it has, with no name of who runs it
+        Way(id=110, nodes=[52, 53, 54, 55, 52], tags={"amenity": "charging_station"}),
     ]
     relations = [
         Relation(id=1000, members=[("w", 100, "outer")],
@@ -78,6 +86,7 @@ def test_extracts_a_layer_per_theme(extract):
     assert {theme: counts[theme] for theme in osm.THEMES} == {
         "forest": 1, "industrial": 0, "water": 0, "coastline": 0, "beach": 0, "solar": 1,
         "supermarket": 1, "station": 1, "municipality": 1, "country": 1, "road": 1, "aerodrome": 3, "pharmacy": 1, "library": 1, "power_line": 1,
+        "charger": 3,
     }
     municipality = pyogrio.read_dataframe(out / "layers.gpkg", layer="municipality")
     assert (municipality["name"][0], municipality["ref"][0]) == ("Aarhus Kommune", "751")
@@ -86,6 +95,9 @@ def test_extracts_a_layer_per_theme(extract):
     aerodromes = pyogrio.read_dataframe(out / "layers.gpkg", layer="aerodrome")
     assert sorted(zip(aerodromes["name"], aerodromes["kind"], aerodromes.geom_type)) == [
         ("Flyvestation", "air_station", "MultiPolygon"), ("Lufthavn", "airport", "MultiPolygon"), ("Svæveflyveplads", "airfield", "Point")]
+    # The public chargers for cars, with who runs them
+    chargers = pyogrio.read_dataframe(out / "layers.gpkg", layer="charger")
+    assert sorted(zip(chargers["operator"], chargers.geom_type)) == [("", "MultiPolygon"), ("Clever", "Point"), ("Tesla", "Point")]
     # The node locations were in a temporary file, which is gone
     assert sorted(path.name for path in out.iterdir()) == ["addresses.npy", "counts.json", "layers.gpkg"]
     assert json.loads((out / "counts.json").read_text()) == counts

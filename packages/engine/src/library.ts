@@ -5,6 +5,7 @@
 import { type Block, newId } from './blocks.ts';
 import { type Criterion, DEFAULT_CRITERIA, MODE_MINUTES, type Place, type Role, type TravelMode } from './types.ts';
 import { LANGUAGE_VERSION } from './migrations.ts';
+import { CHARGER_OPERATORS } from './sites.ts';
 import { MODES, placeValueName } from './values.ts';
 
 export interface BlockTemplate {
@@ -48,6 +49,18 @@ export function criterionCode(c: Criterion): string {
     ].join('\n');
   }
   const s = scaleOf(c);
+  if (c.sites === 'chargers') {
+    // A switch per operator; the nearest charger of those switched on counts
+    const operators = [...CHARGER_OPERATORS, { id: 'other', name: 'Other providers' }];
+    return [
+      `// ${c.note}`,
+      ...operators.map(({ id, name }) => `let ${id} = true  // ${name}`),
+      `let full = slider(${c.full}, ${s.min}, ${s.max}, ${s.step})  // Full points at (m)`,
+      `let zero = slider(${c.zero}, ${s.min}, ${s.max}, ${s.step})  // No points at (m)`,
+      `let nearest = min(${operators.map(({ id }) => `${id} ? charger_${id} : FAR`).join(', ')})`,
+      'ramp(nearest, full, zero)',
+    ].join('\n');
+  }
   const unit = s.unit ? ` (${s.unit})` : '';
   // The labels hold in either direction, so the block can be turned around (turnAround in formula.ts)
   return [

@@ -41,7 +41,7 @@ FEATURE_TAGS = [
     ("landuse", "industrial"),
     ("natural", "water"), ("waterway", "riverbank"),
     ("natural", "coastline"), ("natural", "beach"),
-    ("shop", "supermarket"), ("amenity", "pharmacy"), ("amenity", "library"),
+    ("shop", "supermarket"), ("amenity", "pharmacy"), ("amenity", "library"), ("amenity", "charging_station"),
     ("railway", "station"), ("railway", "halt"),
     ("boundary", "administrative"),
     *[("highway", key) for key in ROAD_CLASSES],
@@ -53,8 +53,11 @@ FEATURE_TAGS = [
 THEMES: dict[str, list[str]] = {
     "forest": [], "industrial": [], "water": [], "coastline": [], "beach": [], "solar": [],
     "supermarket": ["name"], "station": ["name"], "municipality": ["name", "ref"], "country": [], "road": ["road_class"],
-    "aerodrome": ["name", "kind"], "pharmacy": ["name"], "library": ["name"], "power_line": [],
+    "aerodrome": ["name", "kind"], "pharmacy": ["name"], "library": ["name"], "power_line": [], "charger": ["operator"],
 }
+
+# Chargers that are not for the public, or not for cars
+CHARGER_CLOSED = ("private", "no", "permit", "reserved")
 
 
 def classify(tags) -> str | None:
@@ -74,6 +77,8 @@ def classify(tags) -> str | None:
         return "supermarket"
     if tags.get("amenity") in ("pharmacy", "library") and tags.get("access") not in ("private", "no"):
         return tags["amenity"]
+    if tags.get("amenity") == "charging_station":
+        return "charger" if tags.get("access") not in CHARGER_CLOSED and tags.get("motorcar") != "no" else None
     if tags.get("railway") in ("station", "halt"):
         if tags.get("disused") == "yes" or tags.get("usage") == "tourism" or tags.get("railway:preserved") == "yes":
             return None
@@ -136,12 +141,12 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
             continue
         kind = obj.type_str()
         try:
-            if kind == "n" and theme in ("supermarket", "station", "beach", "aerodrome", "pharmacy", "library"):
+            if kind == "n" and theme in ("supermarket", "station", "beach", "aerodrome", "pharmacy", "library", "charger"):
                 geom = wkb.create_point(obj)
             elif kind == "w" and theme in ("coastline", "road", "power_line"):
                 geom = wkb.create_linestring(obj)
             elif kind == "a" and theme in ("forest", "industrial", "water", "beach", "supermarket", "municipality", "country", "solar", "aerodrome",
-                                           "pharmacy", "library"):
+                                           "pharmacy", "library", "charger"):
                 geom = wkb.create_multipolygon(obj)
             else:
                 continue
@@ -155,6 +160,9 @@ def build_layers(pbf: Path, locations: Path) -> dict[str, dict[str, list]]:
             row["name"].append(obj.tags.get("name", ""))
         if theme == "aerodrome":
             row["kind"].append(aerodrome_kind(obj.tags))
+        if theme == "charger":
+            # Who runs it, as the map has it: the operator, else the brand or network on it
+            row["operator"].append(obj.tags.get("operator") or obj.tags.get("brand") or obj.tags.get("network") or "")
         if theme == "municipality":
             row["ref"].append(obj.tags.get("ref", ""))  # the municipality code Danmarks Statistik uses
     return rows

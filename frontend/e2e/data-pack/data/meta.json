@@ -52,6 +52,9 @@
   "elevation": "elevation.png",
   "mask": "mask.png"
  },
+ "sites": {
+  "chargers": "chargers.json"
+ },
  "municipalities": [
   {
    "index": 1,
@@ -77,6 +80,8 @@
   "pharmacies": 545,
   "libraries": 463,
   "turbines": 4866,
+  "chargersGeofa": 2732,
+  "chargersOsm": 233,
   "mstShareOfRegion": 0.1238
  },
  "basemap": {

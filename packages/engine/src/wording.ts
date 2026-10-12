@@ -18,7 +18,13 @@ export interface Wording {
   noPointsInside: string;
   /** A requirement's allowed categories, as `{{ list }}`. */
   only: string;
+  /** The first of many switches that are on, as `{{ list }}`, and how many more are, `{{ n }}`. */
+  andMore: string;
+  /** Many switches on but a few, which are `{{ list }}`. */
+  allBut: string;
   nothingAllowed: string;
+  /** A preference with every switch off, which gives no points. */
+  noneTicked: string;
   /** A block without controls or a comment. */
   customCode: string;
   /** Words written in code, units and travel modes, by their English: "Full points at", "heights", "car". */
@@ -34,7 +40,10 @@ export const ENGLISH: Wording = {
   fullInside: 'Full points inside the area · No points from {{ zero }}',
   noPointsInside: 'No points inside the area · Full points from {{ full }}',
   only: 'Only {{ list }}',
+  andMore: '{{ list }} and {{ n }} more',
+  allBut: 'All but {{ list }}',
   nothingAllowed: 'Nothing allowed',
+  noneTicked: 'None ticked',
   customCode: 'Custom code',
   words: {},
 };

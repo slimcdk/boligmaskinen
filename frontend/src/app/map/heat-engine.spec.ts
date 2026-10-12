@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Block, DEFAULT_VIEW, Grid, GridMeta, LayerName } from '@boligmaskinen/engine';
+import { Block, DEFAULT_VIEW, Grid, GridMeta, LayerName, sitesFrom } from '@boligmaskinen/engine';
 import { HeatEngine, HeatRequest } from './heat-engine';
 
 const LAYERS: LayerName[] = ['forest', 'water', 'beach', 'noise', 'supermarket', 'school', 'daycare', 'station', 'turbine', 'density', 'zone', 'municipality', 'mask'];
@@ -109,6 +109,24 @@ describe('the heat engine', () => {
     engine.setTravel('10.00200,56.00100', { car: Uint8Array.of(5, 8, 12, 40, 5, 5, 255, 255) });
     expect(ask()).toEqual({ kind: 'pass', percent: 50 });
     expect(engine.explain(2, { blocks, places: [place] })!.rows.find((r) => r.id === 'near')).toMatchObject({ input: { name: 'work_car', value: 12 }, score: 0 });
+  });
+  it("measures the distance to the chargers of the operators a block reads, and the detail takes it from the region", () => {
+    // Clever's charger in the top left cell, Tesla's in the top right; the cells are about 62 m wide
+    const sites = sitesFrom({ operators: ['clever', 'tesla', 'other'], points: [[10.0005, 56.0015, 0], [10.0035, 56.0015, 1]] });
+    const region = new HeatEngine({ ...grid(), sites: { chargers: sites } });
+    const reads = (engine: HeatEngine, code: string, cell: number) => engine.explain(cell, { blocks: [block(code)], places: [] })!.rows[0].input!.value;
+    expect(reads(region, 'ramp(charger_clever, 0, 1000)', 0)).toBe(0);
+    expect(reads(region, 'ramp(charger_clever, 0, 1000)', 3)).toBeCloseTo(186, -2);
+    expect(reads(region, 'ramp(charger_tesla, 0, 1000)', 3)).toBe(0);
+    // Every operator's: the nearer of the two
+    expect(reads(region, 'ramp(charger, 0, 1000)', 2)).toBeCloseTo(62, -2);
+    // The detail around the view, a grid of its own, measures nothing itself: the region's distances reach beyond it
+    const detail = new HeatEngine({ ...grid(), sites: undefined }, region);
+    expect(reads(detail, 'ramp(charger_clever, 0, 1000)', 3)).toBeCloseTo(186, -2);
+    // A pack without the chargers has no data for them
+    const without = new HeatEngine(grid());
+    const result = without.render(request([block('ramp(charger_clever, 0, 1000)', { id: 'charger' })]), new Uint32Array(8));
+    expect(result.issues).toEqual([['charger', 'No data for “charger_clever”']]);
   });
 });
 

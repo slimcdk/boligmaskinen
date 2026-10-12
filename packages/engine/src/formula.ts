@@ -96,6 +96,7 @@ export const CONSTANTS: Record<string, { value: number; help: string }> = {
   BYZONE: { value: 1, help: 'zone code for byzone' },
   LANDZONE: { value: 2, help: 'zone code for landzone' },
   SOMMERHUS: { value: 3, help: 'zone code for sommerhusområde' },
+  FAR: { value: Infinity, help: 'farther than any distance: min(a ? d1 : FAR, b ? d2 : FAR) is the nearer of the distances switched on' },
 };
 
 const KEYWORDS = new Set(['let', 'return', 'true', 'false']);

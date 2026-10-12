@@ -35,6 +35,10 @@ describe('compileFormula', () => {
     expect(run('known(noise)', { noise: NaN })).toBe(0);
     expect(run('zone == LANDZONE', { zone: 2 })).toBe(1);
     expect(run('choice(2, a, b, c)', { a: 10, b: 20, c: 30 })).toBe(20);
+    // FAR leaves a distance out of a min(): the nearer of those switched on, or none at all
+    expect(run('let a = true\nlet b = false\nmin(a ? x : FAR, b ? y : FAR)', { x: 800, y: 300 })).toBe(800);
+    expect(run('ramp(min(false ? x : FAR), 500, 3000)', { x: 800 })).toBe(0);
+    expect(run('ramp(min(false ? x : FAR), 3000, 500)', { x: 800 })).toBe(1);
   });
 
   it('lets missing data spread to the result unless the answer is given anyway', () => {

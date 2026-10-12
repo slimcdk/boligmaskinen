@@ -80,7 +80,8 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
     """Write the data pack to `out`, which must be empty or not exist yet; returns its meta.json."""
     meta = json.loads((grid / "meta.json").read_text(encoding="utf-8"))
     tiles = meta.get("tiles", {}).get("available", [])
-    require(grid, [*meta["files"].values(), "municipalities.json", *(f"tiles/{key}.u8.gz" for key in tiles)], "grid files")
+    sites = meta.get("sites", {})
+    require(grid, [*meta["files"].values(), *sites.values(), "municipalities.json", *(f"tiles/{key}.u8.gz" for key in tiles)], "grid files")
     require(sprites, SPRITES, "sprites")
     require(styles, STYLES, "styles")
     require(world, WORLD, "world files")
@@ -113,6 +114,9 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
         meta["pack"] = pack_id
     (out / "data" / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     shutil.copy(grid / "municipalities.json", out / "data" / "municipalities.json")
+    # Points the browser finds distances to itself, such as the chargers for electric cars
+    for file in sites.values():
+        shutil.copy(grid / file, out / "data" / file)
     progress(0.8)
 
     fonts_json = {f"{pbf.parent.name}/{pbf.stem}": base64.b64encode(pbf.read_bytes()).decode() for pbf in glyphs}

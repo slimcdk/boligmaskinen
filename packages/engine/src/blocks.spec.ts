@@ -92,6 +92,17 @@ describe('helpers', () => {
     expect(blockSummary(high)).toBe('No points below 2 m a.s.l. · Full points from 10 m a.s.l.');
     // Metres above sea level are heights, not distances: neither rounded to 10 m nor "inside the area" at 0
     expect(blockSummary({ ...high, code: high.code.replace('slider(2,', 'slider(0,').replace('slider(10,', 'slider(13,') })).toBe('No points below 0 m a.s.l. · Full points from 13 m a.s.l.');
+    // The chargers: every provider ticked says nothing new; a few are named, and many summed up
+    const charger = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'charger')!));
+    const only = (ids: string[]) => ({ ...charger, code: charger.code.replace(/^let (\w+) = true/gm, (line, id: string) => (ids.includes(id) ? line : `let ${id} = false`)) });
+    expect(blockSummary(charger)).toBe('Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only(['clever', 'tesla']))).toBe('Clever, Tesla · Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only(['clever', 'norlys', 'ok', 'eon', 'tesla']))).toBe('Clever, Norlys, OK and 2 more · Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only(['clever', 'norlys', 'spirii', 'ewii', 'eon', 'tesla', 'circle_k', 'uno_x', 'shell', 'q8', 'other']))).toBe('All but OK · Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only(['clever', 'norlys', 'spirii', 'ewii', 'eon', 'tesla', 'circle_k', 'uno_x', 'shell']))).toBe('All but OK, Q8, Other providers · Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only(['other']))).toBe('Other providers · Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only([]))).toBe('None ticked · Full points up to 500 m · No points from 3.0 km');
+    expect(blockSummary(only(['clever', 'norlys', 'ok', 'eon']), undefined, { ...ENGLISH, andMore: '{{ list }} og {{ n }} til' })).toMatch(/^Clever, Norlys, OK og 1 til · /);
     const pits = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'extraction_area')!));
     expect(blockSummary(pits)).toBe('No points below 200 m · Full points from 1.0 km');
     const later = blockFrom(criterionTemplate(DEFAULT_CRITERIA.find((c) => c.id === 'extraction_interest')!));
@@ -157,6 +168,25 @@ describe('the library', () => {
     }
     expect(left).toBeGreaterThan(100);
     expect(Array.from(actual.histogram)).toEqual(Array.from(expected.histogram));
+  });
+});
+
+describe('the chargers block', () => {
+  const charger = blockFrom(LIBRARY.find((t) => t.id === 'charger')!);
+  const tick = (ids: string[]) => ({ ...charger, code: charger.code.replace(/^let (\w+) = true/gm, (line, id: string) => (ids.includes(id) ? line : `let ${id} = false`)) });
+  // Three cells: Clever's charger 400 m away and Tesla's 100 m in the first; none near the second; Q8's 1.75 km from the third
+  const far = 10_000;
+  const values: Record<string, number[]> = Object.fromEntries(DATA_VALUES.filter((v) => v.sites).map((v) => [v.name, [far, far, far]]));
+  Object.assign(values, { charger_clever: [400, far, far], charger_tesla: [100, far, far], charger_q8: [far, far, 1750] });
+  const inputs: BlockInputs = { names: DATA_VALUES.map((v) => v.name), values: (name) => (values[name] ? Float32Array.from(values[name]) : null) };
+  const scores = (block: Block) => Array.from(evaluateBlocks([block], 3, inputs).values.get(block.id)!);
+
+  it('scores the nearest charger of the providers ticked', () => {
+    expect(scores(charger)).toEqual([1, 0, 0.5]);
+    expect(scores(tick(['tesla']))).toEqual([1, 0, 0]);
+    expect(scores(tick(['shell', 'q8']))).toEqual([0, 0, 0.5]);
+    // None ticked gives no points anywhere
+    expect(scores(tick([]))).toEqual([0, 0, 0]);
   });
 });
 
