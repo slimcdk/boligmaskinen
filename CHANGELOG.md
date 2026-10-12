@@ -51,7 +51,8 @@ Everything so far: there is no release yet. The test instance follows `master`.
   PostGIS runs beside it.
 - Security headers with a strict Content Security Policy; no fonts or scripts from elsewhere.
 - A nightly backup of the database, with a tested restore.
-- CI tests everything and scans the image; Dependabot proposes updates.
+- CI tests everything, measures the unit tests' coverage and scans the image; Dependabot proposes
+  updates. The README shows the results as badges, and screenshots of the test instance.
 
 ### Upgrade notes
 

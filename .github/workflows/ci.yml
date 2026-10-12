@@ -26,6 +26,9 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    # The lines the tests cover, for the badges (.github/scripts/coverage.mjs)
+    outputs:
+      coverage: ${{ steps.coverage.outputs.coverage }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -34,7 +37,10 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm test
+      - run: npm test -- --coverage
+      - name: Coverage
+        id: coverage
+        run: node "$GITHUB_WORKSPACE/.github/scripts/coverage.mjs" frontend coverage/frontend/coverage-summary.json
       - run: npm run build
 
   engine:
@@ -44,6 +50,8 @@ jobs:
     defaults:
       run:
         working-directory: packages/engine
+    outputs:
+      coverage: ${{ steps.coverage.outputs.coverage }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -53,7 +61,10 @@ jobs:
           cache-dependency-path: packages/engine/package-lock.json
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      - run: npm test -- --coverage
+      - name: Coverage
+        id: coverage
+        run: node "$GITHUB_WORKSPACE/.github/scripts/coverage.mjs" engine coverage/coverage-summary.json
 
   backend:
     name: Backend tests
@@ -78,6 +89,8 @@ jobs:
           --health-retries 20
     env:
       TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/postgres
+    outputs:
+      coverage: ${{ steps.coverage.outputs.coverage }}
     steps:
       - uses: actions/checkout@v7
       # The backup tests dump and restore with PostgreSQL's client 18, as the server
@@ -95,7 +108,10 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      - run: npm test -- --coverage
+      - name: Coverage
+        id: coverage
+        run: node "$GITHUB_WORKSPACE/.github/scripts/coverage.mjs" backend coverage/coverage-summary.json
 
   pipeline:
     name: Pipeline tests
@@ -104,12 +120,17 @@ jobs:
     defaults:
       run:
         working-directory: pipeline
+    outputs:
+      coverage: ${{ steps.coverage.outputs.coverage }}
     steps:
       - uses: actions/checkout@v7
       # uv installs the Python version pipeline/.python-version asks for
       - run: pipx install uv==0.11.6
       - run: uv sync --frozen
-      - run: uv run pytest
+      - run: uv run pytest --cov --cov-report=term --cov-report=json
+      - name: Coverage
+        id: coverage
+        run: node "$GITHUB_WORKSPACE/.github/scripts/coverage.mjs" pipeline coverage.json
 
   e2e:
     name: End-to-end tests
@@ -282,3 +303,33 @@ jobs:
             CREATED=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # The badges in the README: the results of this run and the coverage of the tests, as shields.io
+  # endpoint files (.github/scripts/badges.mjs) on the branch badges, whose one commit each run
+  # replaces
+  badges:
+    name: Badges
+    needs: [engine, frontend, backend, pipeline, e2e, compose, image]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Take the badges there are
+        run: |
+          mkdir "$RUNNER_TEMP/badges"
+          if git fetch -q --depth=1 origin badges; then git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/badges"; fi
+      - name: Write the badges of this run
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: node .github/scripts/badges.mjs "$RUNNER_TEMP/badges"
+      - name: Put them on the badges branch
+        env:
+          GIT_INDEX_FILE: ${{ runner.temp }}/badges.index
+        run: |
+          git --work-tree="$RUNNER_TEMP/badges" add -A
+          commit=$(git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit-tree "$(git write-tree)" -m "Badges for ${GITHUB_SHA::7}")
+          git push -q -f origin "$commit:refs/heads/badges"

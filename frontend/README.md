@@ -245,6 +245,8 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
 
 - `src/**/*.spec.ts` are the Vitest tests. Among them is a parity test showing that the
   predefined blocks score exactly like the original engine.
+- `npm test -- --coverage` also measures which lines of `src/app` the tests run (in
+  `coverage/frontend/`). CI does, for the coverage badges in the README.
 - `e2e/accessibility.spec.ts` runs axe (WCAG 2.2 A and AA) on the map and the panels, a block's
   settings, the code editor, "About the data" and the data jobs, in light and dark mode and on a
   phone. They must have no violations.
@@ -265,6 +267,20 @@ npm run e2e:ui        # Playwright's UI mode, for writing and debugging tests
   log, and check that the footer shows the version the server reports.
 - The map keeps its view in the address (`#map=zoom/lat/lng`). Tests and links can open a
   given view, and tests read the zoom from it.
+
+## Screenshots
+
+The screenshots in the README (`../docs/screenshots/`) are taken of a running app with the data
+of all of Denmark, such as an instance the jobs have built:
+
+```sh
+BASE_URL=http://my-server:8080 npm run screenshots
+```
+
+`screenshots/readme.spec.ts` opens the map they show from a link to a map, and answers the
+profile API as a server without a database does, so the app keeps the map in the browser.
+Nothing is saved on the server: the maps and places of its users stay as they are. Chrome turns
+the screenshots into WebP, about a fifth of the PNG.
 
 ## Structure
 
