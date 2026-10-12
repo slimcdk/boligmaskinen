@@ -34,13 +34,13 @@ where it stands.
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/denmark.webp" width="320" alt="All of Denmark coloured by the same map, in dark mode"><br>All of Denmark, in dark mode</td>
-    <td><img src="docs/screenshots/block.webp" width="320" alt="The block EV charger opened in the panel, with a checkbox for each provider of chargers"><br>A block's sliders and checkboxes: whose chargers count</td>
-    <td rowspan="2"><img src="docs/screenshots/phone.webp" width="200" alt="The map of Aarhus on a phone, in Danish, with half the panel showing the blocks"><br>On a phone, in Danish</td>
+    <td width="38%" valign="top"><img src="docs/screenshots/denmark.webp" width="320" alt="All of Denmark coloured by the same map, in dark mode"><br>All of Denmark, in dark mode</td>
+    <td width="38%" valign="top"><img src="docs/screenshots/block.webp" width="320" alt="The block EV charger opened in the panel, with a checkbox for each provider of chargers"><br>A block's sliders and checkboxes: whose chargers count</td>
+    <td width="24%" valign="top" rowspan="2"><img src="docs/screenshots/phone.webp" width="200" alt="The map of Aarhus on a phone, in Danish, with half the panel showing the blocks"><br>On a phone, in Danish</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/code.webp" width="320" alt="The code of the block EV charger, next to the values a block can read"><br>A block's code, in the block language</td>
-    <td><img src="docs/screenshots/catalogue.webp" width="320" alt="The dialog What matters to you?, which lists the predefined blocks by group"><br>What matters to you: the predefined blocks</td>
+    <td width="38%" valign="top"><img src="docs/screenshots/code.webp" width="320" alt="The code of the block EV charger, next to the values a block can read"><br>A block's code, in the block language</td>
+    <td width="38%" valign="top"><img src="docs/screenshots/catalogue.webp" width="320" alt="The dialog What matters to you?, which lists the predefined blocks by group"><br>What matters to you: the predefined blocks</td>
   </tr>
 </table>
 
