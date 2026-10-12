@@ -1,8 +1,17 @@
 # Boligmaskinen
 
+[![CI](https://github.com/slimcdk/boligmaskinen/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/slimcdk/boligmaskinen/actions/workflows/ci.yml?query=branch%3Amaster)
+[![Unit tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Ftests.json)](https://github.com/slimcdk/boligmaskinen/actions/workflows/ci.yml?query=branch%3Amaster)
+[![End-to-end tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fe2e.json)](https://github.com/slimcdk/boligmaskinen/actions/workflows/ci.yml?query=branch%3Amaster)
+[![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fcoverage.json)](#ci-and-releases)
+[![Docker image](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fimage.json)](https://github.com/slimcdk/boligmaskinen/pkgs/container/boligmaskinen)
+[![Last commit](https://img.shields.io/github/last-commit/slimcdk/boligmaskinen/master)](https://github.com/slimcdk/boligmaskinen/commits/master)
+
 A self-hosted, map-first home search for Denmark. A full-screen map shows how well every place
 fits what you care about. You say what that is with blocks: small formulas over open data, whose
 numbers become sliders.
+
+![The map of a family that wants forest, water, quiet, high ground, schools, daycare, shops, trains and EV chargers close by, over Aarhus, Silkeborg, Randers and Horsens: green where a home fits it best, red where least](docs/screenshots/map.webp)
 
 **Status:** prototype. It covers all of Denmark with 35 layers of open data on a 100 m grid, in
 Danish and English, and keeps several maps of blocks. Its data jobs fetch the sources and build
@@ -20,6 +29,22 @@ where it stands.
 | [`pipeline/`](pipeline/README.md) | The Python steps that build the grid and the data pack from the open data, for all of Denmark or a region. The app image runs them. |
 | [`docs/`](docs) | [The development plan](docs/plan.md), [the block language](docs/block-language.md), [block ideas](docs/block-ideas.md), [data sources and how they are fetched](docs/data-sources.md), [public data to add](docs/public-data.md), [Plandata's themes](docs/plandata.md), [OpenData.dk's datasets](docs/opendata-dk.md), [Danmarks Statistik's tables](docs/dst.md), [findings](docs/findings.md), [benchmarks](docs/benchmarks/weighting/README.md). |
 | [`.devcontainer/`](.devcontainer) | The development environment: Node 24, uv, go-pmtiles, Playwright's Chromium and psql, next to a PostGIS database. |
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/denmark.webp" width="320" alt="All of Denmark coloured by the same map, in dark mode"><br>All of Denmark, in dark mode</td>
+    <td><img src="docs/screenshots/block.webp" width="320" alt="The block EV charger opened in the panel, with a checkbox for each provider of chargers"><br>A block's sliders and checkboxes: whose chargers count</td>
+    <td rowspan="2"><img src="docs/screenshots/phone.webp" width="200" alt="The map of Aarhus on a phone, in Danish, with half the panel showing the blocks"><br>On a phone, in Danish</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/code.webp" width="320" alt="The code of the block EV charger, next to the values a block can read"><br>A block's code, in the block language</td>
+    <td><img src="docs/screenshots/catalogue.webp" width="320" alt="The dialog What matters to you?, which lists the predefined blocks by group"><br>What matters to you: the predefined blocks</td>
+  </tr>
+</table>
+
+They are taken of the test instance by `npm run screenshots` in `frontend/` (see its README).
 
 ## Getting started
 
@@ -60,6 +85,8 @@ docker compose up -d                 # http://localhost:8080
   `backend/README.md`).
 - **The image:** `BOLIGMASKINEN_TAG` picks it. `master` (the default) is the newest build, and a
   release has its version, such as `v0.1.0`.
+
+![The dialog Data jobs: each source with its schedule, when it last ran and what it found, and when it runs next](docs/screenshots/jobs.webp)
 
 ### Licences
 
@@ -102,6 +129,17 @@ GitHub Actions (`.github/workflows/`):
 - **Every push and pull request:** engine tests, frontend unit tests and build, backend tests against
   PostGIS, pipeline tests, the end-to-end tests in Chrome with the test data pack, and the image
   started with `compose.yaml` and checked.
+- **Coverage:** the unit tests measure which lines they run, with Vitest's V8 coverage for the
+  engine, the frontend and the backend, and coverage.py for the pipeline. Each job's summary
+  gives the share.
+- **The badges** at the top come from the branch `badges`. After every run on master, the job
+  "Badges" writes there the results of the tests and of the image, and the coverage, as
+  shields.io endpoint files (`.github/scripts/badges.mjs`). The branch has one commit, which
+  each run replaces. A part whose tests fail keeps the coverage it had. Per part:
+  ![Engine coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fcoverage-engine.json)
+  ![Frontend coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fcoverage-frontend.json)
+  ![Backend coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fcoverage-backend.json)
+  ![Pipeline coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fslimcdk%2Fboligmaskinen%2Fbadges%2Fcoverage-pipeline.json)
 - **The image is scanned** with Trivy for known vulnerabilities that have a fix. The high ones are
   reported in the job's log; a critical one stops the build. (go-pmtiles 1.31.2, the newest, is
   built with an older Go, which accounts for most of the high ones.)

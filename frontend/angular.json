@@ -129,7 +129,17 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "providersFile": "src/test-providers.ts"
+            "providersFile": "src/test-providers.ts",
+            "coverageInclude": [
+              "src/app/**/*.ts"
+            ],
+            "coverageExclude": [
+              "src/**/*.spec.ts"
+            ],
+            "coverageReporters": [
+              "text-summary",
+              "json-summary"
+            ]
           }
         }
       }
