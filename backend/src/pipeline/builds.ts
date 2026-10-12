@@ -7,7 +7,7 @@ import type { JobContext, JobDefinition, JobOutcome } from '../jobs/types.ts';
 import { USER_AGENT } from './archive.ts';
 import { describeChange, largeChanges, type PackFacts } from './checks.ts';
 import { runProgram, runStep } from './python.ts';
-import { FETCH_JOBS, type MadeFrom, NEEDS_DATA_DIR, NOISE_FILES, type PipelineOptions, readJson, sameInputs, versionId, type Work, work } from './sources.ts';
+import { ELEVATION_TILES, FETCH_JOBS, type MadeFrom, NEEDS_DATA_DIR, NOISE_FILES, type PipelineOptions, readJson, sameInputs, versionId, type Work, work } from './sources.ts';
 import { FONTS, GLYPH_RANGES, styleLayers } from './styles.ts';
 import { Versions } from './versions.ts';
 
@@ -118,7 +118,7 @@ async function buildGrid(w: Work, settings: GridSettings): Promise<JobOutcome> {
   if (busy.length) return waiting(`Waiting for ${names(busy)}, which ${busy.length > 1 ? 'fetch' : 'fetches'} now`);
 
   const osm = await new Versions(join(w.dataDir, 'work', 'osm')).current();
-  const files: Record<string, string> = {};
+  const files: Record<string, string | string[]> = {};
   const hashes: Record<string, string> = {};
   const missing = new Set<string>(osm ? [] : ['osm']);
   if (osm) {
@@ -141,6 +141,12 @@ async function buildGrid(w: Work, settings: GridSettings): Promise<JobOutcome> {
     if (!file || !(await w.archive.present(file))) continue;
     files[key] = file.path;
     hashes[key] = file.sha256;
+  }
+  // The elevation model's tiles, once every one of them is there
+  const tiles = await Promise.all(ELEVATION_TILES.map((tile) => w.archive.newest('elevation', `${tile}.tif`)));
+  if (tiles.every(Boolean) && (await Promise.all(tiles.map((file) => w.archive.present(file)))).every(Boolean)) {
+    files['elevation'] = tiles.map((file) => file!.path);
+    hashes['elevation'] = sha256(tiles.map((file) => file!.sha256).join(' '));
   }
 
   const grids = new Versions(join(w.dataDir, 'work', 'grid'));

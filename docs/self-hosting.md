@@ -10,9 +10,9 @@ empty folder to the map, and through updates and backups.
 |---|---|
 | Software | Docker with Compose (Docker Engine 24 or newer, or Docker Desktop) |
 | Machine | 64-bit Intel/AMD (amd64) or ARM (arm64, such as a Raspberry Pi 5 with a 64-bit OS); Docker picks the image for the machine |
-| Memory | About 1.1 GB while the data is built (each night, for a few minutes), so give the app's container 1.5 GB if you limit it: a new install was checked under that limit. About 300 MB the rest of the time |
-| Disk | About 4 GB in `./data`: the raw downloads, the builds, the road network and the data packs. Reading the OpenStreetMap extract takes 1 GB more for a few minutes |
-| Network | About 1 GB of downloads the first time (OpenStreetMap is 500 MB of it), then a few hundred MB a night |
+| Memory | About 1.2 GB while the data is built (each night, for a few minutes), so give the app's container 1.5 GB if you limit it: a new install was checked under that limit. About 300 MB the rest of the time |
+| Disk | About 4.5 GB in `./data`: the raw downloads, the builds, the road network and the data packs. Reading the OpenStreetMap extract takes 1 GB more for a few minutes |
+| Network | About 1.3 GB of downloads the first time (OpenStreetMap is 500 MB of it, the elevation model 300 MB), then a few hundred MB a night |
 | Time | About six minutes for the first build of all of Denmark on a fast connection (5½ on 2026-10-10) |
 
 The image is private for now: you need read access to `ghcr.io/slimcdk/boligmaskinen`

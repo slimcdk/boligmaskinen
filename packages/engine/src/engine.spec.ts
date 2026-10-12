@@ -35,6 +35,11 @@ describe('decodeValue', () => {
     expect(decodeValue({ kind: 'scaled', layerName: 'no2' }, 0, ctx)).toBeNull();
     expect(decodeValue({ kind: 'scaled', layerName: 'no2' }, 41, ctx)).toBe(10);
     expect(decodeValue({ kind: 'scaled', layer: 'pm25' }, 56, ctx)).toBe(5.5);
+    // The height above sea level is in whole metres from -10 m, as some land lies below the sea
+    expect(decodeValue({ kind: 'scaled', layerName: 'elevation' }, 0, ctx)).toBeNull();
+    expect(decodeValue({ kind: 'scaled', layerName: 'elevation' }, 1, ctx)).toBe(-10);
+    expect(decodeValue({ kind: 'scaled', layerName: 'elevation' }, 11, ctx)).toBe(0);
+    expect(decodeValue({ kind: 'scaled', layer: 'elevation' }, 182, ctx)).toBe(171);
     // A turbine's distance in its heights, in tenths
     expect(decodeValue({ kind: 'scaled', layerName: 'turbine_heights' }, 41, ctx)).toBe(4);
   });

@@ -5,7 +5,7 @@
  * Every criterion reads one 8-bit layer. Its curve and weight are baked into a
  * 256-entry lookup table, so scoring a cell is a handful of table lookups.
  */
-import { RAW_STEPS, type CriterionKind, type LayerName, type Municipality, type MunicipalField, type Role, type ViewState } from './types.ts';
+import { RAW_OFFSET, RAW_STEPS, type CriterionKind, type LayerName, type Municipality, type MunicipalField, type Role, type ViewState } from './types.ts';
 
 /** Everything the engine needs to know about one criterion or place. */
 export interface ScoringItem {
@@ -49,7 +49,7 @@ export function decodeValue(item: Pick<ScoringItem, 'kind' | 'field'> & { layerN
   switch (item.kind) {
     case 'scaled': {
       const name = item.layerName ?? (typeof item.layer === 'string' ? (item.layer as LayerName) : undefined);
-      return raw === 0 ? null : (raw - 1) / (RAW_STEPS[name!] ?? 1);
+      return raw === 0 ? null : (raw - 1) / (RAW_STEPS[name!] ?? 1) + (RAW_OFFSET[name!] ?? 0);
     }
     case 'distance':
       return ctx.distanceMax * Math.pow(raw / 255, 2);

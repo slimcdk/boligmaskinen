@@ -13,10 +13,13 @@ import geopandas as gpd
 import numpy as np
 import openpyxl
 import pytest
+import rasterio
 from pyproj import Transformer
+from rasterio.transform import from_origin
 from shapely.geometry import LineString, Point, box
 
 TO_LONLAT = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True)
+TO_UTM = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
 
 AARHUS = box(570_000, 6_215_000, 580_000, 6_225_000)
 RANDERS = box(570_000, 6_225_000, 580_000, 6_235_000)
@@ -225,6 +228,26 @@ def sources(tmp_path_factory) -> Path:
     with zipfile.ZipFile(root / "haardhed.zip", "w") as archive:
         archive.writestr("README.qgz", "a QGIS project")
         archive.write(root / "haardhed.gpkg", "DrikkevandetsHaardhed.gpkg")
+    # --- The Copernicus elevation model: two tiles that meet at 10.2° east, with the model's points
+    # about 30 m apart. The ground is 20 m in the west tile, with roofs of 30 m on every fifth column
+    # of points, and 50 m in the east tile; the sea, east of 579,950, is 0, as the model has it. A
+    # square in the north-west corner of Aarhus lies 3 m below the sea ---
+    (root / "dem").mkdir()
+    step_lon, step_lat = 1.5 / 3600, 1 / 3600
+    for name, west, ground in (("west", 9.9, 20.0), ("east", 10.2, 50.0)):
+        cols, rows = round(0.3 / step_lon), round(0.4 / step_lat)
+        lons = west + (np.arange(cols) + 0.5) * step_lon
+        lats = 56.4 - (np.arange(rows) + 0.5) * step_lat
+        lon, lat = np.meshgrid(lons, lats)
+        x, y = TO_UTM.transform(lon, lat)
+        heights = np.full((rows, cols), ground, dtype=np.float32)
+        if name == "west":
+            heights[:, ::5] = 30.0
+            heights[(x >= 571_000) & (x < 572_000) & (y >= 6_224_000) & (y < 6_225_000)] = -3.0
+        heights[x >= 579_950] = 0.0
+        with rasterio.open(root / "dem" / f"{name}.tif", "w", driver="GTiff", width=cols, height=rows, count=1, dtype="float32",
+                           crs="EPSG:4326", transform=from_origin(west, 56.4, step_lon, step_lat)) as tile:
+            tile.write(heights, 1)
     with zipfile.ZipFile(root / "GTFS.zip", "w") as feed:
         feed.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\n" + "".join(
             f"{stop},{stop},{lonlat(*xy)[1]:.6f},{lonlat(*xy)[0]:.6f}\n" for stop, xy in stops.items()))
@@ -242,7 +265,7 @@ def sources(tmp_path_factory) -> Path:
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "raw_material_areas": "raastofomr.geojson", "transit": "GTFS.zip", "water_hardness": "haardhed.zip",
         "forest_lines": "skovbyggelinjer.geojson", "church_lines": "kirkebyggelinjer.geojson", "lake_lines": "soe_bes_linjer.geojson",
-        "stream_lines": "aa_bes_linjer.geojson",
+        "stream_lines": "aa_bes_linjer.geojson", "elevation": ["dem/west.tif", "dem/east.tif"],
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",

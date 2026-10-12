@@ -27,6 +27,8 @@ export const SOURCE_URLS = {
   transit: 'https://www.rejseplanen.info/labs/GTFS.zip',
   /** GEUS's dataset of the drinking water's hardness per supply area, on its Dataverse: its files change with every version. */
   water: 'https://dataverse.geus.dk/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W',
+  /** The Copernicus elevation model of 30 m (GLO-30) on AWS's open data, a GeoTIFF per tile of 1°, with no key. */
+  elevation: 'https://copernicus-dem-30m.s3.amazonaws.com',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -43,6 +45,7 @@ const LICENCES = {
   protected: 'CC0 1.0, Miljøstyrelsen and the regions (Danmarks Miljøportal)',
   transit: 'CC BY 4.0, Rejsekort & Rejseplan A/S (Rejseplanen)',
   water: 'CC BY 4.0, GEUS',
+  elevation: 'Copernicus DEM licence, free with its notice: produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved',
 };
 
 /** What the data jobs need to fetch and build. */
@@ -121,6 +124,12 @@ const zipCheck = (content: Buffer) => {
   return formatBytes(content.length);
 };
 
+/** A GeoTIFF: a TIFF or a BigTIFF, in either byte order. */
+const tiffCheck = (content: Buffer) => {
+  if (!['II*\u0000', 'MM\u0000*', 'II+\u0000', 'MM\u0000+'].includes(content.subarray(0, 4).toString('latin1'))) throw new Error('not a TIFF file');
+  return formatBytes(content.length);
+};
+
 /** A GTFS feed: a ZIP file with the timetable's files in it, whose names its directory lists as they are. */
 const gtfsCheck = (content: Buffer) => {
   zipCheck(content);
@@ -189,6 +198,33 @@ async function fetchWater(w: Work): Promise<JobOutcome> {
     },
   });
   return outcome(w, zipped);
+}
+
+/**
+ * The tiles of the Copernicus elevation model that have Danish land, by their south-west corner:
+ * 1° each, from Tønder and Lolland (54°) to Skagen (57°), and Bornholm and Christiansø (14° to 15°).
+ */
+const ELEVATION_CORNERS: [lat: number, lon: number][] = [
+  [54, 8], [54, 9], [54, 10], [54, 11], [54, 12], [54, 15],
+  [55, 8], [55, 9], [55, 10], [55, 11], [55, 12], [55, 14], [55, 15],
+  [56, 8], [56, 9], [56, 10], [56, 11], [56, 12],
+  [57, 8], [57, 9], [57, 10], [57, 11],
+];
+/** Their names, which are also their folders in the bucket. */
+export const ELEVATION_TILES = ELEVATION_CORNERS.map(([lat, lon]) => `Copernicus_DSM_COG_10_N${lat}_00_E${String(lon).padStart(3, '0')}_00_DEM`);
+
+/** The elevation model over Denmark: 22 tiles, each fetched again only when it changed, which is seldom. */
+async function fetchElevation(w: Work): Promise<JobOutcome> {
+  const fetched: Archived[] = [];
+  for (const [i, tile] of ELEVATION_TILES.entries()) {
+    fetched.push(await w.archive.download(w.context, {
+      source: 'elevation', name: `${tile}.tif`, url: `${w.urls.elevation}/${tile}/${tile}.tif`, licence: LICENCES.elevation,
+      progress: [i / ELEVATION_TILES.length, (i + 1) / ELEVATION_TILES.length], check: tiffCheck,
+    }));
+  }
+  const bytes = fetched.reduce((sum, f) => sum + f.file.bytes, 0);
+  const changed = fetched.some((f) => f.changed);
+  return { changed, bytes, result: changed ? `${fetched.length} tiles of 1°, ${formatBytes(bytes)}` : unchangedSince(w, fetched.map((f) => f.file)) };
 }
 
 async function fetchZones(w: Work): Promise<JobOutcome> {
@@ -521,6 +557,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'water', name: 'Drinking water', source: 'GEUS', schedule: '0 5 5 * *', then: ['grid'], fetch: fetchWater,
     description: 'The hardness of the drinking water in the public waterworks’ supply areas, from GEUS’s national dataset (Jupiter).',
+  },
+  {
+    id: 'elevation', name: 'Elevation', source: 'Copernicus DEM', schedule: '0 4 4 * *', then: ['grid'], fetch: fetchElevation,
+    description: 'The height of the land from the Copernicus elevation model of 30 m (GLO-30): the 22 tiles of 1° with Danish land, about 310 MB, fetched again only when one changes.',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];
