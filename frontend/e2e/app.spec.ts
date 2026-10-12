@@ -190,6 +190,26 @@ test('pharmacies, libraries, power lines, plans, gravel pits, district heating a
   await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
 });
 
+test('chargers for electric cars score the map by the providers ticked', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('option', { name: /^EV charger/ }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  const row = block(page, 'EV charger');
+  // Every provider counts at first, so the summary gives the distances alone
+  await expect(row.locator('.rule')).toHaveText('Full points up to 500 m · No points from 3.0 km');
+  await expect(result(page)).toHaveAttribute('aria-label', /median \d+/);
+  const median = async () => Number(/median (\d+)/.exec((await result(page).getAttribute('aria-label')) ?? '')![1]);
+  const all = await median();
+  await expand(page, 'EV charger');
+  for (const name of ['Clever', 'Norlys', 'OK', 'Spirii', 'EWII', 'E.ON', 'Circle K', 'Uno-X', 'Shell', 'Q8', 'Other providers']) {
+    await row.getByRole('checkbox', { name, exact: true }).uncheck();
+  }
+  await expect(row.locator('.rule')).toHaveText('Tesla · Full points up to 500 m · No points from 3.0 km');
+  // Tesla has three chargers in Aarhus Kommune, so far fewer homes are near one
+  await expect.poll(median).toBeLessThan(all);
+});
+
 test('a requirement removes the cells that do not meet it', async ({ page }) => {
   await open(page);
   await page.locator('mat-chip', { hasText: 'Quiet' }).click();

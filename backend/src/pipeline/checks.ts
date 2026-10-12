@@ -26,6 +26,7 @@ const AT_LEAST = { count: 5, share: 0.01 };
 const NAMES: Record<string, string> = {
   addresses: 'addresses', homeCells: 'cells with homes', regionLandCells: 'land cells', supermarkets: 'supermarkets', stations: 'stations',
   schools: 'schools', daycare: 'daycare units', turbines: 'wind turbines', mstShareOfRegion: 'the share of land with mapped noise',
+  chargersGeofa: 'EV chargers from GeoFA', chargersOsm: 'EV chargers from OpenStreetMap',
 };
 
 /**

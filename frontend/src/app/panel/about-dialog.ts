@@ -36,7 +36,7 @@ const CC_BY = { name: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by
 export const SOURCES: DataSource[] = [
   {
     id: 'osm', name: 'OpenStreetMap', url: 'https://www.openstreetmap.org',
-    uses: 'Forests, lakes, the coast, beaches, solar parks, overhead power lines, airports and airfields, supermarkets, stations, pharmacies, libraries, roads and paths, address points and municipalities, and the basemap of Denmark (through Protomaps).',
+    uses: 'Forests, lakes, the coast, beaches, solar parks, overhead power lines, airports and airfields, supermarkets, stations, pharmacies, libraries, the chargers for electric cars that GeoFA lacks, roads and paths, address points and municipalities, and the basemap of Denmark (through Protomaps).',
     licence: { name: 'Open Database License 1.0 (ODbL)', url: 'https://www.openstreetmap.org/copyright' },
     credit: '© OpenStreetMap contributors',
     note: 'The data layers made from it are under the ODbL too.',
@@ -54,6 +54,13 @@ export const SOURCES: DataSource[] = [
     licence: CC_BY,
     credit: 'Drikkevandets hårdhed: GEUS',
     note: "Changed: put on the map's 100 m cells.",
+  },
+  {
+    id: 'geofa', name: 'GeoFA (GeoDanmark)', url: 'https://www.geodanmark.dk/home/vejledninger/geofa/',
+    uses: 'The public chargers for electric cars, with who runs each, as the operators and the municipalities report them.',
+    licence: { name: 'CC BY 4.0', url: 'https://www.geodanmark.dk/home/vejledninger/vilkaar-for-data-anvendelse/' },
+    credit: '@geodanmark',
+    note: 'Changed: a point per operator and site, and the operators’ names made one, such as “Clever A/S” and “Clever”.',
   },
   {
     id: 'elevation', name: 'Copernicus DEM', url: 'https://registry.opendata.aws/copernicus-dem/',

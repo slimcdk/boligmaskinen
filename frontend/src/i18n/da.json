@@ -176,6 +176,11 @@
       "opposite": "Væk fra biblioteker",
       "note": "Nærmeste folkebibliotek, fra OpenStreetMap."
     },
+    "charger": {
+      "name": "Ladestander",
+      "opposite": "Væk fra ladestandere",
+      "note": "Nærmeste offentlige ladestander til elbiler hos de udbydere, der er sat flueben ved, fra GeoFA, hvor operatørerne indberetter dem, og OpenStreetMap."
+    },
     "power_line": {
       "name": "Væk fra højspændingsledninger",
       "opposite": "Tæt på højspændingsledninger",
@@ -284,6 +289,19 @@
     "protected_area": "Afstand til et fredet område, en gældende arealfredning (0 inden for et)",
     "pharmacy": "Afstand til et apotek",
     "library": "Afstand til et folkebibliotek",
+    "charger": "Afstand til en offentlig ladestander til elbiler",
+    "charger_clever": "Afstand til en offentlig ladestander til elbiler fra Clever",
+    "charger_norlys": "Afstand til en offentlig ladestander til elbiler fra Norlys",
+    "charger_ok": "Afstand til en offentlig ladestander til elbiler fra OK",
+    "charger_spirii": "Afstand til en offentlig ladestander til elbiler fra Spirii",
+    "charger_ewii": "Afstand til en offentlig ladestander til elbiler fra EWII",
+    "charger_eon": "Afstand til en offentlig ladestander til elbiler fra E.ON",
+    "charger_tesla": "Afstand til en offentlig ladestander til elbiler fra Tesla",
+    "charger_circle_k": "Afstand til en offentlig ladestander til elbiler fra Circle K",
+    "charger_uno_x": "Afstand til en offentlig ladestander til elbiler fra Uno-X",
+    "charger_shell": "Afstand til en offentlig ladestander til elbiler fra Shell",
+    "charger_q8": "Afstand til en offentlig ladestander til elbiler fra Q8",
+    "charger_other": "Afstand til en offentlig ladestander til elbiler fra en anden operatør",
     "power_line": "Afstand til en luftledning på 132 kV eller mere",
     "planned_road": "Afstand til en vej eller bane, som kommuneplanerne lægger ud, vedtaget eller foreslået",
     "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
@@ -316,6 +334,7 @@
     "per 1,000": "pr. 1.000",
     "per hour": "i timen",
     "m a.s.l.": "m o.h.",
+    "Other providers": "Andre udbydere",
     "car": "bil",
     "bike": "cykel",
     "walk": "gang",
@@ -330,7 +349,10 @@
     "fullInside": "Fulde point inden for området · Ingen point fra {{ zero }}",
     "noPointsInside": "Ingen point inden for området · Fulde point fra {{ full }}",
     "only": "Kun {{ list }}",
+    "andMore": "{{ list }} og {{ n }} til",
+    "allBut": "Alle undtagen {{ list }}",
     "nothingAllowed": "Intet tilladt",
+    "noneTicked": "Ingen valgt",
     "customCode": "Egen kode"
   },
   "mapPanel": {
@@ -498,7 +520,8 @@
   "constants": {
     "BYZONE": "zonekode for byzone",
     "LANDZONE": "zonekode for landzone",
-    "SOMMERHUS": "zonekode for sommerhusområde"
+    "SOMMERHUS": "zonekode for sommerhusområde",
+    "FAR": "længere væk end nogen afstand: min(a ? d1 : FAR, b ? d2 : FAR) er den nærmeste af de afstande, der er slået til"
   },
   "share": {
     "title": "Del »{{ name }}«",
@@ -615,7 +638,7 @@
     "unknown": "ukendt",
     "sources": {
       "osm": {
-        "uses": "Skove, søer, kysten, strande, solcelleparker, højspændingsledninger, lufthavne og flyvepladser, supermarkeder, stationer, apoteker, biblioteker, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
+        "uses": "Skove, søer, kysten, strande, solcelleparker, højspændingsledninger, lufthavne og flyvepladser, supermarkeder, stationer, apoteker, biblioteker, de ladestandere til elbiler, som GeoFA mangler, veje og stier, adressepunkter og kommuner samt baggrundskortet over Danmark (via Protomaps).",
         "note": "Datalagene lavet ud fra det er også under ODbL."
       },
       "transit": {
@@ -626,6 +649,10 @@
       "water": {
         "uses": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra den nationale boringsdatabase Jupiter (prøver til og med 2023).",
         "note": "Ændret: lagt på kortets celler på 100 m."
+      },
+      "geofa": {
+        "uses": "De offentlige ladestandere til elbiler, med hvem der driver hver, som operatørerne og kommunerne indberetter dem.",
+        "note": "Ændret: et punkt pr. operatør og sted, og operatørernes navne gjort ens, som »Clever A/S« og »Clever«."
       },
       "elevation": {
         "uses": "Højden over havet fra højdemodellen GLO-30 på omkring 30 m, en model af overfladen, også tage og trætoppe.",
@@ -846,6 +873,10 @@
       "water": {
         "name": "Drikkevand",
         "description": "Drikkevandets hårdhed i de almene vandværkers forsyningsområder fra GEUS' landsdækkende datasæt (Jupiter)."
+      },
+      "chargers": {
+        "name": "Ladestandere",
+        "description": "De offentlige ladestandere til elbiler, som operatørerne og kommunerne indberetter til GeoFA, med hvem der driver hver; OpenStreetMap lægger dem til, som GeoFA mangler."
       },
       "elevation": {
         "name": "Højdemodel",

@@ -78,6 +78,10 @@ export const JOBS: Job[] = [
     description: 'The hardness of the drinking water in the public waterworks’ supply areas, from GEUS’s national dataset (Jupiter).',
   },
   {
+    id: 'chargers', name: 'EV chargers', kind: 'fetch', source: 'GeoFA (GeoDanmark)', schedule: '55 3 * * *', enabled: true, then: ['grid'],
+    description: 'The public chargers for electric cars that the operators and municipalities report to GeoFA, with who runs each; OpenStreetMap adds those GeoFA lacks.',
+  },
+  {
     id: 'elevation', name: 'Elevation', kind: 'fetch', source: 'Copernicus DEM', schedule: '0 4 4 * *', enabled: true, then: ['grid'],
     description: 'The height of the land from the Copernicus elevation model of 30 m (GLO-30): the 22 tiles of 1° with Danish land, about 310 MB, fetched again only when one changes.',
   },

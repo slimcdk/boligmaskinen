@@ -3,6 +3,7 @@ import json
 import math
 from pathlib import Path
 
+import geopandas as gpd
 import numpy as np
 import pytest
 import shapely
@@ -20,6 +21,7 @@ class Built:
     """A grid build, read back as the frontend reads it."""
 
     def __init__(self, out: Path):
+        self.out = out
         self.meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
         width, height = self.meta["width"], self.meta["height"]
         self.layers = {name: np.frombuffer(gzip.decompress((out / file).read_bytes()), dtype=np.uint8).reshape(height, width)
@@ -219,6 +221,41 @@ def test_has_no_height_at_sea(sources: Path):
     assert (grid.elevation(grid.Grid(581_000, 6_219_000, 582_000, 6_220_000, 100), tiles) == 0).all()
     # Nor where no tile reaches
     assert (grid.elevation(grid.Grid(700_000, 6_219_000, 701_000, 6_220_000, 100), tiles) == 0).all()
+
+
+TO_UTM = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
+
+
+def test_lists_the_public_chargers_for_cars_by_operator(aarhus: Built):
+    sites = json.loads((aarhus.out / "chargers.json").read_text(encoding="utf-8"))
+    assert sites["operators"] == [*grid.CHARGER_OPERATORS, "other"]
+    found = sorted((sites["operators"][operator], *(round(v, -1) for v in TO_UTM.transform(lon, lat))) for lon, lat, operator in sites["points"])
+    # GeoFA's two of Clever's at one site, and OSM's beside them, are one site; OSM has those GeoFA lacks
+    assert found == [("circle_k", 578_020, 6_216_020), ("clever", 573_000, 6_221_000), ("eon", 571_000, 6_222_500),
+                     ("ok", 576_000, 6_217_000), ("other", 575_500, 6_230_000), ("spirii", 577_500, 6_224_000), ("tesla", 572_000, 6_220_000)]
+    assert aarhus.meta["sites"] == {"chargers": "chargers.json"}
+    # The chargers each source gave on the grid: GeoFA's five, of which two at one site, and OSM's four
+    assert (aarhus.meta["counts"]["chargersGeofa"], aarhus.meta["counts"]["chargersOsm"]) == (5, 4)
+
+
+def test_counts_the_chargers_of_the_sources_that_are_there(sources: Path, tmp_path: Path):
+    # An OSM extract taken out before it had chargers, and no GeoFA: no counts, so a later one is new
+    old = tmp_path / "layers.gpkg"
+    gpd.read_file(grid.read_inputs(sources)["osm_layers"], layer="municipality").to_file(old, layer="municipality", driver="GPKG")
+    sites, counts = grid.chargers(grid.Grid(570_000, 6_215_000, 580_000, 6_225_000, 100), old, None)
+    assert (sites["points"], counts) == ([], {})
+    sites, counts = grid.chargers(grid.Grid(570_000, 6_215_000, 580_000, 6_225_000, 100), grid.read_inputs(sources)["osm_layers"], None)
+    assert counts == {"chargersOsm": 3}
+
+
+@pytest.mark.parametrize("name, operator", [
+    ("Clever A/S", "clever"), ("CLEVER", "clever"), ("OK a.m.b.a.", "ok"), ("Ok", "ok"), ("EV Infra Denmark ApS", "eon"), ("E.ON", "eon"),
+    ("E-on", "eon"), ("TESLA MOTORS DENMARK ApS", "tesla"), ("Uno-X Mobility Danmark A/S", "uno_x"), ("Shell Recharge Solutions", "shell"),
+    ("Q8 Danmark", "q8"), ("Spirii Go", "spirii"), ("Circle K", "circle_k"), ("Norlys", "norlys"), ("EWII A/S", "ewii"),
+    ("Powered by E.ON Drive & Clever", "other"), ("Okay Energi", "other"), ("Monta", "other"), ("", "other"), (None, "other"),
+])
+def test_knows_the_operators_by_the_names_the_sources_give(name, operator):
+    assert grid.charger_operator(name) == operator
 
 
 def test_counts_the_departures_near_every_cell(aarhus: Built):

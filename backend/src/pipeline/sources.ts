@@ -27,6 +27,8 @@ export const SOURCE_URLS = {
   transit: 'https://www.rejseplanen.info/labs/GTFS.zip',
   /** GEUS's dataset of the drinking water's hardness per supply area, on its Dataverse: its files change with every version. */
   water: 'https://dataverse.geus.dk/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W',
+  /** GeoFA's WFS (Geografiske fagdata i GeoDanmark), for the chargers for electric cars that operators and municipalities report. */
+  chargers: 'https://geofa.geodanmark.dk/ows/fkg/fkg',
   /** The Copernicus elevation model of 30 m (GLO-30) on AWS's open data, a GeoTIFF per tile of 1°, with no key. */
   elevation: 'https://copernicus-dem-30m.s3.amazonaws.com',
 };
@@ -45,6 +47,7 @@ const LICENCES = {
   protected: 'CC0 1.0, Miljøstyrelsen and the regions (Danmarks Miljøportal)',
   transit: 'CC BY 4.0, Rejsekort & Rejseplan A/S (Rejseplanen)',
   water: 'CC BY 4.0, GEUS',
+  chargers: 'CC BY 4.0, GeoDanmark (GeoFA), credited "@geodanmark"',
   elevation: 'Copernicus DEM licence, free with its notice: produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved',
 };
 
@@ -384,6 +387,8 @@ interface WfsLayer {
   layer: string;
   /** Only the features that match, in GeoServer's CQL, e.g. datovedt>=20241010. */
   filter?: string;
+  /** Only these properties, with the geometry's, when the layer has many more than the grid reads. */
+  properties?: string[];
   /** Says what the features are, or throws when they are not what the layer has. */
   check: (features: { geometry?: unknown; properties?: Record<string, unknown> }[]) => string;
 }
@@ -394,9 +399,9 @@ interface WfsLayer {
  */
 async function fetchWfs(w: Work, source: string, base: string, licence: string, layers: WfsLayer[], count: number): Promise<JobOutcome> {
   const fetched: Archived[] = [];
-  for (const [i, { name, layer, filter, check }] of layers.entries()) {
+  for (const [i, { name, layer, filter, properties, check }] of layers.entries()) {
     const url = `${base}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${layer}&outputFormat=application/json&srsName=EPSG:25832&count=${count}`
-      + (filter ? `&CQL_FILTER=${encodeURIComponent(filter)}` : '');
+      + (filter ? `&CQL_FILTER=${encodeURIComponent(filter)}` : '') + (properties ? `&propertyName=${properties.join(',')}` : '');
     fetched.push(await w.archive.download(w.context, {
       source, name, url, licence, progress: [i / layers.length, (i + 1) / layers.length],
       normalize: (content) => {
@@ -450,6 +455,23 @@ const PROTECTED_LAYERS: WfsLayer[] = [
 ];
 
 const fetchProtected = (w: Work) => fetchWfs(w, 'protected', w.urls.protected, LICENCES.protected, PROTECTED_LAYERS, 100_000);
+
+/**
+ * GeoFA's chargers for electric cars (theme 5607): a point per charger, with who runs it, as the
+ * operators report them through their platforms (Monta, Spirii and others) and as the
+ * municipalities do. Only the fields the grid reads, which keeps it at about 20 MB.
+ */
+const CHARGERS: WfsLayer = {
+  name: 'ladefacilitet.geojson', layer: 'fkg:fkg.t_5607_ladefacilitet',
+  properties: ['geometri', 'statuskode', 'planstatus', 'ladefacilitet_type', 'tilgaengelighed_type', 'operatoer_ladefacilitet', 'ejer_ladefacilitet', 'udbyder_ladefacilitet', 'effekt_type', 'antal_ladepunkter'],
+  check: (features) => {
+    if (features.length < 5000) throw new Error(`only ${features.length} chargers`);
+    if (!features[0].geometry) throw new Error('chargers without their places');
+    return `${number(features.length)} chargers`;
+  },
+};
+
+const fetchChargers = (w: Work) => fetchWfs(w, 'chargers', w.urls.chargers, LICENCES.chargers, [CHARGERS], 200_000);
 
 /**
  * The traffic the municipal plans plan, adopted and proposed: roads and railways, and also paths,
@@ -557,6 +579,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'water', name: 'Drinking water', source: 'GEUS', schedule: '0 5 5 * *', then: ['grid'], fetch: fetchWater,
     description: 'The hardness of the drinking water in the public waterworks’ supply areas, from GEUS’s national dataset (Jupiter).',
+  },
+  {
+    id: 'chargers', name: 'EV chargers', source: 'GeoFA (GeoDanmark)', schedule: '55 3 * * *', then: ['grid'], fetch: fetchChargers,
+    description: 'The public chargers for electric cars that the operators and municipalities report to GeoFA, with who runs each; OpenStreetMap adds those GeoFA lacks.',
   },
   {
     id: 'elevation', name: 'Elevation', source: 'Copernicus DEM', schedule: '0 4 4 * *', then: ['grid'], fetch: fetchElevation,

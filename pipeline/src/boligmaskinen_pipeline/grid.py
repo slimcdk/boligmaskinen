@@ -37,10 +37,13 @@ Usage:
     forest_lines, church_lines, lake_lines, stream_lines
                   the building lines around forests, churches, lakes and streams, from Danmarks Miljøportal (optional)
     elevation     a list of the Copernicus elevation model's tiles (GLO-30 GeoTIFFs) over the region (optional)
+    chargers      GeoFA's chargers for electric cars (theme 5607), as GeoJSON (optional: without it the chargers
+                  come from the OSM extract alone)
 
 The region is denmark, oestjylland, aarhus, or municipality codes such as 751,706.
-<out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json and basemap-region.geojson,
-the outline the basemap has to cover.
+<out_dir> gets a .u8.gz file per layer, meta.json, municipalities.json, chargers.json (the public chargers
+for electric cars, whose distances the browser finds for the operators a block chooses) and
+basemap-region.geojson, the outline the basemap has to cover.
 """
 
 import argparse
@@ -97,7 +100,7 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
                    "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit", "water_hardness",
-                   "forest_lines", "church_lines", "lake_lines", "stream_lines", "elevation"]
+                   "forest_lines", "church_lines", "lake_lines", "stream_lines", "elevation", "chargers"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -133,6 +136,19 @@ HARDNESS_STEPS = 5
 # The height above sea level in whole metres: raw 1 + metres - ELEVATION_MIN, so from -10 m (some land
 # lies below the sea) to 244 m; raw 0 is no data, as at sea
 ELEVATION_MIN = -10
+# Who runs a public charger for electric cars, as a block can choose them: an id, and the names the
+# sources give the operator once they are made plain (lower case, no punctuation, no company form).
+# The rest are "other". E.ON's chargers are run by EV Infra Denmark, whose EVSE ids start with DK*EFC
+CHARGER_OPERATORS = {
+    "clever": ["clever"], "norlys": ["norlys"], "ok": ["ok"], "spirii": ["spirii"], "ewii": ["ewii"], "eon": ["e on", "eon", "ev infra"],
+    "tesla": ["tesla"], "circle_k": ["circle k"], "uno_x": ["uno x"], "shell": ["shell"], "q8": ["q8"],
+}
+COMPANY_WORDS = re.compile(r"\b(a s|aps|a m b a|amba|i s|danmark|denmark|dk|mobility|motors|recharge|solutions|drive|infrastructure)\b")
+# Chargers of one operator closer than this to each other are one site
+CHARGER_SITE_M = 25
+# GeoFA's chargers for cars ("Elladestander til bil"), not those of a municipality's own cars or a private one
+CHARGER_KIND = "Elladestander til bil"
+CHARGER_NOT_PUBLIC = {"Kommunal bilflåde", "Privat ladestander"}
 # Public transport near a cell: the trips that leave a stop within DEPARTURES_M of it between
 # DEPARTURES_FROM and DEPARTURES_TO on the timetable's weekday, per hour
 DEPARTURES_M = 500
@@ -342,6 +358,65 @@ def elevation(grid: "Grid", tiles: list[Path]) -> np.ndarray:
         del window
     raw = np.clip(np.round(heights - ELEVATION_MIN) + 1, 1, 255)
     return np.where(np.isnan(heights), 0, raw).astype(np.uint8)
+
+
+def charger_operator(name: str | None) -> str:
+    """The id of a charger's operator in CHARGER_OPERATORS, or "other"."""
+    plain = re.sub(r"[^0-9a-zæøå]+", " ", (name or "").lower())
+    plain = " ".join(COMPANY_WORDS.sub(" ", plain).split())
+    for operator, names in CHARGER_OPERATORS.items():
+        if any(plain == known or plain.startswith(known + " ") for known in names):
+            return operator
+    return "other"
+
+
+def chargers(grid: "Grid", gpkg: Path, geofa: Path | None) -> tuple[dict, dict[str, int]]:
+    """The public chargers for electric cars on the grid, one point per operator and site, as the
+    browser reads them: {"operators": [id, …], "points": [[lon, lat, index of the operator], …]};
+    and how many chargers each source gave, on the grid. A source that is not there has no count, so
+    the pack check sees a new count when it comes, not a jump from 0: GeoFA, or an OSM extract taken
+    out before it had chargers.
+
+    GeoFA has those the operators report, nearly all; the OSM extract has some that GeoFA lacks, such
+    as Tesla's, Circle K's and Shell's. A site in both counts once for each, which changes no distance.
+    """
+    xs, ys, names, sources = [], [], [], []
+    present = []
+    if geofa:
+        present.append("geofa")
+        points = gpd.read_file(geofa)
+        points = points[(points["ladefacilitet_type"] == CHARGER_KIND) & (pd.to_numeric(points["statuskode"], errors="coerce") == IN_FORCE)
+                        & (points["planstatus"] != "Planlagt") & ~points["tilgaengelighed_type"].isin(CHARGER_NOT_PUBLIC)]
+        # A charger is a MultiPoint, nearly always of one point
+        points = points.set_crs("EPSG:25832", allow_override=True).explode(index_parts=False).reset_index(drop=True)
+        operator = points["operatoer_ladefacilitet"].fillna("")
+        xs.append(points.geometry.x.to_numpy())
+        ys.append(points.geometry.y.to_numpy())
+        names += operator.where(operator != "", points["ejer_ladefacilitet"].fillna("")).tolist()
+        sources += ["geofa"] * len(points)
+    if "charger" in {name for name, _ in pyogrio.list_layers(gpkg)}:
+        present.append("osm")
+    osm = read_layer(gpkg, "charger")
+    if len(osm):
+        centres = osm.geometry.representative_point()
+        xs.append(centres.x.to_numpy())
+        ys.append(centres.y.to_numpy())
+        names += osm["operator"].fillna("").tolist()
+        sources += ["osm"] * len(osm)
+    ids = list(CHARGER_OPERATORS) + ["other"]
+    keys = {"geofa": "chargersGeofa", "osm": "chargersOsm"}
+    if not names:
+        return {"operators": ids, "points": []}, {keys[source]: 0 for source in present}
+    x, y = np.concatenate(xs), np.concatenate(ys)
+    index = np.array([ids.index(charger_operator(name)) for name in names], dtype=np.int64)
+    inside = (x >= grid.x0) & (x < grid.x1) & (y >= grid.y0) & (y < grid.y1)
+    from_source = np.array(sources)[inside]
+    counts = {keys[source]: int((from_source == source).sum()) for source in present}
+    sites = pd.DataFrame({"operator": index, "x": x, "y": y})[inside]
+    sites = sites.loc[~sites.assign(cx=(sites["x"] // CHARGER_SITE_M), cy=(sites["y"] // CHARGER_SITE_M)).duplicated(["operator", "cx", "cy"])]
+    lon, lat = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True).transform(sites["x"].to_numpy(), sites["y"].to_numpy())
+    order = np.lexsort((np.round(lat, 5), np.round(lon, 5), sites["operator"].to_numpy()))
+    return {"operators": ids, "points": [[round(float(lon[i]), 5), round(float(lat[i]), 5), int(sites["operator"].iloc[i])] for i in order]}, counts
 
 
 def departures_per_hour(grid: "Grid", feed: Path) -> tuple[np.ndarray, int]:
@@ -824,6 +899,17 @@ def build(inputs: dict[str, Path | list[Path]], out: Path, region_id: str = "den
     else:
         warn("No source for elevation: the layer is left out")
 
+    # --- Chargers for electric cars: points, whose distances the browser finds for the operators chosen
+    charger_sites, charger_counts = chargers(grid, gpkg, inputs.get("chargers"))
+    (out / "chargers.json").write_text(json.dumps(charger_sites, separators=(",", ":")), encoding="utf-8")
+    by_operator = np.bincount([point[2] for point in charger_sites["points"]], minlength=len(charger_sites["operators"]))
+    # Counted per source, so the pack switches in when GeoFA comes in addition to OpenStreetMap
+    found.update(charger_counts)
+    step(f"Chargers for electric cars: {charger_counts.get('chargersGeofa', 0):,} from GeoFA and {charger_counts.get('chargersOsm', 0):,} from OpenStreetMap, "
+         f"{len(charger_sites['points']):,} sites" + ("" if inputs.get("chargers") else ", from OpenStreetMap alone") + ": "
+         + ", ".join(f"{operator} {count:,}" for operator, count in zip(charger_sites["operators"], by_operator)), 0.795)
+    del charger_sites
+
     # --- Sample onto a Web Mercator display grid ------------------------------------------------
     to_merc = Transformer.from_crs("EPSG:25832", "EPSG:3857", always_xy=True)
     from_merc = Transformer.from_crs("EPSG:3857", "EPSG:25832", always_xy=True)
@@ -923,6 +1009,7 @@ def build(inputs: dict[str, Path | list[Path]], out: Path, region_id: str = "den
         "gridMetres": cell,
         "distanceMax": DIST_MAX,
         "files": files,
+        "sites": {"chargers": "chargers.json"},
         **({"tiles": tiles} if tiles else {}),
         "municipalities": municipality_stats,
         "counts": {
@@ -931,6 +1018,7 @@ def build(inputs: dict[str, Path | list[Path]], out: Path, region_id: str = "den
             "supermarkets": found["supermarkets"], "stations": found["stations"],
             "schools": found["schools"], "daycare": found["daycare"], "pharmacies": found["pharmacies"],
             "libraries": found["libraries"], "turbines": found["turbines"],
+            **{key: found[key] for key in ("chargersGeofa", "chargersOsm") if key in found},
             "mstShareOfRegion": round(mapped, 4),
         },
     }

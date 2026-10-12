@@ -16,7 +16,7 @@ import pytest
 import rasterio
 from pyproj import Transformer
 from rasterio.transform import from_origin
-from shapely.geometry import LineString, Point, box
+from shapely.geometry import LineString, MultiPoint, Point, box
 
 TO_LONLAT = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True)
 TO_UTM = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
@@ -95,6 +95,12 @@ def sources(tmp_path_factory) -> Path:
         "road": [{"road_class": "motorway", "geometry": LineString([(565_000, 6_222_000), (585_000, 6_222_000)])},
                  {"road_class": "secondary", "geometry": LineString([(574_000, 6_215_000), (574_000, 6_235_000)])}],
         "coastline": [{"geometry": LineString([(580_000, 6_215_000), (580_000, 6_235_000)])}],
+        # Chargers GeoFA lacks: Tesla's, a Circle K mapped as its car park, one with no operator in
+        # Randers; and one GeoFA has too, a few metres off
+        "charger": [{"operator": "Tesla", "geometry": Point(572_000, 6_220_000)},
+                    {"operator": "Circle K", "geometry": box(578_000, 6_216_000, 578_040, 6_216_040)},
+                    {"operator": "", "geometry": Point(575_500, 6_230_000)},
+                    {"operator": "Clever", "geometry": Point(573_005, 6_221_003)}],
     }
     for name, rows in layers.items():
         frame(rows).to_file(gpkg, layer=name, driver="GPKG")
@@ -220,6 +226,23 @@ def sources(tmp_path_factory) -> Path:
                                ("soe_bes_linjer", 0, box(578_000, 6_221_000, 578_500, 6_221_500)),
                                ("aa_bes_linjer", 3, box(574_000, 6_224_000, 575_000, 6_224_300))]:
         gpd.GeoDataFrame([{"Statuskode": status, "geometry": area}], geometry="geometry", crs="EPSG:25832").to_file(root / f"{name}.geojson", driver="GeoJSON")
+    # --- GeoFA's chargers: a point per charger, as the operators report them. Two of Clever's at one
+    # site, OK's, E.ON's (run by EV Infra Denmark), and one with only its owner, Spirii; not counted
+    # are a planned one, one for bicycles, one for a municipality's own cars, a draft, and one far away ---
+    def charger(x: float, y: float, operator: str, **changes) -> dict:
+        return {"ladefacilitet_type": "Elladestander til bil", "statuskode": 3, "planstatus": "Eksisterende", "tilgaengelighed_type": "Offentligt tilgængelig",
+                "operatoer_ladefacilitet": operator, "ejer_ladefacilitet": operator, "effekt_type": "Normallader", "antal_ladepunkter": 2,
+                "geometry": MultiPoint([(x, y)]), **changes}
+    gpd.GeoDataFrame([
+        charger(573_000, 6_221_000, "Clever A/S"), charger(573_008, 6_221_004, "Clever A/S", statuskode="3"),
+        charger(576_000, 6_217_000, "OK a.m.b.a."), charger(571_000, 6_222_500, "EV Infra Denmark ApS"),
+        charger(577_500, 6_224_000, "", ejer_ladefacilitet="Spirii APS"),
+        charger(575_000, 6_219_000, "Norlys", planstatus="Planlagt"),
+        charger(575_100, 6_219_000, "Norlys", ladefacilitet_type="Elladestander til cykel"),
+        charger(575_200, 6_219_000, "Norlys", tilgaengelighed_type="Kommunal bilflåde"),
+        charger(575_300, 6_219_000, "Norlys", statuskode=1),
+        charger(725_000, 6_175_000, "Norlys"),
+    ], geometry="geometry", crs="EPSG:25832").to_file(root / "ladefacilitet.geojson", driver="GeoJSON")
     # --- GEUS's drinking water hardness: soft in the south-west, hard in the south-east, and no
     # waterworks in the north; a GeoPackage in a ZIP file, as GEUS gives it ---
     gpd.GeoDataFrame([{"Hardness_d": 6.2, "geometry": box(570_000, 6_215_000, 575_000, 6_220_000)},
@@ -265,7 +288,7 @@ def sources(tmp_path_factory) -> Path:
         "protected_areas": "fredede_omr.geojson", "natura2000_habitats": "habitat_omr.geojson", "natura2000_birds": "fugle_bes_omr.geojson",
         "raw_material_areas": "raastofomr.geojson", "transit": "GTFS.zip", "water_hardness": "haardhed.zip",
         "forest_lines": "skovbyggelinjer.geojson", "church_lines": "kirkebyggelinjer.geojson", "lake_lines": "soe_bes_linjer.geojson",
-        "stream_lines": "aa_bes_linjer.geojson", "elevation": ["dem/west.tif", "dem/east.tif"],
+        "stream_lines": "aa_bes_linjer.geojson", "elevation": ["dem/west.tif", "dem/east.tif"], "chargers": "ladefacilitet.geojson",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",

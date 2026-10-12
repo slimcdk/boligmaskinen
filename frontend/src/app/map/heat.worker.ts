@@ -25,7 +25,7 @@ addEventListener('message', ({ data }: MessageEvent<HeatMessage>) => {
       break;
     case 'detail':
       detailGrid = data.grid;
-      detail = data.grid && new HeatEngine(data.grid);
+      detail = data.grid && new HeatEngine(data.grid, engine);
       if (detail) for (const [position, times] of travel) detail.setTravel(position, onDetail(times));
       break;
     case 'travel':

@@ -1,4 +1,5 @@
 /** Shared types and defaults for the scoring engine and the UI. */
+import type { Sites } from './sites.ts';
 
 export type LayerName =
   | 'forest' | 'water' | 'beach' | 'noise' | 'supermarket' | 'school' | 'daycare'
@@ -59,6 +60,8 @@ export interface Criterion extends Curve {
   step?: number;
   options?: CategoryOption[];
   allowed?: number[];
+  /** Reads the distance to points the browser measures, with a switch per operator: the chargers. */
+  sites?: 'chargers';
 }
 
 /** A point the user cares about, such as work or family. Groups use it through "Your place" blocks. */
@@ -100,6 +103,8 @@ export interface GridMeta {
   gridMetres?: number;
   distanceMax: number;
   files: Record<string, string>;
+  /** Points whose distances the browser finds itself, by what they are: chargers.json. */
+  sites?: { chargers?: string };
   /** The grid's own cells for the map zoomed in, where the display grid is coarser (pipeline grid step). */
   tiles?: DetailTiles;
   municipalities: Municipality[];
@@ -134,6 +139,8 @@ export interface Grid {
   municipalities: (Municipality | undefined)[];
   homeCells: Uint32Array;
   landCells: Uint32Array;
+  /** The points of the data pack's `sites`, where it has them. */
+  sites?: { chargers?: Sites };
 }
 
 /** The heatmap's colour scales (the frontend's map/colours.ts holds their colours). */
@@ -172,6 +179,11 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   { id: 'classSize', group: 'Everyday life', name: 'Small classes', opposite: 'Large classes', note: 'Pupils per class in the municipality’s folkeskoler, 2025, from Danmarks Statistik.', kind: 'municipal', field: 'classSize', unit: 'pupils', min: 10, max: 28, step: 0.5, role: 'want', weight: 1, full: 18, zero: 23 },
   { id: 'station', group: 'Everyday life', name: 'Train or light rail', opposite: 'Away from railways', note: 'Nearest station.', kind: 'distance', layer: 'station', role: 'want', weight: 1, full: 1000, zero: 10000 },
   { id: 'pharmacy', group: 'Everyday life', name: 'Pharmacy', opposite: 'Away from pharmacies', note: 'Nearest pharmacy, from OpenStreetMap.', kind: 'distance', layer: 'pharmacy', role: 'want', weight: 1, full: 1000, zero: 5000 },
+  {
+    id: 'charger', group: 'Everyday life', name: 'EV charger', opposite: 'Away from EV chargers',
+    note: 'Nearest public charger for electric cars of the providers ticked, from GeoFA, where the operators report them, and OpenStreetMap.',
+    kind: 'distance', sites: 'chargers', role: 'want', weight: 1, full: 500, zero: 3000,
+  },
   { id: 'library', group: 'Everyday life', name: 'Library', opposite: 'Away from libraries', note: 'Nearest public library, from OpenStreetMap.', kind: 'distance', layer: 'library', role: 'want', weight: 1, full: 1000, zero: 5000 },
   {
     // Denmark ranges from about 3 to 13 µg/m³ (median 4.2); WHO's guideline is 10

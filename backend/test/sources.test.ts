@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'elevation', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'chargers', 'elevation', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -48,7 +48,7 @@ describeWithDatabase('the source jobs', () => {
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`, transit: `${base}/transit/GTFS.zip`,
-      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`,
+      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`, chargers: `${base}/geofa`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -114,6 +114,20 @@ describeWithDatabase('the source jobs', () => {
     expect(server.to(aarhus).map((r) => r.headers['if-none-match'] ?? null)).toEqual([null, '"Copernicus_DSM_COG_10_N56_00_E010_00_DEM"']);
     server.file(aarhus, { content: '<Error><Code>AccessDenied</Code></Error>', etag: '"denied"' });
     await expect(run('elevation')).rejects.toThrow(/did not give what it should: not a TIFF file/);
+  });
+
+  it('EV chargers: asks GeoFA for the chargers with only the fields the grid reads', async () => {
+    let chargers = 6000;
+    server.on('GET /geofa', (_request, response) => {
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: chargers }, () => ({ geometry: { type: 'MultiPoint', coordinates: [[575000, 6220000]] } })) }));
+    });
+    expect(await run('chargers')).toMatchObject({ changed: true, result: '6,000 chargers' });
+    const query = new URL(server.to('/geofa')[0].url, server.url).searchParams;
+    expect(query.get('typeNames')).toBe('fkg:fkg.t_5607_ladefacilitet');
+    expect(query.get('propertyName')!.split(',')).toEqual(expect.arrayContaining(['geometri', 'operatoer_ladefacilitet', 'ladefacilitet_type', 'planstatus']));
+    chargers = 40;
+    await expect(run('chargers')).rejects.toThrow(/did not give what it should: only 40 chargers/);
   });
 
   it('Planning zones: a new time stamp alone is no change, and an error page is not kept', async () => {

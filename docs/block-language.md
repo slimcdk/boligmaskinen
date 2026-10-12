@@ -108,6 +108,8 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `supermarket`, `school`, `daycare`, `station` | Distance to the nearest one |
 | `departures` | Departures per hour between 7 and 9 on a weekday from the stops within 500 m, each trip once, up to 255 (Rejseplanen; added 2026-10-10, which keeps the language version) |
 | `pharmacy`, `library` | Distance to the nearest pharmacy or public library (OpenStreetMap; added 2026-10-10, which keeps the language version) |
+| `charger` | Distance to the nearest public charger for electric cars, of any provider (GeoFA and OpenStreetMap; added 2026-10-12, which keeps the language version) |
+| `charger_clever`, `_norlys`, `_ok`, `_spirii`, `_ewii`, `_eon`, `_tesla`, `_circle_k`, `_uno_x`, `_shell`, `_q8`, `_other` | The same for one provider's chargers, or for those of every other operator. The browser measures these from the data pack's points (`chargers.json`) the first time a block reads them, rather than loading a layer for each. The block "EV charger" ticks the providers with a checkbox each: `min(clever ? charger_clever : FAR, …)` |
 | `zone` | Planning zone: `BYZONE`, `LANDZONE` or `SOMMERHUS` |
 | `income_tax` | Municipal income tax, % |
 | `land_tax` | Land tax, ‰ |
@@ -125,6 +127,7 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `BYZONE` | 1 |
 | `LANDZONE` | 2 |
 | `SOMMERHUS` | 3 |
+| `FAR` | Infinity: farther than any distance, so `a ? distance : FAR` leaves a distance out of a `min()` when `a` is off (added 2026-10-12, which keeps the language version) |
 
 ## Functions
 
@@ -149,7 +152,7 @@ Like free values in GeoGebra, some `let` lines become controls in the side panel
 |---|---|
 | `let reach = 3000` | A slider from 0 to about three times the value |
 | `let reach = slider(3000, 0, 10000, 100)` | A slider with that range and step |
-| `let byzone = true` | A checkbox |
+| `let byzone = true` | A checkbox; checkboxes that follow each other share a row, and the panel's summary names those ticked, or those not when few are not ("All but OK") |
 | `let travel = choice(2, work_car, work_bike, work_walk)` | A choice between the values, named after them without their shared start ("car", "bike", "walk") |
 
 - **Label and unit.** The comment at the end of the line is the label. A unit in brackets at its

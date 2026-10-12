@@ -3,6 +3,7 @@
  * the travel times to the user's own places.
  */
 import { formatDistance } from './format.ts';
+import { CHARGER_OPERATORS } from './sites.ts';
 import { ENGLISH, formatNumber, word, type Wording } from './wording.ts';
 import { toVariableName } from './formula.ts';
 import { type CriterionKind, type LayerName, type MunicipalField, type Place, type TravelMode } from './types.ts';
@@ -19,7 +20,22 @@ export interface ValueInfo {
   layer?: LayerName;
   field?: MunicipalField;
   place?: { id: string; mode: TravelMode };
+  /** A distance to points of the data pack the browser measures itself: those of the operators, or all. */
+  sites?: { file: 'chargers'; operators: string[] | null };
 }
+
+/** The distance to a public charger for electric cars: of any operator, of each a block can choose, and of the others. */
+export const CHARGER_VALUES: ValueInfo[] = [
+  { name: 'charger', label: 'Distance to a public charger for electric cars', unit: 'm', group: 'Everyday life', kind: 'distance', sites: { file: 'chargers', operators: null } },
+  ...CHARGER_OPERATORS.map(({ id, name }): ValueInfo => ({
+    name: `charger_${id}`, label: `Distance to a public charger for electric cars run by ${name}`, unit: 'm', group: 'Everyday life', kind: 'distance',
+    sites: { file: 'chargers', operators: [id] },
+  })),
+  {
+    name: 'charger_other', label: 'Distance to a public charger for electric cars run by another operator', unit: 'm', group: 'Everyday life', kind: 'distance',
+    sites: { file: 'chargers', operators: ['other'] },
+  },
+];
 
 export const DATA_VALUES: ValueInfo[] = [
   { name: 'forest', label: 'Distance to a wood of at least 5 ha', unit: 'm', group: 'Nature', kind: 'distance', layer: 'forest' },
@@ -52,6 +68,7 @@ export const DATA_VALUES: ValueInfo[] = [
   { name: 'departures', label: 'Departures per hour from the stops within 500 m, weekday 7–9', unit: 'per hour', group: 'Everyday life', kind: 'count', layer: 'departures' },
   { name: 'pharmacy', label: 'Distance to a pharmacy', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'pharmacy' },
   { name: 'library', label: 'Distance to a public library', unit: 'm', group: 'Everyday life', kind: 'distance', layer: 'library' },
+  ...CHARGER_VALUES,
   { name: 'zone', label: 'Planning zone: BYZONE, LANDZONE or SOMMERHUS', unit: '', group: 'Area and economy', kind: 'category', layer: 'zone' },
   { name: 'district_heating', label: 'Distance to an area the heat plans give district heating (0 inside one)', unit: 'm', group: 'Area and economy', kind: 'distance', layer: 'district_heating' },
   { name: 'building_line', label: 'Distance to a building line around a forest, church, lake or stream, inside which building needs a dispensation (0 inside one)', unit: 'm', group: 'Area and economy', kind: 'distance', layer: 'building_line' },

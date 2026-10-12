@@ -280,7 +280,7 @@ export class HeatService {
     if (this.worker) {
       this.post({ type: 'detail', grid: detail }, transfers(detail));
     } else {
-      this.detailEngine = new HeatEngine(detail);
+      this.detailEngine = new HeatEngine(detail, this.engine);
       for (const [position, times] of this.routed) this.detailEngine.setTravel(position, onDetail(grid, detail, times));
     }
     this.schedule(grid);

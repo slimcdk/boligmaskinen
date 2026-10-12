@@ -41,6 +41,10 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 1200 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
   });
+  server.on('GET /geofa', (_request, response) => {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 6000 }, () => ({ geometry: { type: 'MultiPoint', coordinates: [] } })) }));
+  });
   server.on('GET /protected', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify({ timeStamp: new Date().toISOString(), features: Array.from({ length: 6000 }, () => ({ geometry: { type: 'MultiPolygon', coordinates: [] } })) }));
@@ -67,7 +71,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/air`, protected: `${base}/protected`, plans: `${base}/plans`, transit: `${base}/transit/GTFS.zip`,
-      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`,
+      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`, chargers: `${base}/geofa`,
     },
     protomaps: { builds: `${base}/protomaps/builds.json`, tiles: `${base}/tiles`, assets: `${base}/assets`, iconsLicence: `${base}/icons/LICENSE.md` },
   };
