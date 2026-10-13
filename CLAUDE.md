@@ -11,5 +11,8 @@
 - **The plan:**
   - `docs/plan.md` holds the milestones; GitHub has them as milestones and issues, and PRs close issues.
   - Ideas for blocks over home data are in `docs/block-ideas.md`.
+- **Decisions and guides:** read the ADRs in `docs/adr/` before changing how a part works, and record
+  a new decision that shapes the project as an ADR. Adding a data source or a predefined block follows
+  `docs/guides/adding-a-data-source.md` and `docs/guides/adding-a-block.md`; `CONTRIBUTING.md` has the rest.
 - **The block language** is described in `docs/block-language.md`. A change that could alter existing
   code raises its version and comes with a migration (`packages/engine/src/migrations.ts`).

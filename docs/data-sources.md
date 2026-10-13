@@ -7,6 +7,8 @@ sizes, cadence, licences and the traps found along the way.
 The data covers all of Denmark. `pipeline/` processes it, and `pipeline/README.md` lists
 its steps.
 
+How to add a source, step by step: [the guide](guides/adding-a-data-source.md).
+
 ## Principles
 
 - **Only sources we may use.** Each source is open, licensed, or the user brings their own
