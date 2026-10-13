@@ -257,9 +257,11 @@ self-hosting guide.
 
 | Decision | When | Leaning |
 |---|---|---|
-| Python in the app image, or a separate job image | Milestone 2, step 1 | In the image, so there is one image |
-| Tile format for the layers (vector tiles or raw byte tiles) | Milestone 3 | Raw byte tiles, which the engine reads directly |
-| Routing engine | Milestone 3 | OSRM for speed; Valhalla if isochrones are needed |
 | Listings source and budget | Track A | E-mails first, then a licence |
 | Who applies for EJF, and for what purpose | Track A | Ask GST first |
-| Translation framework | Before milestone 7 | Transloco |
+
+The decisions taken are recorded in [`adr/`](adr/README.md): Python in the app image
+([ADR 3](adr/0003-one-image.md)), raw byte tiles for the layers
+([ADR 4](adr/0004-a-grid-of-cells-in-a-data-pack.md)), our own routing rather than OSRM or Valhalla
+([ADR 7](adr/0007-our-own-routing.md)), and Transloco for the translations
+([ADR 10](adr/0010-material-3-two-languages.md)).

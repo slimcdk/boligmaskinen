@@ -27,7 +27,7 @@ where it stands.
 | [`backend/`](backend/README.md) | Node 24 + Fastify server that serves the frontend, the data pack and the API. |
 | [`packages/engine/`](packages/engine/README.md) | The scoring engine and the block language, shared by the frontend and the backend. |
 | [`pipeline/`](pipeline/README.md) | The Python steps that build the grid and the data pack from the open data, for all of Denmark or a region. The app image runs them. |
-| [`docs/`](docs) | [The development plan](docs/plan.md), [the block language](docs/block-language.md), [block ideas](docs/block-ideas.md), [data sources and how they are fetched](docs/data-sources.md), [public data to add](docs/public-data.md), [Plandata's themes](docs/plandata.md), [OpenData.dk's datasets](docs/opendata-dk.md), [Danmarks Statistik's tables](docs/dst.md), [findings](docs/findings.md), [benchmarks](docs/benchmarks/weighting/README.md). |
+| [`docs/`](docs) | [The development plan](docs/plan.md), [the block language](docs/block-language.md), [block ideas](docs/block-ideas.md), [data sources and how they are fetched](docs/data-sources.md), [public data to add](docs/public-data.md), [Plandata's themes](docs/plandata.md), [OpenData.dk's datasets](docs/opendata-dk.md), [Danmarks Statistik's tables](docs/dst.md), [findings](docs/findings.md), [benchmarks](docs/benchmarks/weighting/README.md), [the architecture decisions](docs/adr/README.md), and the guides to [adding a data source](docs/guides/adding-a-data-source.md) and [adding a weighting](docs/guides/adding-a-block.md). |
 | [`.devcontainer/`](.devcontainer) | The development environment: Node 24, uv, go-pmtiles, Playwright's Chromium and psql, next to a PostGIS database. |
 
 ## Screenshots
@@ -60,6 +60,8 @@ npm run e2e          # Playwright, with the test data pack in e2e/data-pack
 ```
 
 Without the dev container, Node 24 is needed (`frontend/.nvmrc`), and uv for the pipeline.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) says how changes go in, and points to the decisions and the
+guides.
 
 ## Running it
 

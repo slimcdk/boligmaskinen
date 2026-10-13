@@ -3,6 +3,8 @@
 Blocks to build when milestone 4 brings data about each home (DAR addresses, BBR buildings and
 units, MAT parcels, VUR valuations) and milestone 5 brings what is for sale. Started 2026-10-07.
 
+How to build one as a predefined block: [the guide](guides/adding-a-block.md).
+
 This is a catalogue of ideas, not a decision. Each idea says:
 
 - what the block weighs;
