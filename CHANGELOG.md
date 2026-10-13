@@ -23,8 +23,8 @@ Everything so far: there is no release yet. The test instance follows `master`.
   are; until then they are estimated from the distance.
 - Maps and places are saved on the server, so every browser has them, and a map can be shared as
   a link.
-- 51 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,
-  building lines, noise (of roads, railways, airports and industry), roads and railways to come, new
+- 53 values of open data: forests, lakes and the sea, beaches, protected areas and Natura 2000,
+  building lines, contaminated land (V1 and V2), noise (of roads, railways, airports and industry), roads and railways to come, new
   local plans, zones around businesses and plants, gravel pits (now and to come), wind turbines (by
   distance, and by their height), solar parks, overhead power lines, airports, airfields and air
   stations, address density, supermarkets, schools, daycare, stations, departures of public

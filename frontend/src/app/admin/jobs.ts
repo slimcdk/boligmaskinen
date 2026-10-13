@@ -85,6 +85,10 @@ export const JOBS: Job[] = [
     id: 'elevation', name: 'Elevation', kind: 'fetch', source: 'Copernicus DEM', schedule: '0 4 4 * *', enabled: true, then: ['grid', 'terrain'],
     description: 'The height of the land from the Copernicus elevation model of 30 m (GLO-30): the 22 tiles of 1° with Danish land, about 310 MB, fetched again only when one changes.',
   },
+  {
+    id: 'soil', name: 'Soil contamination', kind: 'fetch', source: 'Danmarks Miljøportal (DKJord)', schedule: '10 4 * * 1', enabled: true, then: ['grid'],
+    description: 'The land the regions have mapped as contaminated: V1, where it is possible, and V2, where it is known, as the zipped shapefiles the register makes every day.',
+  },
   { id: 'world', name: 'World map', kind: 'fetch', source: 'Natural Earth', schedule: '0 2 1 * *', enabled: true, then: ['pack'], description: 'Land, lakes, borders and names outside Denmark.' },
   { id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', enabled: true, then: ['basemap', 'terrain'], description: 'Every data layer on the 100 m grid, sampled to the 200 m display grid.' },
   {

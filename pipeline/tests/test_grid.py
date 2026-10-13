@@ -189,6 +189,17 @@ def test_measures_the_distance_to_the_areas_kept_for_digging_later(aarhus: Built
     assert decode_distance(aarhus.at("extraction_interest", 571_500, 6_216_500)) > 6_000
 
 
+def test_measures_the_distance_to_contaminated_land_from_the_regions_zips(aarhus: Built):
+    # The V2 parcel is smaller than a cell: the cell of a point inside it holds it, within a cell of
+    # the coarser display grid
+    assert decode_distance(aarhus.at("soil_contamination", 574_135, 6_219_135)) <= 150
+    assert decode_distance(aarhus.at("soil_contamination", 575_135, 6_219_135)) == pytest.approx(1_000, abs=150)
+    assert aarhus.at("soil_contamination_v1", 576_200, 6_220_200) == 0
+    assert aarhus.at("soil_contamination_v1", 572_100, 6_216_100) == 0
+    assert decode_distance(aarhus.at("soil_contamination_v1", 576_200, 6_221_200)) == pytest.approx(800, abs=150)
+    assert aarhus.meta["counts"]["soilV2"] == 1 and aarhus.meta["counts"]["soilV1"] == 2
+
+
 def test_measures_the_distance_to_the_building_lines(aarhus: Built):
     assert aarhus.at("building_line", 576_500, 6_222_500) == 0
     assert aarhus.at("building_line", 571_300, 6_221_300) == 0

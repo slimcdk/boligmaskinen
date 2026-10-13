@@ -103,6 +103,9 @@ const OPTIONAL_GRID_SOURCES: Record<string, [job: string, name: string]> = {
   noise_industry: ['noise', 'eu_2022_virksomhed_by_4m.shp'],
   // And the chargers came with GeoFA after the OSM extract's
   chargers: ['chargers', 'ladefacilitet.geojson'],
+  // And the regions' contaminated land after all of them
+  soil_v1: ['soil', 'V1FLADER_SHAPE.zip'],
+  soil_v2: ['soil', 'V2FLADER_SHAPE.zip'],
 };
 
 interface GridMeta {

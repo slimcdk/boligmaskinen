@@ -95,6 +95,8 @@ to the nearest one; beyond 20 km they count as 20 km.
 | `new_local_plan` | Distance to a local plan of the last two years, proposed or adopted; 0 inside one, so `new_local_plan < 500` is "a new local plan within 500 m" (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `district_heating` | Distance to an area the heat plans give district heating; 0 inside one, so `district_heating == 0` is "in a district heating area" (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `building_line` | Distance to a building line around a forest, church, lake or stream, inside which building needs a dispensation; 0 inside one (Danmarks Miljøportal; added 2026-10-10, which keeps the language version) |
+| `soil_contamination` | Distance to land the regions have mapped as contaminated (V2, where contamination is known); 0 inside it (Danmarks Miljøportal's DKJord; added 2026-10-13, which keeps the language version) |
+| `soil_contamination_v1` | Distance to land the regions have mapped as possibly contaminated (V1); 0 inside it (as above) |
 | `consequence_zone` | Distance to a zone the municipal plans draw around a business or technical plant that smells, makes noise or is a risk; 0 inside one (Plandata.dk; added 2026-10-10, which keeps the language version) |
 | `extraction_area` | Distance to an area the regions' raw material plans set aside for digging sand, gravel or clay; 0 inside one (Danmarks Miljøportal; added 2026-10-10, which keeps the language version) |
 | `extraction_interest` | Distance to an area the regions' raw material plans keep for digging later; 0 inside one (Danmarks Miljøportal; added 2026-10-10, which keeps the language version) |

@@ -100,7 +100,7 @@ INPUTS = ["osm_layers", "osm_addresses", "noise", "zones", "institutions", "dayc
 OPTIONAL_INPUTS = ["income", "nursery_price", "class_size", "no2", "pm25", "noise_rail", "noise_air", "noise_industry", "protected_areas", "natura2000_habitats", "natura2000_birds",
                    "planned_traffic", "planned_traffic_proposed", "local_plans_proposed", "local_plans_adopted", "supply_areas",
                    "consequence_zones", "consequence_zones_plants", "raw_material_areas", "transit", "water_hardness",
-                   "forest_lines", "church_lines", "lake_lines", "stream_lines", "elevation", "chargers"]
+                   "forest_lines", "church_lines", "lake_lines", "stream_lines", "elevation", "chargers", "soil_v1", "soil_v2"]
 # Miljøstyrelsen's noise maps besides the roads', in the same bands
 OTHER_NOISE = {"noise_rail": "railways", "noise_air": "airports", "noise_industry": "industry"}
 # DCE's air quality: the GeoJSON property, and raw steps per µg/m³ (raw 0 is no data)
@@ -116,7 +116,7 @@ MST_BANDS = {"Lden5559": 57, "Lden6064": 62, "Lden6569": 67, "Lden7074": 72, "Ld
 
 LAYERS = ["forest", "water", "beach", "noise", "supermarket", "school", "daycare", "station", "departures", "pharmacy", "library", "turbine",
           "turbine_heights", "solar", "power_line", "airport", "airfield", "air_station", "protected_area", "natura2000", "building_line", "planned_road", "new_local_plan", "consequence_zone", "extraction_area", "extraction_interest", "district_heating", "density", "zone",
-          "municipality", "no2", "pm25", "water_hardness", "elevation", "mask"]
+          "municipality", "no2", "pm25", "water_hardness", "elevation", "soil_contamination", "soil_contamination_v1", "mask"]
 
 # The status of a fredning or Natura 2000 area in force ("Gældende / Vedtaget"), not a proposal or a draft
 IN_FORCE = 3
@@ -179,6 +179,8 @@ class AreaLayer:
     # Narrow areas, such as a planned road, count by every cell they touch; the others by the cells
     # whose centres they cover, and one smaller than a cell by the cell of a point inside it
     all_touched: bool = False
+    # The name meta.json counts the areas under, which the pack's check compares night by night
+    counted: str | None = None
 
 
 def in_force(frame: gpd.GeoDataFrame):
@@ -209,6 +211,10 @@ AREA_LAYERS = [
     AreaLayer("extraction_interest", [AreaSource("raw_material_areas", ["Statuskode", "Omr_tkode"],
                                                  lambda frame: in_force(frame) & (frame["Omr_tkode"] == EXTRACTION_INTEREST))],
               "Raw material areas kept for later, in force"),
+    # The regions' register of contaminated land (DKJord): V2, where contamination is known, and V1,
+    # where it is possible, each a zipped shapefile of every area in it
+    AreaLayer("soil_contamination", [AreaSource("soil_v2", [])], "Land mapped as contaminated (V2)", counted="soilV2"),
+    AreaLayer("soil_contamination_v1", [AreaSource("soil_v1", [])], "Land mapped as possibly contaminated (V1)", counted="soilV1"),
 ]
 
 # The aerodrome layers, and the kinds of aerodrome each measures the distance to (osm.aerodrome_kind)
@@ -311,15 +317,20 @@ def jsonstat_values(path: Path) -> dict[str, float]:
     return {code: values[index * stride] for code, index in areas.items()}
 
 
+def vector_path(path: Path, suffixes: tuple[str, ...] = (".shp", ".gpkg", ".geojson")) -> str:
+    """A file of vector data, or the first file with one of `suffixes` inside a ZIP file, wherever in it."""
+    if path.suffix.lower() != ".zip":
+        return str(path)
+    with zipfile.ZipFile(path) as archive:
+        member = next((name for name in archive.namelist() if name.lower().endswith(suffixes)), None)
+    if member is None:
+        raise SystemExit(f"{path} has no {' or '.join(suffixes)} file")
+    return f"/vsizip/{path}/{member}"
+
+
 def read_zipped(path: Path, suffix: str = ".gpkg") -> gpd.GeoDataFrame:
     """A layer of a file, or of the first file with `suffix` inside a ZIP file."""
-    if path.suffix.lower() != ".zip":
-        return gpd.read_file(path)
-    with zipfile.ZipFile(path) as archive:
-        member = next((name for name in archive.namelist() if name.lower().endswith(suffix)), None)
-    if member is None:
-        raise SystemExit(f"{path} has no {suffix} file")
-    return gpd.read_file(f"/vsizip/{path}/{member}")
+    return gpd.read_file(vector_path(path, (suffix,)))
 
 
 def water_hardness(grid: "Grid", source: Path) -> tuple[np.ndarray, int]:
@@ -449,7 +460,7 @@ def departures_per_hour(grid: "Grid", feed: Path) -> tuple[np.ndarray, int]:
 
 def area_cells(grid: "Grid", source: Path, area: AreaSource, all_touched: bool) -> tuple[np.ndarray, int]:
     """The cells of the areas of a file that `area` keeps, and how many it keeps."""
-    frame = gpd.read_file(source, columns=area.columns)
+    frame = gpd.read_file(vector_path(source), columns=area.columns)
     frame = frame.to_crs("EPSG:25832") if frame.crs else frame.set_crs("EPSG:25832")
     kept = frame.geometry.notna() & ~frame.geometry.is_empty
     frame = frame[kept & area.keep(frame)]
@@ -764,6 +775,8 @@ def build(inputs: dict[str, Path | list[Path]], out: Path, region_id: str = "den
             cells |= kept
             count += kept_count
         layers[layer.name] = encode_distance(grid.distance_to(cells))
+        if layer.counted:
+            found[layer.counted] = count
         step(f"{layer.what}: {count:,} cover {cells.sum() * cell * cell / 1e4:,.0f} ha of cells", 0.44)
         del cells, kept
 
@@ -1018,7 +1031,7 @@ def build(inputs: dict[str, Path | list[Path]], out: Path, region_id: str = "den
             "supermarkets": found["supermarkets"], "stations": found["stations"],
             "schools": found["schools"], "daycare": found["daycare"], "pharmacies": found["pharmacies"],
             "libraries": found["libraries"], "turbines": found["turbines"],
-            **{key: found[key] for key in ("chargersGeofa", "chargersOsm") if key in found},
+            **{key: found[key] for key in ("chargersGeofa", "chargersOsm", "soilV1", "soilV2") if key in found},
             "mstShareOfRegion": round(mapped, 4),
         },
     }
