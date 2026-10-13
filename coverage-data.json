@@ -1,0 +1,18 @@
+{
+  "engine": {
+    "covered": 799,
+    "total": 900
+  },
+  "frontend": {
+    "covered": 1468,
+    "total": 2153
+  },
+  "backend": {
+    "covered": 1034,
+    "total": 1076
+  },
+  "pipeline": {
+    "covered": 1596,
+    "total": 1702
+  }
+}
