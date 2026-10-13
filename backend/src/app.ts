@@ -12,7 +12,7 @@ import { defineJobs } from './jobs/definitions.ts';
 import { JobRunner } from './jobs/runner.ts';
 import type { JobDefinition } from './jobs/types.ts';
 import { Archive } from './pipeline/archive.ts';
-import { PROTOMAPS_URLS, roadVersions } from './pipeline/builds.ts';
+import { PROTOMAPS_URLS, roadVersions, terrainVersions } from './pipeline/builds.ts';
 import { FETCH_JOBS, type SourceUrls } from './pipeline/sources.ts';
 import { TravelTimes } from './pipeline/travel.ts';
 import { dataPackRoutes } from './routes/data-pack.ts';
@@ -90,6 +90,10 @@ export async function buildApp(options: AppOptions): Promise<FastifyInstance> {
       // An install from before travel times has the extract, but no road network yet
       if (fetched.has('osm') && !fresh.includes('osm') && !(await roadVersions(dataDir).current())) {
         await runner.startAll(['roads'], 'There is no road network yet, so it is built now');
+      }
+      // And one from before the terrain has the elevation model, but no terrain yet
+      if (fetched.has('elevation') && !fresh.includes('elevation') && !(await terrainVersions(dataDir).current())) {
+        await runner.startAll(['terrain'], 'There is no terrain yet, so it is built now');
       }
     }
   }

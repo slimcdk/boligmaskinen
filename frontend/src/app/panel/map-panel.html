@@ -51,6 +51,13 @@
         <mat-panel-description>{{ mapSummary() }}</mat-panel-description>
       </mat-expansion-panel-header>
       <div class="settings">
+        @if (hasTerrain()) {
+          <span class="label">{{ 'mapPanel.background' | transloco }}</span>
+          <mat-button-toggle-group class="full" hideSingleSelectionIndicator [value]="view().background" (change)="setView({ background: $event.value })" [attr.aria-label]="'mapPanel.background' | transloco">
+            <mat-button-toggle value="map">{{ 'mapPanel.backgroundMap' | transloco }}</mat-button-toggle>
+            <mat-button-toggle value="terrain">{{ 'mapPanel.backgroundTerrain' | transloco }}</mat-button-toggle>
+          </mat-button-toggle-group>
+        }
         <span class="label">{{ 'mapPanel.colours' | transloco }}</span>
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="palette">
           <mat-select [value]="view().palette" (selectionChange)="setView({ palette: $event.value })" [aria-label]="'mapPanel.heatmapColours' | transloco">

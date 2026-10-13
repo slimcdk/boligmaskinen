@@ -585,7 +585,7 @@ const SOURCES: SourceJob[] = [
     description: 'The public chargers for electric cars that the operators and municipalities report to GeoFA, with who runs each; OpenStreetMap adds those GeoFA lacks.',
   },
   {
-    id: 'elevation', name: 'Elevation', source: 'Copernicus DEM', schedule: '0 4 4 * *', then: ['grid'], fetch: fetchElevation,
+    id: 'elevation', name: 'Elevation', source: 'Copernicus DEM', schedule: '0 4 4 * *', then: ['grid', 'terrain'], fetch: fetchElevation,
     description: 'The height of the land from the Copernicus elevation model of 30 m (GLO-30): the 22 tiles of 1° with Danish land, about 310 MB, fetched again only when one changes.',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },

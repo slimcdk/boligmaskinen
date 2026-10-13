@@ -76,6 +76,11 @@ async function workerUrl(): Promise<string> {
 /** How long OpenStreetMap's credit stays on the map once it has loaded. */
 const CREDIT_MS = 5000;
 
+/** The terrain's shading in a scheme's colours: Denmark is flat, so its slopes are drawn steeper. */
+function shading(colours: MapColours) {
+  return { 'hillshade-shadow-color': colours.shadow, 'hillshade-highlight-color': colours.highlight, 'hillshade-accent-color': colours.shadow, 'hillshade-exaggeration': 0.85 };
+}
+
 /** The full-screen MapLibre map with the heatmap overlay and the user's places. */
 @Component({
   selector: 'app-map-view',
@@ -145,6 +150,7 @@ export class MapView implements AfterViewInit, OnDestroy {
         this.map.setPaintProperty(layer, 'raster-opacity', view.opacity);
         this.map.setPaintProperty(layer, 'raster-resampling', view.smooth > 0 ? 'linear' : 'nearest');
       }
+      if (this.map.getLayer('terrain')) this.map.setLayoutProperty('terrain', 'visibility', view.background === 'terrain' ? 'visible' : 'none');
     });
     effect(() => this.syncMarkers(this.store.places()));
     effect(() => {
@@ -187,6 +193,11 @@ export class MapView implements AfterViewInit, OnDestroy {
       const protocol = new Protocol();
       const parts = Array.from({ length: grid.meta.basemap.parts }, (_, i) => `${this.data.base}basemap/part-${i}.png`);
       protocol.add(new PMTiles(new ChunkedPmtilesSource('basemap', parts, grid.meta.basemap.chunkSize)));
+      const terrain = grid.meta.terrain;
+      if (terrain) {
+        const terrainParts = Array.from({ length: terrain.parts }, (_, i) => `${this.data.base}terrain/part-${i}.png`);
+        protocol.add(new PMTiles(new ChunkedPmtilesSource('terrain', terrainParts, terrain.chunkSize)));
+      }
       addProtocol('pmtiles', protocol.tile);
       addProtocol('glyphs', async (params) => {
         const key = decodeURIComponent(params.url.replace('glyphs://', '')).replace(/\.pbf$/, '');
@@ -211,6 +222,8 @@ export class MapView implements AfterViewInit, OnDestroy {
             minzoom: DETAIL_ZOOM,
           },
           ...worldSources(this.data.base),
+          // The terrain step's tiles: the elevation model as Terrarium, which the background "Terrain" shades
+          ...(grid.meta.terrain ? { terrain: { type: 'raster-dem', url: 'pmtiles://terrain', tileSize: 512, encoding: 'terrarium' } as const } : {}),
         },
         layers: withWorld(layers, MAP_COLOURS[scheme]),
       },
@@ -258,6 +271,14 @@ export class MapView implements AfterViewInit, OnDestroy {
         coordinates: [[b.west, b.north], [b.east, b.north], [b.east, b.south], [b.west, b.south]],
       });
       map.addLayer({ id: 'heat-detail', type: 'raster', source: 'heat-detail', layout: { visibility: 'none' }, paint }, 'roads_tunnels_other_casing');
+      // The terrain shades the heatmap too, under the roads and the names
+      if (grid.meta.terrain) {
+        map.addLayer({
+          id: 'terrain', type: 'hillshade', source: 'terrain',
+          layout: { visibility: view.background === 'terrain' ? 'visible' : 'none' },
+          paint: shading(MAP_COLOURS[scheme]),
+        }, 'roads_tunnels_other_casing');
+      }
       const look = () => {
         const bounds = map.getBounds();
         this.heat.setView({ west: bounds.getWest(), south: bounds.getSouth(), east: bounds.getEast(), north: bounds.getNorth() }, map.getZoom());
@@ -320,6 +341,9 @@ export class MapView implements AfterViewInit, OnDestroy {
       for (const [property, value] of Object.entries(layer.paint)) map.setPaintProperty(layer.id, property as PaintProperty, value);
     }
     map.setPaintProperty('municipalities', 'line-color', colours.municipalities);
+    if (map.getLayer('terrain')) {
+      for (const [property, value] of Object.entries(shading(colours))) map.setPaintProperty('terrain', property as PaintProperty, value);
+    }
     map.setSprite(`${this.data.base}${BASEMAP_FILES[scheme].sprite}`);
     this.styledScheme = scheme;
   }

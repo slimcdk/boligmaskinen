@@ -76,6 +76,8 @@ describeWithDatabase('a new install', () => {
     expect(outcome('grid').filter((o) => o.includes(' cells '))).toEqual(['succeeded: aarhus: 2 × 2 cells of 200 m, 459,924 with homes']);
     expect(outcome('basemap')).toEqual([expect.stringMatching(/^succeeded: Planet build 20261009 up to zoom 12, \d+ B$/)]);
     expect(outcome('pack').filter((o) => o.includes('Switched'))).toHaveLength(1);
+    // The terrain follows the elevation model and the grid's outline, and the pack waits for it
+    expect(outcome('terrain').filter((o) => o.includes(' tiles '))).toEqual([expect.stringMatching(/^succeeded: 1,408 tiles up to zoom 11, \d+ B$/)]);
     // The road network follows the OSM extract and the timetables, with the timetables beside it, and is
     // built once: as both start it, a second run may wait in the queue and be dropped, or find nothing new
     expect(outcome('roads').filter((o) => o.includes(' nodes: '))).toEqual(['succeeded: 7,200,839 nodes: 8,565,564 edges by car, 12,979,152 by bike, 15,345,026 on foot; public transport of 2026-10-06: 1,168,243 connections']);
@@ -98,6 +100,9 @@ describeWithDatabase('a new install', () => {
     expect(own.statusCode).toBe(200);
     expect(own.headers['cache-control']).toBe('public, max-age=31536000, immutable');
     expect(own.body).toMatch(/^tiles of .*"region":"aarhus".* from http:\/\/127\.0\.0\.1:\d+\/tiles\/20261009\.pmtiles$/);
+    // With the terrain of the region, from the 22 tiles of the elevation model
+    expect((await meta()) as unknown).toMatchObject({ terrain: { parts: 1 } });
+    expect((await app.inject(`/data-packs/${served.pack}/terrain/part-0.png`)).body).toMatch(/^terrain of .*"region":"aarhus".* from 22 tiles$/);
   }, 60_000);
 
   it('builds again only what a changed source touches, and keeps serving the old pack beside the new one', async () => {
@@ -108,8 +113,10 @@ describeWithDatabase('a new install', () => {
     const latest = (jobId: string) => runs.filter((r) => r.jobId === jobId).at(-1)!;
     expect(latest('plandata')).toMatchObject({ status: 'succeeded', result: '3 polygons' });
     expect(latest('grid')).toMatchObject({ trigger: 'after', result: expect.stringContaining('cells of 200 m') });
-    // The outline is the same, so the basemap was not cut again
+    // The outline is the same, so the basemap was not cut again, nor the terrain made again
     expect(latest('basemap')).toMatchObject({ result: 'Unchanged: planet build 20261009' });
+    expect(latest('terrain')).toMatchObject({ status: 'succeeded', result: 'Nothing changed since the last build' });
+    expect(readFileSync(join(dataDir, 'data-pack', 'data', 'meta.json'), 'utf8')).toContain('"terrain":{"parts":1}');
     const after = await meta();
     expect(after.pack).not.toBe(before.pack);
     expect((await meta(`/data-packs/${before.pack}/data/meta.json`)).pack).toBe(before.pack);
@@ -193,7 +200,7 @@ describeWithDatabase('an install from before the jobs', () => {
 });
 
 describeWithDatabase('an install that fetches already', () => {
-  it('fetches a source that came with a new version at once, builds the road network, and nothing else', async () => {
+  it('fetches a source that came with a new version at once, builds the road network and the terrain, and nothing else', async () => {
     const database = await createTestDatabase();
     const server = await TestServer.start();
     const served = serveSources(server);
@@ -216,6 +223,7 @@ describeWithDatabase('an install that fetches already', () => {
     try {
       const runs = (await app.inject('/api/jobs')).json().runs as JobRun[];
       expect(runs.map((r) => [r.jobId, r.log[0].text])).toEqual([
+        ['terrain', 'There is no terrain yet, so it is built now'],
         ['roads', 'There is no road network yet, so it is built now'],
         ['protected', 'A source that has not been fetched yet, so it is fetched now'],
         ['plans', 'A source that has not been fetched yet, so it is fetched now'],

@@ -65,9 +65,14 @@ in `src/jobs/definitions.ts`, with the shapes in `src/jobs/types.ts` (the fronte
   of public transport from Rejseplanen's feed (the "Public transport" job) with the `transit`
   step. It follows both jobs, and its nightly run builds it only when the extract or the feed
   changed. An install from before it builds it at its next start.
-- **The order:** a fetch that found something new starts the grid, the grid starts the basemap,
-  and the basemap starts the pack. The world map starts the pack directly, and the OSM extract
-  and the timetables start the road network.
+- **Terrain** makes the tiles the map shades the land with, when its background is "Terrain", from
+  the elevation model's 22 tiles over the region the grid outlines, with the `terrain` step, into
+  `DATA_DIR/work/terrain/<id>`, keeping two. It builds only when the model or the outline changed,
+  and the pack takes it when it is of the pack's region. An install from before it builds it at
+  its next start.
+- **The order:** a fetch that found something new starts the grid, the grid starts the basemap and
+  the terrain, and they start the pack. The world map starts the pack directly, the elevation model
+  the terrain, and the OSM extract and the timetables start the road network.
 - **A new install** has no data pack, so at its first start every fetch job runs, and the builds
   follow.
 - **"Back up the database"** (`src/jobs/backup.ts`) runs pg_dump of PostgreSQL 18 every night into

@@ -67,6 +67,24 @@ describe('checking the data pack', () => {
     await expect(checkDataPack(context().context)).rejects.toThrow('2 files are missing or empty: data/water.png, world/places.json');
   });
 
+  it("looks for the terrain's parts when the pack has a terrain", async () => {
+    const pack = mkdtempSync(join(tmpdir(), 'data-pack-terrain-'));
+    try {
+      for (const file of FILES) {
+        mkdirSync(dirname(join(pack, file)), { recursive: true });
+        writeFileSync(join(pack, file), 'x'.repeat(1000));
+      }
+      writeFileSync(join(pack, 'data/meta.json'), JSON.stringify({ files: { forest: 'forest.png', water: 'water.png' }, basemap: { parts: 1 }, terrain: { parts: 2 } }));
+      mkdirSync(join(pack, 'terrain'));
+      writeFileSync(join(pack, 'terrain/part-0.png'), 'x'.repeat(1000));
+      await expect(checkDataPack({ ...context().context, dataPackDir: pack })).rejects.toThrow('1 file is missing or empty: terrain/part-1.png');
+      writeFileSync(join(pack, 'terrain/part-1.png'), 'x'.repeat(1000));
+      await expect(checkDataPack({ ...context().context, dataPackDir: pack })).resolves.toMatchObject({ result: '2 layers' });
+    } finally {
+      rmSync(pack, { recursive: true, force: true });
+    }
+  });
+
   it('says so when there is no data pack', async () => {
     await expect(checkDataPack({ ...context().context, dataPackDir: join(dir, 'nothing') })).rejects.toThrow(/^Cannot read data\/meta.json/);
   });

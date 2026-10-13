@@ -81,7 +81,7 @@ docker compose up -d                 # http://localhost:8080
   ten minutes. The data jobs (the gear in the panel) show how far they are.
 - **What it needs:**
   - about 1 GB of downloads the first time;
-  - 4 GB of disk in `./data`;
+  - 5 GB of disk in `./data`;
   - about 1 GB of memory while the data is built, for a few minutes a night.
 - **Settings:** `REGION` and `GRID_CELL_METRES` choose the area and the cell size (see
   `backend/README.md`).
@@ -172,7 +172,7 @@ often, and which other sources we have looked at.
 | [Rejseplanen](https://www.rejseplanen.dk) | The timetables of every bus, train, metro, light rail and ferry (GTFS): the travel times by public transport, and the departures near every cell | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [GEUS](https://doi.org/10.22008/FK2/5OZV7W) | The hardness of the drinking water in the public waterworks' supply areas, from the national borehole database Jupiter | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [GeoFA (GeoDanmark)](https://www.geodanmark.dk/home/vejledninger/geofa/) | The public chargers for electric cars, with who runs each, as the operators and the municipalities report them | [CC BY 4.0](https://www.geodanmark.dk/home/vejledninger/vilkaar-for-data-anvendelse/) |
-| [Copernicus DEM](https://registry.opendata.aws/copernicus-dem/) | The height above sea level, from the elevation model GLO-30 of about 30 m | [Copernicus DEM licence (GLO-30)](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM/resources/license/License-COPDEM-30.pdf) |
+| [Copernicus DEM](https://registry.opendata.aws/copernicus-dem/) | The height above sea level, from the elevation model GLO-30 of about 30 m, and the shading of the land in the background Terrain | [Copernicus DEM licence (GLO-30)](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM/resources/license/License-COPDEM-30.pdf) |
 | [Miljøstyrelsen](https://miljoegis.mim.dk) | Noise from roads, railways, airports and industry, from the strategic noise mapping 2022 (Lden) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [DCE, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Nitrogen dioxide (NO₂) and fine particles (PM2.5): yearly means for 2024 on a 1 km grid, from DCE's model of the air | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [Miljøstyrelsen and the regions, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Fredninger of land in force, the Natura 2000 areas for habitats and birds, the areas the regions' raw material plans set aside for digging, now or later, and the building lines around forests, churches, lakes and streams | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |

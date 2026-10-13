@@ -21,6 +21,7 @@ before changing how a part works. The guides say how to do the common changes:
 | [11](0011-elevation-from-copernicus.md) | The height above sea level from Copernicus until DHM can be had | 2026-10-12 |
 | [12](0012-points-measured-in-the-browser.md) | Distances to points a block chooses are measured in the browser | 2026-10-12 |
 | [13](0013-images-releases-test-instance.md) | Every green commit is an image; releases retag it; the test instance follows master | 2026-10-07 |
+| [14](0014-terrain-from-our-own-tiles.md) | The background "Terrain" from our own tiles of the Copernicus model | 2026-10-13 |
 
 ## Writing one
 

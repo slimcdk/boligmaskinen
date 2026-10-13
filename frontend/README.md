@@ -103,6 +103,8 @@ browser.
   window's edges, with M3's large corners and elevation, each only as tall as its content.
   - **The map panel** (`src/app/panel/map-panel.ts`) is on top: the app's name, which cells to show and
     from how many points, the histogram, and the map settings. Its settings may take most of the window.
+    Their first is the background: the map, or the map with the land shaded by the terrain's tiles
+    ("Terrain"), when the data pack has them.
   - **The weighting panel** (`src/app/panel/panel.ts`) is below it: the open map, the blocks in groups,
     the places and the footer. It takes the rest of the window and scrolls inside.
   - The map runs under them to the edges and keeps its view beside them (MapLibre's padding), moving

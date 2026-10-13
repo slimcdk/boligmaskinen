@@ -73,11 +73,15 @@ export class MapPanel {
     return this.i18n.t('mapPanel.describeLimit', { shown: cells(s.shown), considered: cells(s.considered), limit: s.limit });
   });
 
+  /** The data pack has the terrain's tiles, so the map can shade the land (packs from before it have none). */
+  protected readonly hasTerrain = computed(() => !!this.data.grid()?.meta.terrain);
+
   protected readonly mapSummary = computed(() => {
     const v = this.view();
     const palette = this.palette().name;
     const colours = v.palette === DEFAULT_VIEW.palette && v.bands === 'smooth' ? '' : ` · ${v.bands === 'steps' ? this.i18n.t('mapPanel.inSteps', { palette }) : palette}`;
-    return `${this.i18n.t(`mapPanel.summaryCells.${v.cells}`)} · ${this.i18n.t(`mapPanel.summarySmooth.${v.smooth}`)}${colours}`;
+    const terrain = v.background === 'terrain' && this.hasTerrain() ? ` · ${this.i18n.t('mapPanel.summaryTerrain')}` : '';
+    return `${this.i18n.t(`mapPanel.summaryCells.${v.cells}`)} · ${this.i18n.t(`mapPanel.summarySmooth.${v.smooth}`)}${colours}${terrain}`;
   });
 
   // The heatmap's colours, each with a swatch in the current light or dark mode

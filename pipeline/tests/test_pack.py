@@ -54,6 +54,18 @@ def test_packs_everything_the_map_loads(parts, tmp_path):
     # The detail tiles come along, each in a container of its own
     assert meta["tiles"]["available"] == ["0-0"]
     assert pack.read_container((out / "tiles" / "0-0.png").read_bytes()) == gzip.decompress((parts["grid"] / "tiles" / "0-0.u8.gz").read_bytes())
+    # Without the terrain's tiles, the pack has none
+    assert "terrain" not in meta and not (out / "terrain").exists()
+
+
+def test_packs_the_terrain_in_parts_too(parts, tmp_path):
+    terrain = tmp_path / "terrain.pmtiles"
+    terrain.write_bytes(os.urandom(pack.CHUNK + 99))
+    out = tmp_path / "pack"
+    meta = pack.build(**parts, out=out, terrain=terrain)
+    assert meta["terrain"] == {"parts": 2, "chunkSize": pack.CHUNK, "size": pack.CHUNK + 99}
+    assert json.loads((out / "data" / "meta.json").read_text())["terrain"] == meta["terrain"]
+    assert b"".join(pack.read_container((out / "terrain" / f"part-{i}.png").read_bytes()) for i in range(2)) == terrain.read_bytes()
 
 
 def test_makes_a_valid_png(parts, tmp_path):

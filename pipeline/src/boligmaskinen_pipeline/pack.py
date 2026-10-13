@@ -8,11 +8,11 @@ The binary files go into standard web types, which every host serves and compres
 - glyph PBFs become one JSON file of base64 strings.
 
 The basemap is split into parts that are fetched only when the map needs a tile in them,
-so smaller parts make the first map appear sooner.
+so smaller parts make the first map appear sooner. So are the terrain's tiles, when there are any.
 
 Usage:
     python -m boligmaskinen_pipeline pack --grid DIR --basemap FILE --fonts DIR --sprites DIR \\
-        --styles DIR --world DIR --out DIR [--id ID]
+        --styles DIR --world DIR --out DIR [--terrain FILE] [--id ID]
 
 --grid is the grid step's output, --fonts holds <font>/<range>.pbf, --sprites the light and dark
 sprites, and --styles style-layers.json and style-layers-dark.json. --id names the pack in its
@@ -76,7 +76,18 @@ def require(folder: Path, names: list[str], what: str) -> None:
         raise SystemExit(f"The {what} in {folder} lack {', '.join(missing)}")
 
 
-def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, world: Path, out: Path, pack_id: str | None = None) -> dict:
+def parts_of(archive: Path, folder: Path) -> dict:
+    """An archive in parts of CHUNK bytes, as byte containers in `folder`; its entry in meta.json."""
+    data = archive.read_bytes()
+    parts = [data[i:i + CHUNK] for i in range(0, len(data), CHUNK)]
+    folder.mkdir()
+    for index, part in enumerate(parts):
+        (folder / f"part-{index}.png").write_bytes(png_container(part))
+    return {"parts": len(parts), "chunkSize": CHUNK, "size": len(data)}
+
+
+def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, world: Path, out: Path, pack_id: str | None = None,
+          terrain: Path | None = None) -> dict:
     """Write the data pack to `out`, which must be empty or not exist yet; returns its meta.json."""
     meta = json.loads((grid / "meta.json").read_text(encoding="utf-8"))
     tiles = meta.get("tiles", {}).get("available", [])
@@ -91,12 +102,9 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
     if out.exists() and any(out.iterdir()):
         raise SystemExit(f"{out} is not empty")
     (out / "data").mkdir(parents=True)
-    (out / "basemap").mkdir()
-
-    archive = basemap.read_bytes()
-    parts = [archive[i:i + CHUNK] for i in range(0, len(archive), CHUNK)]
-    for index, part in enumerate(parts):
-        (out / "basemap" / f"part-{index}.png").write_bytes(png_container(part))
+    basemap_parts = parts_of(basemap, out / "basemap")
+    # The terrain's tiles, which the map shades the land with
+    terrain_parts = parts_of(terrain, out / "terrain") if terrain else None
     progress(0.5)
 
     for name, file in list(meta["files"].items()):
@@ -109,7 +117,9 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
         (out / "tiles").mkdir()
         for key in tiles:
             (out / "tiles" / f"{key}.png").write_bytes(png_container(gzip.decompress((grid / "tiles" / f"{key}.u8.gz").read_bytes())))
-    meta["basemap"] = {"parts": len(parts), "chunkSize": CHUNK, "size": len(archive)}
+    meta["basemap"] = basemap_parts
+    if terrain_parts:
+        meta["terrain"] = terrain_parts
     if pack_id:
         meta["pack"] = pack_id
     (out / "data" / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -130,7 +140,8 @@ def build(grid: Path, basemap: Path, fonts: Path, sprites: Path, styles: Path, w
     for name in WORLD:
         shutil.copy(world / name, out / "world" / name)
     total = sum(path.stat().st_size for path in out.rglob("*") if path.is_file())
-    log(f"Packed {len(meta['files'])} layers, {len(tiles)} detail tiles, {len(parts)} basemap parts and {len(glyphs)} glyph ranges: {total / 1e6:.1f} MB")
+    terrain_text = f", {terrain_parts['parts']} terrain parts" if terrain_parts else ""
+    log(f"Packed {len(meta['files'])} layers, {len(tiles)} detail tiles, {basemap_parts['parts']} basemap parts{terrain_text} and {len(glyphs)} glyph ranges: {total / 1e6:.1f} MB")
     progress(1)
     return meta
 
@@ -140,7 +151,8 @@ def cli(argv: list[str]) -> None:
     for name in ["grid", "fonts", "sprites", "styles", "world"]:
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--basemap", type=Path, required=True, help="the region's .pmtiles file")
+    parser.add_argument("--terrain", type=Path, default=None, help="the terrain's .pmtiles file, from the terrain step")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--id", default=None)
     args = parser.parse_args(argv)
-    build(args.grid, args.basemap, args.fonts, args.sprites, args.styles, args.world, args.out, args.id)
+    build(args.grid, args.basemap, args.fonts, args.sprites, args.styles, args.world, args.out, args.id, args.terrain)
