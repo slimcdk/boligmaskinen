@@ -310,7 +310,8 @@ async function buildTerrain(w: Work): Promise<JobOutcome> {
     inputs: { elevation: sha256(tiles.map((file) => file!.sha256).join(' ')), outline: sha256(await readFile(outline)) },
   };
   if (sameInputs(await readJson<MadeFrom>(join((await versions.current()) ?? '', 'made-from.json')), wanted)) {
-    return waiting('Nothing changed since the last build');
+    // Started by a new grid, it passes the change on to the pack, which may be waiting for it
+    return { changed: w.context.trigger === 'after', result: 'Nothing changed since the last build' };
   }
   const id = versionId(w.context);
   const stage = await versions.staging(id);
