@@ -8,15 +8,16 @@ Steps:
     roads       build the road network that travel times are found on
     transit     add a weekday's public transport timetable to the road network, from a GTFS feed
     travel      find the travel times to a place by car, by bike, on foot and by public transport
+    terrain     make the tiles the map shades the land with, from the elevation model
     remote-zip  list or extract members of a remote ZIP file with HTTP range requests
 """
 
 import sys
 
-from . import grid, osm, pack, remote_zip, roads, transit, travel, world
+from . import grid, osm, pack, remote_zip, roads, terrain, transit, travel, world
 
 STEPS = {"osm": osm.cli, "grid": grid.cli, "world": world.cli, "pack": pack.cli, "remote-zip": remote_zip.cli,
-         "roads": roads.cli, "transit": transit.cli, "travel": travel.cli}
+         "roads": roads.cli, "transit": transit.cli, "travel": travel.cli, "terrain": terrain.cli}
 
 
 def main() -> None:

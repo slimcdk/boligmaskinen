@@ -9,7 +9,8 @@ run them: the jobs fetch the sources, and each step is one command,
 | `osm` | The Geofabrik extract of Denmark | `layers.gpkg` with a layer per theme (forests, water, solar parks, power lines, airfields, pharmacies, libraries, roads, municipalities …) and `addresses.npy` |
 | `grid` | `inputs.json`, naming the OSM extract and every other source | A gzipped 8-bit raster per layer, `meta.json`, the municipal outlines, the outline the basemap has to cover, and detail tiles where the display grid is coarser than the grid |
 | `world` | Natural Earth's five 1:50m zips | The world map outside Denmark: land, lakes, borders and names |
-| `pack` | The grid, the basemap, fonts, sprites, styles and the world map | The data pack |
+| `terrain` | The region's outline and the tiles of the Copernicus elevation model | The terrain the map shades the land with: Terrarium tiles of 512 px in lossless WebP, zoom 5 to 11, in one PMTiles archive |
+| `pack` | The grid, the basemap, fonts, sprites, styles, the world map and the terrain | The data pack |
 | `remote-zip` | A ZIP file on a web server | The members asked for, fetched with HTTP range requests |
 | `roads` | The Geofabrik extract of Denmark | The road network for travel times: per mode (car, bike, walk) a sparse matrix of seconds, turned around, and the nodes where trips can start |
 | `transit` | Rejseplanen's GTFS feed and a road network | The timetable of a weekday beside the network: its connections, the footpaths between stops and the stops' nearest walk nodes |
@@ -46,6 +47,7 @@ image under a memory limit, with the real data:
 | `roads` | 0.75 GB, and the same 0.9 GB file of node locations; it writes 370 MB |
 | `travel` | 0.55 GB, about 10 s for a place, 3 s once the pack's cells are matched to the network |
 | The basemap, cut out with `pmtiles extract` | 0.06 GB |
+| `terrain`, all of Denmark | 0.3 GB and 3 minutes for 950 tiles, 72 MB (measured outside the image on 2026-10-13) |
 
 What keeps them small (#69):
 

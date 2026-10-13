@@ -44,7 +44,7 @@ function names(jobIds: string[]): string {
   return named.length > 1 ? `${named.slice(0, -1).join(', ')} and ${named.at(-1)}` : named[0];
 }
 
-const BUILD_NAMES: Record<string, string> = { grid: 'Build the grid', basemap: 'Basemap', world: 'World map', pack: 'Pack the data', roads: 'Road network' };
+const BUILD_NAMES: Record<string, string> = { grid: 'Build the grid', basemap: 'Basemap', world: 'World map', pack: 'Pack the data', roads: 'Road network', terrain: 'Terrain' };
 
 /** A result that says the job waits, and starts nothing after it. */
 function waiting(text: string): JobOutcome {
@@ -287,6 +287,42 @@ async function buildBasemap(w: Work, options: BuildOptions): Promise<JobOutcome>
   return { changed: true, bytes: size, result: `Planet build ${build.replace(/\.pmtiles$/, '')} up to zoom ${BASEMAP_MAX_ZOOM}, ${formatBytes(size)}` };
 }
 
+// --- The terrain ----------------------------------------------------------------------------------
+
+/** The versions of the terrain: the newest two. */
+export const terrainVersions = (dataDir: string) => new Versions(join(dataDir, 'work', 'terrain'), { keep: 2 });
+
+/**
+ * The tiles the map shades the land with when its background is "Terrain": the elevation model's
+ * tiles over the region the grid outlines. Built again only when the model or the outline changed.
+ */
+async function buildTerrain(w: Work): Promise<JobOutcome> {
+  const grid = await new Versions(join(w.dataDir, 'work', 'grid')).current();
+  if (!grid) return waiting('Waiting for Build the grid, which outlines the region');
+  const tiles = await Promise.all(ELEVATION_TILES.map((tile) => w.archive.newest('elevation', `${tile}.tif`)));
+  if (!tiles.every(Boolean) || !(await Promise.all(tiles.map((file) => w.archive.present(file!)))).every(Boolean)) {
+    return waiting('Waiting for Elevation: nothing fetched yet');
+  }
+  const outline = join(grid, 'basemap-region.geojson');
+  const versions = terrainVersions(w.dataDir);
+  const wanted: MadeFrom = {
+    revision: w.revision,
+    inputs: { elevation: sha256(tiles.map((file) => file!.sha256).join(' ')), outline: sha256(await readFile(outline)) },
+  };
+  if (sameInputs(await readJson<MadeFrom>(join((await versions.current()) ?? '', 'made-from.json')), wanted)) {
+    // Started by a new grid, it passes the change on to the pack, which may be waiting for it
+    return { changed: w.context.trigger === 'after', result: 'Nothing changed since the last build' };
+  }
+  const id = versionId(w.context);
+  const stage = await versions.staging(id);
+  await runStep(w.context, w.step(), 'terrain', [outline, join(stage, 'terrain.pmtiles'), ...tiles.map((file) => file!.path)]);
+  await writeFile(join(stage, 'made-from.json'), JSON.stringify(wanted));
+  const dir = await versions.publish(stage, id);
+  const size = (await stat(join(dir, 'terrain.pmtiles'))).size;
+  const summary = await readJson<{ tiles: number; maxZoom: number }>(join(dir, 'terrain.json'));
+  return { changed: true, bytes: size, result: `${count(summary?.tiles ?? 0, 'tile')} up to zoom ${summary?.maxZoom ?? '?'}, ${formatBytes(size)}` };
+}
+
 // --- Pack the data ----------------------------------------------------------------------------------
 
 /** The data packs, with the link the app serves the current one through. */
@@ -298,7 +334,7 @@ export function packVersions(dataDir: string, dataPackDir: string): Versions {
 const OLD_PACK = '00000000T000000Z-before-the-jobs';
 
 async function buildPack(w: Work, options: BuildOptions & { dataPackDir: string }): Promise<JobOutcome> {
-  const busy = await w.context.busy(['grid', 'basemap', 'world']);
+  const busy = await w.context.busy(['grid', 'basemap', 'world', 'terrain']);
   if (busy.length) return waiting(`Waiting for ${names(busy)}, which ${busy.length > 1 ? 'run' : 'runs'} now`);
   const parts = {
     grid: await new Versions(join(w.dataDir, 'work', 'grid')).current(),
@@ -308,13 +344,20 @@ async function buildPack(w: Work, options: BuildOptions & { dataPackDir: string 
   const missing = Object.entries(parts).filter(([, dir]) => !dir).map(([part]) => part);
   if (missing.length) return waiting(`Waiting for ${names(missing)}`);
   const { grid, basemap, world } = parts as Record<keyof typeof parts, string>;
+  const outline = sha256(await readFile(join(grid, 'basemap-region.geojson')));
   const basemapMade = await readJson<MadeFrom>(join(basemap, 'made-from.json'));
-  if (basemapMade?.inputs['outline'] !== sha256(await readFile(join(grid, 'basemap-region.geojson')))) {
+  if (basemapMade?.inputs['outline'] !== outline) {
     return waiting('Waiting for the Basemap of the new region');
   }
+  // The terrain comes along when there is one of this region; without it the map has no "Terrain"
+  const terrainDir = await terrainVersions(w.dataDir).current();
+  const terrain = terrainDir && (await readJson<MadeFrom>(join(terrainDir, 'made-from.json')))?.inputs['outline'] === outline ? terrainDir : null;
 
   const packs = packVersions(w.dataDir, options.dataPackDir);
-  const wanted: MadeFrom = { revision: w.revision, inputs: { grid: basename(grid), basemap: basename(basemap), world: basename(world) } };
+  const wanted: MadeFrom = {
+    revision: w.revision,
+    inputs: { grid: basename(grid), basemap: basename(basemap), world: basename(world), ...(terrain ? { terrain: basename(terrain) } : {}) },
+  };
   const current = await packs.current();
   if (current && sameInputs(await readJson<MadeFrom>(join(current, 'made-from.json')), wanted)) {
     return waiting(`The data pack is up to date: ${basename(current)}`);
@@ -341,6 +384,7 @@ async function buildPack(w: Work, options: BuildOptions & { dataPackDir: string 
   await runStep(w.context, w.step([0, 0.9]), 'pack', [
     '--grid', grid, '--basemap', join(basemap, 'basemap.pmtiles'), '--fonts', join(basemap, 'fonts'), '--sprites', join(basemap, 'sprites'),
     '--styles', join(basemap, 'styles'), '--world', world, '--out', stage, '--id', id,
+    ...(terrain ? ['--terrain', join(terrain, 'terrain.pmtiles')] : []),
   ]);
   await writeFile(join(stage, 'made-from.json'), JSON.stringify(wanted));
   // The licence texts of the fonts and icons go with the copies the pack serves
@@ -380,7 +424,7 @@ export function buildJobs(options: BuildOptions): JobDefinition[] {
       build: (w) => buildBasemap(w, options),
     },
     {
-      id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', then: ['basemap'],
+      id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', then: ['basemap', 'terrain'],
       description: `Every data layer on ${describeGrid(options.grid)}, sampled to the display grid.`,
       build: (w) => buildGrid(w, options.grid),
     },
@@ -388,6 +432,11 @@ export function buildJobs(options: BuildOptions): JobDefinition[] {
       id: 'roads', name: 'Road network', kind: 'build', source: 'OpenStreetMap, Rejseplanen', schedule: '15 6 * * *',
       description: 'The roads, paths and ferries of the OSM extract, and a weekday’s timetable of public transport, which the travel times to your places are found on.',
       build: (w) => buildRoads(w),
+    },
+    {
+      id: 'terrain', name: 'Terrain', kind: 'build', source: 'Copernicus DEM', schedule: '30 4 4 * *', then: ['pack'],
+      description: 'The tiles the map shades the land with when its background is Terrain: the elevation model over the region, up to zoom 11.',
+      build: (w) => buildTerrain(w),
     },
     {
       id: 'pack', name: 'Pack the data', kind: 'build', source: 'Boligmaskinen', schedule: '30 6 * * *', then: ['data-pack'],

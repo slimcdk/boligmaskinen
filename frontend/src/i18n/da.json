@@ -372,6 +372,10 @@
     "allOffText": "Slå en gruppe til, eller giv et af dine ønsker noget vægt, for at farve kortet.",
     "hint": "Vælg det, der betyder noget for dig, så farver kortet hver celle på {{ cell }} m efter, hvor godt den passer.",
     "settings": "Kortindstillinger",
+    "background": "Baggrund",
+    "backgroundMap": "Kort",
+    "backgroundTerrain": "Terræn",
+    "summaryTerrain": "terræn",
     "colours": "Farver",
     "heatmapColours": "Farver på kortet",
     "scale": "Farveskala",
@@ -655,7 +659,7 @@
         "note": "Ændret: et punkt pr. operatør og sted, og operatørernes navne gjort ens, som »Clever A/S« og »Clever«."
       },
       "elevation": {
-        "uses": "Højden over havet fra højdemodellen GLO-30 på omkring 30 m, en model af overfladen, også tage og trætoppe.",
+        "uses": "Højden over havet fra højdemodellen GLO-30 på omkring 30 m, en model af overfladen, også tage og trætoppe, og skyggerne på landet, når baggrunden er Terræn.",
         "note": "Ændret: lagt på kortets celler på 100 m som den laveste fjerdedel af modellens punkter i hver. De organisationer, der ved lov eller delegation har ansvaret for Copernicus-programmet, har intet ansvar for nogen brug af Copernicus WorldDEM-30."
       },
       "mst": {
@@ -841,6 +845,10 @@
       "roads": {
         "name": "Vejnet",
         "description": "Veje, stier og færger fra OSM-udtrækket og en hverdags køreplan for offentlig transport, som rejsetiderne til dine steder findes på."
+      },
+      "terrain": {
+        "name": "Terræn",
+        "description": "Fliserne, kortet skygger landet med, når baggrunden er Terræn: højdemodellen over regionen, op til zoom 11."
       },
       "pack": {
         "name": "Pak data",

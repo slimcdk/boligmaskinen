@@ -110,6 +110,8 @@ export interface GridMeta {
   municipalities: Municipality[];
   counts: Record<string, number>;
   basemap: { parts: number; chunkSize: number; size: number };
+  /** The terrain's tiles (the terrain step), which the map shades the land with; packs before it have none. */
+  terrain?: { parts: number; chunkSize: number; size: number };
 }
 
 /**
@@ -157,6 +159,8 @@ export interface ViewState {
   palette: HeatPalette;
   /** A smooth colour scale, or five steps of it. */
   bands: 'smooth' | 'steps';
+  /** Under the heatmap: the map, or the map with the land shaded by its terrain. */
+  background: 'map' | 'terrain';
 }
 
 
@@ -228,7 +232,7 @@ export const DEFAULT_CRITERIA: Criterion[] = [
   },
 ];
 
-export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85, palette: 'red-green', bands: 'smooth' };
+export const DEFAULT_VIEW: ViewState = { show: 'all', top: 20, abs: 60, smooth: 1, cells: 'homes', showBelow: false, opacity: 0.85, palette: 'red-green', bands: 'smooth', background: 'map' };
 
 /** The places' pins; white reads on each at 4.5:1 or more. */
 export const PLACE_COLOURS = ['#1f6feb', '#8a3ffc', '#007d79', '#d12771', '#946f00'];

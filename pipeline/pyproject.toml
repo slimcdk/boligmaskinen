@@ -15,6 +15,7 @@ dependencies = [
     "osmium>=4.0",
     "openpyxl>=3.1",
     "httpx>=0.28",
+    "pmtiles>=3.8",
 ]
 
 [dependency-groups]

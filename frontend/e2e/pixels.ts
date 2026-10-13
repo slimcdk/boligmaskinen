@@ -8,11 +8,8 @@ function paeth(a: number, b: number, c: number): number {
   return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
 }
 
-/**
- * How bright a screenshot is on average, from 0 (black) to 255 (white). Reads the 8-bit RGB and
- * RGBA PNGs that Playwright takes, so a test can tell a light map from a dark one.
- */
-export function meanLuminance(png: Buffer): number {
+/** The rows of RGB or RGBA bytes of an 8-bit PNG, as Playwright takes its screenshots. */
+function decode(png: Buffer): { width: number; height: number; channels: number; lines: Uint8Array[] } {
   let width = 0;
   let height = 0;
   let channels = 0;
@@ -38,7 +35,7 @@ export function meanLuminance(png: Buffer): number {
   const raw = inflateSync(Buffer.concat(data));
   const stride = width * channels;
   let previous = new Uint8Array(stride);
-  let sum = 0;
+  const lines: Uint8Array[] = [];
   for (let y = 0; y < height; y++) {
     const start = y * (stride + 1);
     const filter = raw[start];
@@ -50,8 +47,35 @@ export function meanLuminance(png: Buffer): number {
       const predictor = filter === 1 ? a : filter === 2 ? b : filter === 3 ? (a + b) >> 1 : filter === 4 ? paeth(a, b, c) : 0;
       line[x] = (raw[start + 1 + x] + predictor) & 255;
     }
-    for (let x = 0; x < stride; x += channels) sum += 0.2126 * line[x] + 0.7152 * line[x + 1] + 0.0722 * line[x + 2];
+    lines.push(line);
     previous = line;
   }
+  return { width, height, channels, lines };
+}
+
+/**
+ * How bright a screenshot is on average, from 0 (black) to 255 (white), so a test can tell a light
+ * map from a dark one.
+ */
+export function meanLuminance(png: Buffer): number {
+  const { width, height, channels, lines } = decode(png);
+  let sum = 0;
+  for (const line of lines) {
+    for (let x = 0; x < width * channels; x += channels) sum += 0.2126 * line[x] + 0.7152 * line[x + 1] + 0.0722 * line[x + 2];
+  }
   return sum / (width * height);
+}
+
+/** How far apart two screenshots of the same size are: the mean difference of their colours, 0 to 255. */
+export function meanDifference(a: Buffer, b: Buffer): number {
+  const one = decode(a);
+  const two = decode(b);
+  if (one.width !== two.width || one.height !== two.height) throw new Error('The screenshots are not of the same size');
+  let sum = 0;
+  for (let y = 0; y < one.height; y++) {
+    for (let x = 0; x < one.width; x++) {
+      for (let c = 0; c < 3; c++) sum += Math.abs(one.lines[y][x * one.channels + c] - two.lines[y][x * two.channels + c]);
+    }
+  }
+  return sum / (one.width * one.height * 3);
 }

@@ -86,11 +86,21 @@ case "$step" in
     printf '{"type":"FeatureCollection","features":[],"region":"%s"}' "$region" > "$out/basemap-region.geojson"
     echo "Built the grid of $region"
     ;;
+  terrain)
+    # terrain <outline> <out.pmtiles> <tile>...: the archive names the outline and how many tiles it was made from
+    outline="$1"; out="$2"; shift 2
+    printf 'terrain of %s from %s tiles' "$(cat "$outline" | tr -d '\n ')" "$#" > "$out"
+    printf '{"tiles": 1408, "bytes": 92000000, "maxZoom": 11, "lowest": -58.0, "highest": 222.0}' > "$(dirname "$out")/terrain.json"
+    echo "Terrain: 1,408 tiles with land"
+    ;;
   pack)
-    # pack --grid G --basemap B --fonts F --sprites S --styles T --world W --out O --id ID
+    # pack --grid G --basemap B --fonts F --sprites S --styles T --world W --out O --id ID [--terrain T]
+    arg_terrain=""
     while [ $# -gt 1 ]; do eval "arg_$(echo "$1" | tr -d '-')=\"\$2\""; shift 2; done
     mkdir -p "$arg_out/data" "$arg_out/basemap"
-    sed "s/^{/{\"pack\":\"$arg_id\",\"basemap\":{\"parts\":1},/" "$arg_grid/meta.json" > "$arg_out/data/meta.json"
+    terrain=""
+    if [ -n "$arg_terrain" ]; then mkdir -p "$arg_out/terrain" && cp "$arg_terrain" "$arg_out/terrain/part-0.png" && terrain='"terrain":{"parts":1},'; fi
+    sed "s/^{/{\"pack\":\"$arg_id\",\"basemap\":{\"parts\":1},$terrain/" "$arg_grid/meta.json" > "$arg_out/data/meta.json"
     cp "$arg_grid/forest.u8.gz" "$arg_grid/municipalities.json" "$arg_out/data/"
     cp "$arg_basemap" "$arg_out/basemap/part-0.png"
     mkdir -p "$arg_out/world" && cp -r "$arg_sprites" "$arg_out/" && cp "$arg_world"/*.json "$arg_out/world/"

@@ -112,11 +112,20 @@ export interface MapColours {
   placeLabel: string;
   countryLabel: string;
   municipalities: string;
+  /** The terrain's shading: the slopes away from the light, and those towards it. */
+  shadow: string;
+  highlight: string;
 }
 
 export const MAP_COLOURS: Record<Scheme, MapColours> = {
-  light: { earth: '#e2dfda', water: '#80deea', boundaries: '#adadad', placeLabel: '#5c5c5c', countryLabel: '#8a8a8a', municipalities: '#3b4046' },
-  dark: { earth: '#1f1f1f', water: '#31353f', boundaries: '#5b6374', placeLabel: '#8c8c8c', countryLabel: '#6e6e6e', municipalities: '#c4cad3' },
+  light: {
+    earth: '#e2dfda', water: '#80deea', boundaries: '#adadad', placeLabel: '#5c5c5c', countryLabel: '#8a8a8a', municipalities: '#3b4046',
+    shadow: 'rgba(52, 44, 36, 0.75)', highlight: 'rgba(255, 255, 255, 0.5)',
+  },
+  dark: {
+    earth: '#1f1f1f', water: '#31353f', boundaries: '#5b6374', placeLabel: '#8c8c8c', countryLabel: '#6e6e6e', municipalities: '#c4cad3',
+    shadow: 'rgba(0, 0, 0, 0.85)', highlight: 'rgba(255, 255, 255, 0.3)',
+  },
 };
 
 /** The basemap's style layers and icons per scheme: the Protomaps "light" and "dark" flavours. */

@@ -15,6 +15,8 @@ Everything so far: there is no release yet. The test instance follows `master`.
 - Blocks in a small, safe language score every cell. Predefined blocks are code too, and a block
   can be turned around. Blocks run as compiled JavaScript in a Web Worker.
 - Several maps, groups of blocks that switch on and off, and places with travel times.
+- The map's background can be "Terrain": the land shaded by the Copernicus elevation model, over
+  the heatmap and under the roads and the names.
 - Travel times by car, by bike and on foot are found on OpenStreetMap's roads, paths and ferries,
   for every cell of the map, and by public transport on Rejseplanen's timetables: the time to be
   at the place between 7:30 and 8:30 on a weekday, waiting included. Each place says when they

@@ -64,7 +64,7 @@ export const SOURCES: DataSource[] = [
   },
   {
     id: 'elevation', name: 'Copernicus DEM', url: 'https://registry.opendata.aws/copernicus-dem/',
-    uses: 'The height above sea level, from the elevation model GLO-30 of about 30 m, a model of the surface, roofs and treetops too.',
+    uses: 'The height above sea level, from the elevation model GLO-30 of about 30 m, a model of the surface, roofs and treetops too, and the shading of the land when the background is Terrain.',
     licence: { name: 'Copernicus DEM licence (GLO-30)', url: 'https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM/resources/license/License-COPDEM-30.pdf' },
     credit: 'Produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved',
     note: "Changed: put on the map's 100 m cells as the lowest quarter of the model's points in each. The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.",

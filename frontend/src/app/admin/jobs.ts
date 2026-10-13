@@ -82,14 +82,18 @@ export const JOBS: Job[] = [
     description: 'The public chargers for electric cars that the operators and municipalities report to GeoFA, with who runs each; OpenStreetMap adds those GeoFA lacks.',
   },
   {
-    id: 'elevation', name: 'Elevation', kind: 'fetch', source: 'Copernicus DEM', schedule: '0 4 4 * *', enabled: true, then: ['grid'],
+    id: 'elevation', name: 'Elevation', kind: 'fetch', source: 'Copernicus DEM', schedule: '0 4 4 * *', enabled: true, then: ['grid', 'terrain'],
     description: 'The height of the land from the Copernicus elevation model of 30 m (GLO-30): the 22 tiles of 1° with Danish land, about 310 MB, fetched again only when one changes.',
   },
   { id: 'world', name: 'World map', kind: 'fetch', source: 'Natural Earth', schedule: '0 2 1 * *', enabled: true, then: ['pack'], description: 'Land, lakes, borders and names outside Denmark.' },
-  { id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', enabled: true, then: ['pack'], description: 'Every data layer on the 100 m grid, sampled to the 200 m display grid.' },
+  { id: 'grid', name: 'Build the grid', kind: 'build', source: 'Boligmaskinen', schedule: '0 6 * * *', enabled: true, then: ['basemap', 'terrain'], description: 'Every data layer on the 100 m grid, sampled to the 200 m display grid.' },
   {
     id: 'roads', name: 'Road network', kind: 'build', source: 'OpenStreetMap, Rejseplanen', schedule: '15 6 * * *', enabled: true,
     description: 'The roads, paths and ferries of the OSM extract, and a weekday’s timetable of public transport, which the travel times to your places are found on.',
+  },
+  {
+    id: 'terrain', name: 'Terrain', kind: 'build', source: 'Copernicus DEM', schedule: '30 4 4 * *', enabled: true, then: ['pack'],
+    description: 'The tiles the map shades the land with when its background is Terrain: the elevation model over the region, up to zoom 11.',
   },
   { id: 'pack', name: 'Pack the data', kind: 'build', source: 'Boligmaskinen', schedule: '30 6 * * *', enabled: true, then: ['data-pack'], description: 'The data pack the map loads.' },
   { id: 'data-pack', name: 'Check the data pack', kind: 'check', source: 'Boligmaskinen', schedule: '0 7 * * *', enabled: true, description: 'Reads the data pack the map loads and checks that every layer, basemap part and world file is there.' },
