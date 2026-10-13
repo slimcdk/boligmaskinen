@@ -50,7 +50,9 @@
   "pm25": "pm25.png",
   "water_hardness": "water_hardness.png",
   "elevation": "elevation.png",
-  "mask": "mask.png"
+  "mask": "mask.png",
+  "soil_contamination": "soil_contamination.png",
+  "soil_contamination_v1": "soil_contamination_v1.png"
  },
  "sites": {
   "chargers": "chargers.json"

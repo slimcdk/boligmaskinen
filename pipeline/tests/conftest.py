@@ -226,6 +226,17 @@ def sources(tmp_path_factory) -> Path:
                                ("soe_bes_linjer", 0, box(578_000, 6_221_000, 578_500, 6_221_500)),
                                ("aa_bes_linjer", 3, box(574_000, 6_224_000, 575_000, 6_224_300))]:
         gpd.GeoDataFrame([{"Statuskode": status, "geometry": area}], geometry="geometry", crs="EPSG:25832").to_file(root / f"{name}.geojson", driver="GeoJSON")
+    # --- The regions' contaminated land, as Miljøportal zips it, in a folder: a V2 parcel smaller
+    # than a cell, and two V1 areas ---
+    for name, areas in [("V2FLADER", [box(574_120, 6_219_120, 574_150, 6_219_150)]),
+                        ("V1FLADER", [box(576_000, 6_220_000, 576_400, 6_220_400), box(572_000, 6_216_000, 572_200, 6_216_200)])]:
+        folder = root / f"{name}_SHAPE"
+        folder.mkdir()
+        gpd.GeoDataFrame([{"Lokalitets": f"751-{i:05d}", "geometry": area} for i, area in enumerate(areas)], geometry="geometry",
+                         crs="EPSG:25832").to_file(folder / f"{name}.shp")
+        with zipfile.ZipFile(root / f"{name}_SHAPE.zip", "w") as archive:
+            for member in sorted(folder.iterdir()):
+                archive.write(member, f"zipfolder/{name}_SHAPE/{member.name}")
     # --- GeoFA's chargers: a point per charger, as the operators report them. Two of Clever's at one
     # site, OK's, E.ON's (run by EV Infra Denmark), and one with only its owner, Spirii; not counted
     # are a planned one, one for bicycles, one for a municipality's own cars, a draft, and one far away ---
@@ -289,6 +300,7 @@ def sources(tmp_path_factory) -> Path:
         "raw_material_areas": "raastofomr.geojson", "transit": "GTFS.zip", "water_hardness": "haardhed.zip",
         "forest_lines": "skovbyggelinjer.geojson", "church_lines": "kirkebyggelinjer.geojson", "lake_lines": "soe_bes_linjer.geojson",
         "stream_lines": "aa_bes_linjer.geojson", "elevation": ["dem/west.tif", "dem/east.tif"], "chargers": "ladefacilitet.geojson",
+        "soil_v1": "V1FLADER_SHAPE.zip", "soil_v2": "V2FLADER_SHAPE.zip",
         "osm_layers": "osm/layers.gpkg", "osm_addresses": "osm/addresses.npy", "noise": "mst/eu_2022_vej_4m.shp", "noise_rail": "mst/eu_2022_jernbane_4m.shp",
         "zones": "zonekort.geojson", "institutions": "institutions.json", "daycare": "dagtilbud.csv", "turbines": "vinddata.xlsx",
         "tax": "pskat.json", "burglaries": "straf.json", "population": "folk.json", "income": "indkomst.json",

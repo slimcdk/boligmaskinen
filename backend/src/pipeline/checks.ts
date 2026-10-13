@@ -27,6 +27,7 @@ const NAMES: Record<string, string> = {
   addresses: 'addresses', homeCells: 'cells with homes', regionLandCells: 'land cells', supermarkets: 'supermarkets', stations: 'stations',
   schools: 'schools', daycare: 'daycare units', turbines: 'wind turbines', mstShareOfRegion: 'the share of land with mapped noise',
   chargersGeofa: 'EV chargers from GeoFA', chargersOsm: 'EV chargers from OpenStreetMap',
+  soilV1: 'areas mapped as possibly contaminated (V1)', soilV2: 'areas mapped as contaminated (V2)',
 };
 
 /**

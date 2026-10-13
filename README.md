@@ -13,7 +13,7 @@ numbers become sliders.
 
 ![The map of a family that wants forest, water, quiet, high ground, schools, daycare, shops, trains and EV chargers close by, over Aarhus, Silkeborg, Randers and Horsens: green where a home fits it best, red where least](docs/screenshots/map.webp)
 
-**Status:** prototype. It covers all of Denmark with 35 layers of open data on a 100 m grid, in
+**Status:** prototype. It covers all of Denmark with 37 layers of open data on a 100 m grid, in
 Danish and English, and keeps several maps of blocks. Its data jobs fetch the sources and build
 the data themselves, every night, and find the travel times to your places on OpenStreetMap's
 roads and Rejseplanen's timetables. Still to come: data about homes and homes for sale
@@ -175,7 +175,7 @@ often, and which other sources we have looked at.
 | [Copernicus DEM](https://registry.opendata.aws/copernicus-dem/) | The height above sea level, from the elevation model GLO-30 of about 30 m, and the shading of the land in the background Terrain | [Copernicus DEM licence (GLO-30)](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM/resources/license/License-COPDEM-30.pdf) |
 | [Miljøstyrelsen](https://miljoegis.mim.dk) | Noise from roads, railways, airports and industry, from the strategic noise mapping 2022 (Lden) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [DCE, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Nitrogen dioxide (NO₂) and fine particles (PM2.5): yearly means for 2024 on a 1 km grid, from DCE's model of the air | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
-| [Miljøstyrelsen and the regions, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Fredninger of land in force, the Natura 2000 areas for habitats and birds, the areas the regions' raw material plans set aside for digging, now or later, and the building lines around forests, churches, lakes and streams | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| [Miljøstyrelsen and the regions, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Fredninger of land in force, the Natura 2000 areas for habitats and birds, the areas the regions' raw material plans set aside for digging, now or later, the building lines around forests, churches, lakes and streams, and the land the regions have mapped as contaminated (V1 and V2) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | [Plandata.dk](https://www.plandata.dk) | Planning zones (byzone, landzone and sommerhusområde), the roads and railways the municipal plans lay out, the local plans of the last two years, the zones around businesses and plants, and the district heating areas | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [STIL Institutionsregisteret](https://institutionsregisteret.stil.dk) | Folkeskoler, friskoler and private schools | No licence stated; the register is public |
 | [STIL Dagtilbudsregisteret](https://dagtilbudsregister.stil.dk) | Daycare units | No licence stated; the data is free for everyone, says STIL |

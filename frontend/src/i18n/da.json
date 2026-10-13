@@ -206,6 +206,11 @@
       "opposite": "Inden for byggelinjer",
       "note": "Nærmeste byggelinje om en skov, kirke, sø eller å, hvor byggeri kræver dispensation, fra Danmarks Miljøportal."
     },
+    "soil_contamination": {
+      "name": "Ren jord",
+      "opposite": "Nær forurenet jord",
+      "note": "Nærmeste jord, som regionerne har kortlagt som forurenet (V2, hvor forureningen er kendt), fra Danmarks Miljøportal."
+    },
     "consequence_zone": {
       "name": "Væk fra konsekvenszoner",
       "opposite": "Tæt på konsekvenszoner",
@@ -307,6 +312,8 @@
     "new_local_plan": "Afstand til en lokalplan fra de seneste to år, foreslået eller vedtaget (0 inden for en)",
     "district_heating": "Afstand til et område, som varmeplanerne giver fjernvarme (0 inden for et)",
     "building_line": "Afstand til en byggelinje om en skov, kirke, sø eller å, hvor byggeri kræver dispensation (0 inden for en)",
+    "soil_contamination": "Afstand til jord, som regionerne har kortlagt som forurenet, V2 (0 inden for den)",
+    "soil_contamination_v1": "Afstand til jord, som regionerne har kortlagt som muligt forurenet, V1 (0 inden for den)",
     "consequence_zone": "Afstand til en konsekvenszone om en virksomhed eller et teknisk anlæg (0 inden for en)",
     "extraction_area": "Afstand til et område, som regionernes råstofplaner udlægger til gravning (0 inden for et)",
     "extraction_interest": "Afstand til et område, som regionernes råstofplaner holder i reserve til senere gravning (0 inden for et)",
@@ -718,7 +725,7 @@
       },
       "protected": {
         "name": "Miljøstyrelsen og regionerne, via Danmarks Miljøportal",
-        "uses": "Gældende arealfredninger, som beskytter landskab og natur, Natura 2000-områderne for naturtyper og fugle, de områder, som regionernes råstofplaner udlægger til gravning nu eller senere, og byggelinjerne om skove, kirker, søer og åer.",
+        "uses": "Gældende arealfredninger, som beskytter landskab og natur, Natura 2000-områderne for naturtyper og fugle, de områder, som regionernes råstofplaner udlægger til gravning nu eller senere, byggelinjerne om skove, kirker, søer og åer, og den jord, som regionerne har kortlagt som forurenet (V1 og V2).",
         "note": "Ændret: lagt på kortets celler på 100 m. CC0 kræver ingen kreditering; den gives af høflighed."
       }
     }
@@ -889,6 +896,10 @@
       "elevation": {
         "name": "Højdemodel",
         "description": "Landets højde fra Copernicus' højdemodel på 30 m (GLO-30): de 22 felter på 1°, der har dansk land, omkring 310 MB, hentes igen, kun når et af dem ændres."
+      },
+      "soil": {
+        "name": "Jordforurening",
+        "description": "Den jord, som regionerne har kortlagt som forurenet: V1, hvor forurening er mulig, og V2, hvor den er kendt, som de zippede shapefiler, registret laver hver dag."
       },
       "plans": {
         "name": "Planer",

@@ -53,6 +53,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
   server.file('/transit/GTFS.zip', { content: zip('agency.txt stops.txt trips.txt stop_times.txt'), etag: '"gtfs"' });
   server.file('/geus/api/datasets/:persistentId/', { content: JSON.stringify({ data: { latestVersion: { versionNumber: 2, files: [{ dataFile: { id: 83762, filename: 'DrikkevandetsHaardhed_QGIS_DK_EN_2023.zip' } }] } } }) });
   server.file('/api/access/datafile/83762', { content: zip('DrikkevandetsHaardhed.gpkg'), etag: '"water"' });
+  for (const name of ['V1FLADER_SHAPE.zip', 'V2FLADER_SHAPE.zip']) server.file(`/soil/${name}`, { content: zip(`zipfolder/${name}/${name.slice(0, 8)}.shp`), etag: `"${name}"` });
   for (const tile of ELEVATION_TILES) server.file(`/dem/${tile}/${tile}.tif`, { content: Buffer.from(`II*\u0000${tile}`, 'latin1'), etag: `"${tile}"` });
   server.on('GET /protomaps/builds.json', (_request, response) => {
     response.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify([{ key: '20261008.pmtiles' }, { key: sources.planetBuild }]));
@@ -71,7 +72,7 @@ export function serveSources(server: TestServer): { sources: Sources; urls: Sour
       osm: `${base}/osm/denmark-latest.osm.pbf`, zones: `${base}/wfs`, institutions: `${base}/institutions`, daycare: `${base}/Eksport.aspx`,
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/air`, protected: `${base}/protected`, plans: `${base}/plans`, transit: `${base}/transit/GTFS.zip`,
-      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`, chargers: `${base}/geofa`,
+      water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`, chargers: `${base}/geofa`, soil: `${base}/soil`,
     },
     protomaps: { builds: `${base}/protomaps/builds.json`, tiles: `${base}/tiles`, assets: `${base}/assets`, iconsLicence: `${base}/icons/LICENSE.md` },
   };

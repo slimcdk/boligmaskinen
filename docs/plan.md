@@ -41,8 +41,8 @@ as jobs (milestone 2). Milestone 3 is done but for the sources that need
 access; milestone 7 but for a first release. Of milestone 4, scoring in the database is ready for
 the homes.**
 
-- All of Denmark: 35 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
-  10, with a world map around it. Nature, protected areas and Natura 2000, building lines, noise from roads,
+- All of Denmark: 37 layers of open data on a 100 m grid, shown at 200 m and at 100 m from zoom
+  10, with a world map around it. Nature, protected areas and Natura 2000, building lines, contaminated land, noise from roads,
   railways, airports and industry, air quality, the hardness of the drinking water, the height above sea level, wind turbines (also by their height), solar parks,
   power lines, airports and airfields, what the plans lay out (roads and railways, new local
   plans, zones around businesses, gravel pits now and to come), district heating, everyday services (also pharmacies and
@@ -158,7 +158,7 @@ what they took (#69).
      whether its times come from the roads and the timetables.
 5. **More areas, more values.** The national noise maps, GeoDanmark and the GeoFA school
    districts. Air quality (NO₂ and PM2.5 from DCE) came first, on 2026-10-10. Then energy parks: solar parks came from OpenStreetMap on 2026-10-10 ("Away from solar parks"), and the turbines' size the same day (`turbine_heights`); the designated areas are to come. Airports, airfields and air stations came from OpenStreetMap the same day too, and Miljøstyrelsen's protected areas and Natura 2000 from Danmarks Miljøportal; pharmacies, libraries and the overhead power lines of 132 kV or more from OpenStreetMap, where they are nearly all mapped; and the roads and railways the municipal plans lay out, the local plans of the last two years, the zones around businesses and plants, and the district heating areas, from Plandata.dk; and the areas the regions' raw material plans set aside for digging, now or later, from Danmarks Miljøportal. And
-   drinking water quality: the hardness per supply area came from GEUS on 2026-10-10, PFAS and nitrate are to come. The chargers for electric cars came from GeoFA and OpenStreetMap on 2026-10-12, with a checkbox per provider in the block; the height above sea level came from the Copernicus elevation model the same day, and on 2026-10-13 the map's background "Terrain", shaded by the same model ([ADR 14](adr/0014-terrain-from-our-own-tiles.md)); Danmarks Højdemodel would make both exact, and give the slope, and Dataforsyningen's orthophotos a background of aerial photos, once there is a Dataforsyningen token (#53); see
+   drinking water quality: the hardness per supply area came from GEUS on 2026-10-10, PFAS and nitrate are to come. The chargers for electric cars came from GeoFA and OpenStreetMap on 2026-10-12, with a checkbox per provider in the block; the height above sea level came from the Copernicus elevation model the same day, and on 2026-10-13 the map's background "Terrain", shaded by the same model ([ADR 14](adr/0014-terrain-from-our-own-tiles.md)); the land the regions have mapped as contaminated (V1 and V2), from Danmarks Miljøportal's register, came on 2026-10-13 too; Danmarks Højdemodel would make both exact, and give the slope, and Dataforsyningen's orthophotos a background of aerial photos, once there is a Dataforsyningen token (#53); see
    [data-sources.md](data-sources.md#sources-not-used-yet-and-what-they-need). The GeoFA school
    districts were fetched on 2026-10-10 (1,409 districts, 143 MB of GeoJSON) but not used: a
    district has a number and a name, not the school's, and some hold several schools or grades,

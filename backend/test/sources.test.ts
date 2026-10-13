@@ -6,7 +6,7 @@ import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { migrate } from '../src/db/migrate.ts';
 import type { JobDefinition, JobOutcome } from '../src/jobs/types.ts';
-import { ELEVATION_TILES, NEEDS_DATA_DIR, type SourceUrls, sourceJobs } from '../src/pipeline/sources.ts';
+import { ELEVATION_TILES, NEEDS_DATA_DIR, SOIL_FILES, type SourceUrls, sourceJobs } from '../src/pipeline/sources.ts';
 import { createTestDatabase, describeWithDatabase } from './database.ts';
 import { runContext } from './sources/context.ts';
 import { TestServer } from './sources/server.ts';
@@ -17,7 +17,7 @@ const zip = (text: string) => Buffer.concat([Buffer.from('PK\u0003\u0004', 'lati
 describe('the source jobs without DATA_DIR', () => {
   it('say what they need', () => {
     const jobs = sourceJobs({ dataDir: null, python: FAKE_PYTHON, revision: 'abc' });
-    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'chargers', 'elevation', 'world']);
+    expect(jobs.map((j) => j.id)).toEqual(['osm', 'transit', 'plandata', 'stil-schools', 'stil-daycare', 'ens', 'dst', 'noise', 'air', 'plans', 'protected', 'water', 'chargers', 'elevation', 'soil', 'world']);
     expect(jobs.every((j) => j.blocked === NEEDS_DATA_DIR && !j.run)).toBe(true);
   });
 });
@@ -49,6 +49,7 @@ describeWithDatabase('the source jobs', () => {
       turbinesPage: `${base}/data-oversigt`, statbank: `${base}/statbank`, noise: `${base}/noise/2022_noise_shp.zip`, naturalEarth: `${base}/ne`,
       air: `${base}/wfs-air`, protected: `${base}/wfs-protected`, plans: `${base}/wfs-plans`, transit: `${base}/transit/GTFS.zip`,
       water: `${base}/geus/api/datasets/:persistentId/?persistentId=doi:10.22008/FK2/5OZV7W`, elevation: `${base}/dem`, chargers: `${base}/geofa`,
+      soil: `${base}/soil`,
     };
     jobs = new Map(sourceJobs({ dataDir, python: FAKE_PYTHON, revision, urls }).map((j) => [j.id, j]));
   }
@@ -100,6 +101,16 @@ describeWithDatabase('the source jobs', () => {
     expect(server.to('/api/access/datafile/83762')).toHaveLength(1);
     server.file('/geus/api/datasets/:persistentId/', { content: dataset([{ id: 1, filename: 'something else.pdf' }]) });
     await expect(run('water')).rejects.toThrow(/Found no ZIP file for QGIS in the dataset/);
+  });
+
+  it("Soil contamination: fetches the regions' zipped V1 and V2 areas, and keeps no file without a shapefile", async () => {
+    for (const name of SOIL_FILES) server.file(`/soil/${name}`, { content: zip(`zipfolder/${name}/${name.slice(0, 8)}.shp`), etag: `"${name}-1"` });
+    expect(await run('soil')).toMatchObject({ changed: true, result: 'V1 areas, 45 B, V2 areas, 45 B' });
+    expect(server.to('/soil/V2FLADER_SHAPE.zip')).toHaveLength(1);
+    // Unchanged, as the server says with its ETag
+    expect(await run('soil')).toMatchObject({ changed: false, result: expect.stringMatching(/^Unchanged since /) });
+    server.file('/soil/V2FLADER_SHAPE.zip', { content: zip('an empty archive'), etag: '"V2FLADER_SHAPE.zip-2"' });
+    await expect(run('soil')).rejects.toThrow(/a ZIP file without a shapefile/);
   });
 
   it('Elevation: fetches the tiles with Danish land, again only those that changed, and keeps no tile that is not a TIFF', async () => {

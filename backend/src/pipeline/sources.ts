@@ -31,6 +31,7 @@ export const SOURCE_URLS = {
   chargers: 'https://geofa.geodanmark.dk/ows/fkg/fkg',
   /** The Copernicus elevation model of 30 m (GLO-30) on AWS's open data, a GeoTIFF per tile of 1°, with no key. */
   elevation: 'https://copernicus-dem-30m.s3.amazonaws.com',
+  soil: 'https://arealdata-api.miljoeportal.dk/download',
 };
 
 export type SourceUrls = typeof SOURCE_URLS;
@@ -48,6 +49,7 @@ const LICENCES = {
   transit: 'CC BY 4.0, Rejsekort & Rejseplan A/S (Rejseplanen)',
   water: 'CC BY 4.0, GEUS',
   chargers: 'CC BY 4.0, GeoDanmark (GeoFA), credited "@geodanmark"',
+  soil: 'CC0 1.0, the regions (Danske Regioner), through Danmarks Miljøportal',
   elevation: 'Copernicus DEM licence, free with its notice: produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved',
 };
 
@@ -201,6 +203,34 @@ async function fetchWater(w: Work): Promise<JobOutcome> {
     },
   });
   return outcome(w, zipped);
+}
+
+/**
+ * The land the regions have mapped as contaminated, from Danmarks Miljøportal's register (DKJord):
+ * V1, where contamination is possible, and V2, where it is known, each a zipped shapefile made every
+ * day. The address redirects to a copy that holds for a day, so it is asked for each time. The
+ * register's WFS cannot give a whole layer in one answer: HTTP 500 after two minutes (2026-10-13).
+ */
+export const SOIL_FILES = ['V1FLADER_SHAPE.zip', 'V2FLADER_SHAPE.zip'];
+
+async function fetchSoil(w: Work): Promise<JobOutcome> {
+  const fetched: Archived[] = [];
+  for (const [i, name] of SOIL_FILES.entries()) {
+    fetched.push(await w.archive.download(w.context, {
+      source: 'soil', name, url: `${w.urls.soil}/${name}`, licence: LICENCES.soil, progress: [i / SOIL_FILES.length, (i + 1) / SOIL_FILES.length],
+      check: (content) => {
+        zipCheck(content);
+        if (!content.includes('.shp')) throw new Error('a ZIP file without a shapefile');
+        return `${name.slice(0, 2)} areas, ${formatBytes(content.length)}`;
+      },
+    }));
+  }
+  for (const f of fetched) await w.context.log(`${f.summary}: ${freshness(f, w.day)}`);
+  const changed = fetched.some((f) => f.changed);
+  return {
+    changed, bytes: fetched.reduce((sum, f) => sum + f.file.bytes, 0),
+    result: changed ? fetched.map((f) => f.summary).join(', ') : unchangedSince(w, fetched.map((f) => f.file)),
+  };
 }
 
 /**
@@ -587,6 +617,10 @@ const SOURCES: SourceJob[] = [
   {
     id: 'elevation', name: 'Elevation', source: 'Copernicus DEM', schedule: '0 4 4 * *', then: ['grid', 'terrain'], fetch: fetchElevation,
     description: 'The height of the land from the Copernicus elevation model of 30 m (GLO-30): the 22 tiles of 1° with Danish land, about 310 MB, fetched again only when one changes.',
+  },
+  {
+    id: 'soil', name: 'Soil contamination', source: 'Danmarks Miljøportal (DKJord)', schedule: '10 4 * * 1', then: ['grid'], fetch: fetchSoil,
+    description: 'The land the regions have mapped as contaminated: V1, where it is possible, and V2, where it is known, as the zipped shapefiles the register makes every day.',
   },
   { id: 'world', name: 'World map', source: 'Natural Earth', schedule: '0 2 1 * *', then: ['pack'], fetch: fetchWorld, description: 'Land, lakes, borders and names outside Denmark.' },
 ];
