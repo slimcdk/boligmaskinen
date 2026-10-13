@@ -90,7 +90,8 @@ docker compose up -d                 # http://localhost:8080
 
 ### Licences
 
-The data comes with duties, which "About the data" in the app lists source by source.
+The data comes with duties, which "About the data" in the app lists source by source
+([Data sources](#data-sources) below lists them too).
 
 - **Credits.** Every source is credited there, with its licence. OpenStreetMap's credit is also on
   the map until it is first used.
@@ -156,3 +157,30 @@ GitHub Actions (`.github/workflows/`):
   `<version>-amd64`, `<version>-arm64`) and, unless it is a pre-release, `latest`. The footer then shows the version, which the running
   container reports at `/api/version`.
 - **Changes to `.devcontainer/`** build the dev container and check its tools and database.
+
+## Data sources
+
+Everything on the map comes from open data. "About the data" in the app credits each source as it
+asks, and [`docs/data-sources.md`](docs/data-sources.md) says how each one is fetched and how
+often, and which other sources we have looked at.
+
+| Source | What the map takes from it | Licence |
+|---|---|---|
+| [OpenStreetMap](https://www.openstreetmap.org) | Forests, lakes, the coast, beaches, solar parks, overhead power lines, airports and airfields, supermarkets, stations, pharmacies, libraries, the chargers for electric cars that GeoFA lacks, roads and paths, address points and municipalities, and the basemap of Denmark (through Protomaps) | [ODbL 1.0](https://www.openstreetmap.org/copyright) |
+| [Rejseplanen](https://www.rejseplanen.dk) | The timetables of every bus, train, metro, light rail and ferry (GTFS): the travel times by public transport, and the departures near every cell | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [GEUS](https://doi.org/10.22008/FK2/5OZV7W) | The hardness of the drinking water in the public waterworks' supply areas, from the national borehole database Jupiter | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [GeoFA (GeoDanmark)](https://www.geodanmark.dk/home/vejledninger/geofa/) | The public chargers for electric cars, with who runs each, as the operators and the municipalities report them | [CC BY 4.0](https://www.geodanmark.dk/home/vejledninger/vilkaar-for-data-anvendelse/) |
+| [Copernicus DEM](https://registry.opendata.aws/copernicus-dem/) | The height above sea level, from the elevation model GLO-30 of about 30 m | [Copernicus DEM licence (GLO-30)](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM/resources/license/License-COPDEM-30.pdf) |
+| [Miljøstyrelsen](https://miljoegis.mim.dk) | Noise from roads, railways, airports and industry, from the strategic noise mapping 2022 (Lden) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [DCE, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Nitrogen dioxide (NO₂) and fine particles (PM2.5): yearly means for 2024 on a 1 km grid, from DCE's model of the air | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [Miljøstyrelsen and the regions, through Danmarks Miljøportal](https://arealdata.miljoeportal.dk) | Fredninger of land in force, the Natura 2000 areas for habitats and birds, the areas the regions' raw material plans set aside for digging, now or later, and the building lines around forests, churches, lakes and streams | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| [Plandata.dk](https://www.plandata.dk) | Planning zones (byzone, landzone and sommerhusområde), the roads and railways the municipal plans lay out, the local plans of the last two years, the zones around businesses and plants, and the district heating areas | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [STIL Institutionsregisteret](https://institutionsregisteret.stil.dk) | Folkeskoler, friskoler and private schools | No licence stated; the register is public |
+| [STIL Dagtilbudsregisteret](https://dagtilbudsregister.stil.dk) | Daycare units | No licence stated; the data is free for everyone, says STIL |
+| [Energistyrelsen](https://ens.dk/analyser-og-statistik/data-oversigt-over-energisektoren) | Wind turbines in operation, with their height, from the master data register | [Free to use with the source named](https://ens.dk/om-os/datapolitik) |
+| [Danmarks Statistik](https://www.statistikbanken.dk) | Income tax and land tax, population, home burglaries, mean disposable income, nursery rates and class sizes per municipality (tables PSKAT, FOLK1A, STRAF22, INDKP101, RES88 and KVOTIEN) | [Free to use with the source named, as CC BY 4.0](https://www.dst.dk/da/presse/kildeangivelse) |
+| [Protomaps](https://github.com/protomaps/basemaps) | The basemap of Denmark: tiles made from OpenStreetMap, and the map style | [Tiles: ODbL. Style: CC0. Code: BSD-3-Clause](https://docs.protomaps.com/basemaps/downloads) |
+| [ESA WorldCover](https://esa-worldcover.org) | Land cover in the basemap when the map is zoomed out, part of Protomaps' tiles | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [Natural Earth](https://www.naturalearthdata.com) | The world map outside Denmark | [Public domain](https://www.naturalearthdata.com/about/terms-of-use/) |
+| [Fonts and icons](https://github.com/protomaps/basemaps-assets) | The map's labels and icons: the Noto fonts and Mapzen's icons | [Noto: SIL OFL 1.1. Icons: MIT](https://openfontlicense.org) |
+| [Roboto and Material Symbols](https://fonts.google.com) | The app's own text and icons, served by the app itself, not by Google | [Roboto: SIL OFL 1.1. Material Symbols: Apache 2.0](https://openfontlicense.org) |

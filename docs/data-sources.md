@@ -23,6 +23,8 @@ its steps.
 - **Every source is credited as it asks**, in "About the data" (`SOURCES` in
   `frontend/src/app/panel/about-dialog.ts`): what it gives, its licence and its credit. The terms were
   checked on the providers' own pages on 2026-10-09; see [Licences and credits](#licences-and-credits).
+  The README's "Data sources" lists them too, and `frontend/tools/check-readme.mjs` (run before
+  the frontend's tests) checks that it has every one.
 - **Personal data.** Datatilsynet's 2024 decision on Boliglag means no owner names and no
   search by owner name. Sale prices are tied to addresses, so they need a GDPR legal basis
   (see EJF below).

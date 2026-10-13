@@ -159,7 +159,8 @@ browser.
   - The sources in "About the data" and the jobs have their English in `about-dialog.ts` and on
     the server; their Danish is in `da.json` (`about.sources`, `jobs.byId`).
 - **`npm test` first runs `tools/check-i18n.mjs`:** every key the code names is in `en.json`,
-  and `da.json` has the same keys with the same placeholders.
+  and `da.json` has the same keys with the same placeholders. Then `tools/check-readme.mjs`: the
+  README's "Data sources" has a row for every source in `SOURCES`, by its name and link.
 - **The tests read English:** the unit tests get the app's texts in English
   (`src/test-providers.ts`), and the end-to-end tests run in an en-US browser.
   `e2e/language.spec.ts` runs the app in a da-DK browser and switches the language.
@@ -297,7 +298,7 @@ the screenshots into WebP, about a fifth of the PNG.
 | `src/app/i18n/` | Danish and English: the language in use, the footer's menu, and the engine's names in the language. |
 | `src/i18n/` | The catalogues of texts, `en.json` and `da.json`. |
 | `e2e/` | Playwright end-to-end tests, and `e2e/data-pack/`, the test data pack. |
-| `tools/` | `build-info.mjs` (the version label), `check-i18n.mjs` (the catalogues) and `to_artifact.py` (publishing). |
+| `tools/` | `build-info.mjs` (the version label), `check-i18n.mjs` (the catalogues), `check-readme.mjs` (the README's data sources) and `to_artifact.py` (publishing). |
 
 ## Publishing as a Claude artifact
 
