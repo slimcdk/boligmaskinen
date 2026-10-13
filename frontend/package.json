@@ -8,7 +8,7 @@
     "prebuild": "node tools/build-info.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "pretest": "node tools/check-i18n.mjs",
+    "pretest": "node tools/check-i18n.mjs && node tools/check-readme.mjs",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
     "e2e": "playwright test",
