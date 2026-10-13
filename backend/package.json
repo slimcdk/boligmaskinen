@@ -15,16 +15,16 @@
   },
   "dependencies": {
     "@boligmaskinen/engine": "file:../packages/engine",
-    "@fastify/compress": "^9.2.0",
-    "@fastify/static": "^10.1.5",
+    "@fastify/compress": "^9.2.1",
+    "@fastify/static": "^10.1.6",
     "@protomaps/basemaps": "^5.7.2",
-    "cron-parser": "^5.10.1",
+    "cron-parser": "^5.10.2",
     "fastify": "^5.12.5",
     "pg": "^8.23.1",
-    "pg-boss": "^12.37.0"
+    "pg-boss": "^12.37.1"
   },
   "devDependencies": {
-    "@types/node": "^24.19.1",
+    "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",
     "@vitest/coverage-v8": "^5.0.3",
     "typescript": "~6.0.3",
